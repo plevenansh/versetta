@@ -1,6 +1,8 @@
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
-
+import { projectRouter } from './routes/projects';
+import { taskRouter } from './routes/tasks';
+import { userRouter } from './routes/users';
 const t = initTRPC.create();
 
 export const router = t.router;

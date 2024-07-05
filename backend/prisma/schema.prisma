@@ -18,6 +18,9 @@ model Project {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
+  status      String   @default("active")
+  startDate   DateTime?
+  endDate     DateTime?
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
   tasks       Task[]
@@ -27,6 +30,8 @@ model Task {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
+  status      String   @default("pending")
+  dueDate     DateTime?
   completed   Boolean  @default(false)
   projectId   Int
   project     Project  @relation(fields: [projectId], references: [id])

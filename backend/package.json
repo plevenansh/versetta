@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
+    "build": "tsc -b",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,7 +13,8 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^5.16.1",
-    "@trpc/server": "^10.45.2",
+    "@trpc/client": "^11.0.0-rc.446",
+    "@trpc/server": "^11.0.0-rc.446",
     "@types/pg": "^8.11.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

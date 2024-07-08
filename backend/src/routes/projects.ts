@@ -30,9 +30,16 @@ export const projectRouter = router({
     }))
     .mutation(async ({ input }) => {
       try {
-        return await prisma.project.create({ data: input });
+
+        console.log("hithere")
+      
+        // return await prisma.project.create({ data: input })
+        //   .then((createdProject) => {
+        //     console.log('Project created successfully:', createdProject);
+        //     return createdProject;
+        //  });
       } catch (error) {
-        throw new Error('Failed to create project');
+        throw new Error('Failed to create project yess');
       }
     }),
 

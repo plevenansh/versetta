@@ -13,8 +13,8 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^5.16.1",
-    "@trpc/client": "^11.0.0-rc.446",
-    "@trpc/server": "^11.0.0-rc.446",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
     "@types/pg": "^8.11.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

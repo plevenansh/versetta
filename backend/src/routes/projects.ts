@@ -5,42 +5,32 @@ import prisma from '../lib/prisma';
 
 export const projectRouter = router({
   getAll: publicProcedure.query(async () => {
-    try {
-      return await prisma.project.findMany();
-    } catch (error) {
-      throw new Error('Failed to fetch projects');
-    }
+    return await prisma.project.findMany();
   }),
 
   getById: publicProcedure
     .input(z.number())
     .query(async ({ input }) => {
-      try {
-        return await prisma.project.findUnique({ where: { id: input } });
-      } catch (error) {
-        throw new Error('Failed to fetch project');
-      }
+      return await prisma.project.findUnique({ 
+        where: { id: input },
+        include: { tasks: true }
+      });
     }),
 
   create: publicProcedure
     .input(z.object({
       title: z.string().min(1, 'Title is required'),
       description: z.string().optional(),
+      status: z.string().default("active"),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
       userId: z.number()
     }))
     .mutation(async ({ input }) => {
-      try {
-
-        console.log("hithere")
-      
-        // return await prisma.project.create({ data: input })
-        //   .then((createdProject) => {
-        //     console.log('Project created successfully:', createdProject);
-        //     return createdProject;
-        //  });
-      } catch (error) {
-        throw new Error('Failed to create project yess');
-      }
+      console.log("Input received:", input);
+      const createdProject = await prisma.project.create({ data: input });
+      console.log('Project created successfully:', createdProject);
+      return createdProject;
     }),
 
   update: publicProcedure
@@ -48,25 +38,31 @@ export const projectRouter = router({
       id: z.number(),
       title: z.string().min(1, 'Title is required').optional(),
       description: z.string().optional(),
+      status: z.string().optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
     }))
     .mutation(async ({ input }) => {
-      try {
-        const { id, ...data } = input;
-        return await prisma.project.update({ where: { id }, data });
-      } catch (error) {
-        throw new Error('Failed to update project');
-      }
+      const { id, ...data } = input;
+      return await prisma.project.update({ 
+        where: { id }, 
+        data,
+        include: { tasks: true }
+      });
     }),
 
   delete: publicProcedure
     .input(z.number())
     .mutation(async ({ input }) => {
-      try {
-        return await prisma.project.delete({ where: { id: input } });
-      } catch (error) {
-        throw new Error('Failed to delete project');
-      }
+      return await prisma.project.delete({ where: { id: input } });
     }),
 
-  
+  getByUserId: publicProcedure
+    .input(z.number())
+    .query(async ({ input }) => {
+      return await prisma.project.findMany({
+        where: { userId: input },
+        include: { tasks: true }
+      });
+    }),
 });

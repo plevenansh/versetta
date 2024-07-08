@@ -55,15 +55,14 @@ exports.projectRouter = (0, trpc_1.router)({
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             console.log("hithere");
-            return yield prisma_1.default.project.create({ data: input });
-            // return await prisma.project.create({ data: input })
-            //   .then((createdProject) => {
-            //     console.log('Project created successfully:', createdProject);
-            //     return createdProject;
-            //  });
+            console.log("Input received:", input); // Log the input
+            const createdProject = yield prisma_1.default.project.create({ data: input });
+            console.log('Project created successfully:', createdProject);
+            return createdProject;
         }
         catch (error) {
-            throw new Error('Failed to create project');
+            console.error('Error creating project:', error); // Log the full error
+            throw new Error(`Failed to create project: `);
         }
     })),
     update: trpc_1.publicProcedure

@@ -14,7 +14,15 @@ export const userRouter = router({
   create: publicProcedure
     .input(z.object({ email: z.string().email(), name: z.string().optional() }))
     .mutation(async ({ input }) => {
-      return await prisma.user.create({ data: input });
-    }),
+      try {
+        const user = await prisma.user.create({
+          data: input
+        });
+        console.log('User created successfully:', user);
+        return user;
+      } catch (error) {
+        console.error('Error creating user:', error);
+        throw new Error(`Failed to create user: `);
+      } }),
   // Add more user-related procedures as needed
 });

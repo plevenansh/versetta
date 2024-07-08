@@ -19,7 +19,17 @@ exports.userRouter = (0, trpc_1.router)({
     create: trpc_1.publicProcedure
         .input(zod_1.z.object({ email: zod_1.z.string().email(), name: zod_1.z.string().optional() }))
         .mutation(async ({ input }) => {
-        return await prisma_1.default.user.create({ data: input });
+        try {
+            const user = await prisma_1.default.user.create({
+                data: input
+            });
+            console.log('User created successfully:', user);
+            return user;
+        }
+        catch (error) {
+            console.error('Error creating user:', error);
+            throw new Error(`Failed to create user: `);
+        }
     }),
     // Add more user-related procedures as needed
 });

@@ -1,13 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import { createExpressMiddleware } from '@trpc/server/adapters/express';
-
-import { publicProcedure,router } from './trpc';
+import { createHTTPServer } from '@trpc/server/adapters/standalone';
+import { publicProcedure, router } from './trpc';
 import { projectRouter } from './routes/projects';
 import { taskRouter } from './routes/tasks';
 //import { dashboardRouter } from './routes/dashboard';
 
-
+console.log('Initializing tRPC server...');
 
 export const appRouter = router({
   projects: projectRouter,
@@ -16,19 +13,19 @@ export const appRouter = router({
 //   dashboard: dashboardRouter
 });
 
+const server = createHTTPServer({
+  router: appRouter,
+});
 
+const port = 3000;
 
-// const app = express();
-// app.use(cors());
+server.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+  console.log('Available routes:');
+  console.log('- /trpc/projects');
+  console.log('- /trpc/tasks');
+});
 
-// app.use('/trpc', createExpressMiddleware({
-//   router: appRouter,
-//   createContext: () => ({}),
-// }));
-//
-// const port = process.env.PORT || 3000;
-// app.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
+console.log('Server setup complete. Waiting for connections...');
 
 export type AppRouter = typeof appRouter;

@@ -22,8 +22,8 @@ export const projectRouter = router({
       title: z.string().min(1, 'Title is required'),
       description: z.string().optional(),
       status: z.string().default("active"),
-      startDate: z.date().optional(),
-      endDate: z.date().optional(),
+      startDate: z.string().transform((str) => new Date(str)).optional(),
+      endDate: z.string().transform((str) => new Date(str)).optional(),
       userId: z.number()
     }))
     .mutation(async ({ input }) => {
@@ -62,7 +62,7 @@ export const projectRouter = router({
     .query(async ({ input }) => {
       return await prisma.project.findMany({
         where: { userId: input },
-        include: { tasks: true }
+        // include: { tasks: true }
       });
     }),
 });

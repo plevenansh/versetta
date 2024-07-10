@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Button } from "@/src/app/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { AlertCircle, AtSign, Lock, User, CheckCircle } from 'lucide-react';
+"use client";
 
+import React, { useState } from 'react';
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { Label } from "@/components/label";
+import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ n/select";
+import { Separator } from "@/components/separator";
+import { AlertCircle, AtSign, Lock, User, CheckCircle, Eye, EyeOff } from 'lucide-react';
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -44,12 +45,19 @@ const SignUpPage = () => {
     setNotification({ type: 'success', message: 'Account created successfully! Welcome to CreatorStudio.' });
   };
 
+
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const togglePasswordVisibility = () => {
+      setShowPassword(!showPassword);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">Join CreatorStudio</h1>
-          <p className="text-gray-600 mt-2">Unleash your creativity and connect with your audience</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4 ">
+      <div className="bg-white rounded-lg shadow-xl p-7 max-w-md w-full">
+        <div className="text-center mb-8 ">
+          <h1 className="text-3xl font-bold text-indigo-600">Join Versetta</h1>
+          <p className="text-gray-600 mt-2">Unleash your creativity and mangane the team and channel easily.</p>
         </div>
 
         {notification && (
@@ -127,13 +135,21 @@ const SignUpPage = () => {
                 <Input
                   id="password"
                   name="password"
-                  type="password"
-                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
                   className="pl-10"
                   required
                 />
+                 <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  
+               </button>
               </div>
             </div>
 

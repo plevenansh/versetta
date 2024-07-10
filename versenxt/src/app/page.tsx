@@ -1,11 +1,13 @@
 import React from 'react';
-import { SignupPage } from '@/app/components/signup';
+import SignUpPage from '@/components/signup';
+import SignInPage from '@/components/signin';
+import Layout from '@/components/Layout'
+import Dashboard from '@/components/Dashboard'
 
 export default function Home() {
   return (
-    <div>
-      hello
-      yess changed
-    </div>
-  );
+    <Layout>
+      <Dashboard />
+    </Layout>
+  )
 }

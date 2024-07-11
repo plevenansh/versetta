@@ -14,7 +14,7 @@ const menuItems = [
 
 export default function Sidebar({ collapsed, onToggle }) {
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out bg-white bg-opacity-20 backdrop-blur-lg rounded-r-3xl shadow-lg`}>
+    <div className={`${collapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out bg-white bg-opacity-20 backdrop-blur-lg  shadow-lg`}>
       <div className="flex items-center justify-between p-4">
         {!collapsed && <h1 className="text-2xl font-bold text-white">Versetta</h1>}
         <Button variant="ghost" size="icon" onClick={onToggle}>

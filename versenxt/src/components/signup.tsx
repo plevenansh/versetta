@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Button } from "@/components/button";
-import { Input } from "@/components/input";
-import { Label } from "@/components/label";
-import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ n/select";
-import { Separator } from "@/components/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { AlertCircle, AtSign, Lock, User, CheckCircle, Eye, EyeOff } from 'lucide-react';
 const SignUpPage = () => {
   const [formData, setFormData] = useState({

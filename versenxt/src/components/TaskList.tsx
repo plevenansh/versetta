@@ -22,7 +22,7 @@ export default function TaskList() {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-green bg-opacity-10 backdrop-blur-lg rounded-xl  shadow-lg">
       <CardHeader>
         <CardTitle>Tasks</CardTitle>
       </CardHeader>

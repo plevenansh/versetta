@@ -1,13 +1,11 @@
-// src/trpc.ts
-
 import { initTRPC } from '@trpc/server';
-import superjson from 'superjson';
 
-const t = initTRPC.create({
-  transformer: superjson,
-});
+// Avoid exporting the entire t-object
+// since it's not very descriptive.
+// For instance, the use of a t variable
+// is common in i18n libraries.
+const t = initTRPC.create();
 
+// Base router and procedure helpers
 export const router = t.router;
-export const publicProcedure = t.procedure;
-// You can add more procedures here, like:
-// export const protectedProcedure = t.procedure.use(/* some auth middleware */);
+export const procedure = t.procedure;

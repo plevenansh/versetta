@@ -1,30 +1,18 @@
-import { Inter } from "next/font/google";
+"use client"
 
-import '@/styles/globals.css'
-import { ThemeProvider } from "next-themes"
-import type { Metadata } from 'next'
+import { ReactNode } from 'react';
+import { trpc } from '@/trpc/client';
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: 'Versetta Dashboard',
-  description: 'Content Creator Dashboard',
+interface RootLayoutProps {
+  children: ReactNode;
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        
-          <ThemeProvider attribute="class" defaultTheme="light">
-            {children}
-          </ThemeProvider>
-        
-      </body>
+      <body>{children}</body>
     </html>
-  )
+  );
 }
+
+export default trpc.withTRPC(RootLayout);

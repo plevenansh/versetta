@@ -1,14 +1,25 @@
+'use client';
+
+import { trpc } from '@/trpc/client';
 import React from 'react';
-import SignUpPage from '@/components/signup';
-import SignInPage from '@/components/signin';
 import Layout from '@/components/Layout'
 import Dashboard from '@/components/Dashboard'
 
 export default function Home() {
+  const hello = trpc.hello.useQuery({ text: 'world' });
+
+  if (!hello.data) {
+    return (
+      <Layout>
+        <div>Loading...</div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      <Dashboard />
+      {/* <Dashboard /> */}
+      <p>{hello.data.greeting}</p>
     </Layout>
-    // <SignInPage />
-  )
+  );
 }

@@ -12,17 +12,42 @@ export const taskRouter = router({
         where: input ? { projectId: input } : undefined
       });
     }),
+  // create: publicProcedure
+  //   .input(z.object({
+  //     title: z.string(),
+  //     description: z.string().optional(),
+  //     status: z.string().optional(),
+  //     dueDate: z.date().optional(),
+  //     projectId: z.number()
+  //   }))
+  //   .mutation(async ({ input }) => {
+  //     return await prisma.task.create({ data: input });
+  //   }),
+
+
   create: publicProcedure
-    .input(z.object({
-      title: z.string(),
-      description: z.string().optional(),
-      status: z.string().optional(),
-      dueDate: z.date().optional(),
-      projectId: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      return await prisma.task.create({ data: input });
-    }),
+  .input(z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    status: z.string().optional(),
+    //dueDate: z.date().optional(),
+    dueDate: z.string().transform((str) => new Date(str)).optional(),
+    projectId: z.number()
+  }))
+  .mutation(async ({ input }) => {
+    const data: Prisma.TaskCreateInput = {
+      title: input.title,
+      description: input.description,
+      status: input.status,
+     // dueDate: input.dueDate,
+     dueDate: input.dueDate,
+     //dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+      project: { connect: { id: input.projectId } }
+    };
+    return await prisma.task.create({ data });
+  }),
+
+
   update: publicProcedure
     .input(z.object({
       id: z.number(),

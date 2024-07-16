@@ -1,6 +1,7 @@
+import { Prisma } from '@prisma/client';
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import prisma from '../../lib/prisma';
 
 export const userRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -19,18 +20,34 @@ export const userRouter = router({
     .query(async ({ input }) => {
       return await prisma.user.findUnique({ where: { id: input } });
     }),
+  // create: publicProcedure
+  //   .input(z.object({ email: z.string().email(), name: z.string().optional() }))
+  //   .mutation(async ({ input }) => {
+  //     try {
+  //       const user = await prisma.user.create({
+  //         data: input
+  //       });
+  //       console.log('User created successfully:', user);
+  //       return user;
+  //     } catch (error) {
+  //       console.error('Error creating user:', error);
+  //       throw new Error(`Failed to create user: `);
+  //     } }),
+
+
   create: publicProcedure
-    .input(z.object({ email: z.string().email(), name: z.string().optional() }))
-    .mutation(async ({ input }) => {
-      try {
-        const user = await prisma.user.create({
-          data: input
-        });
-        console.log('User created successfully:', user);
-        return user;
-      } catch (error) {
-        console.error('Error creating user:', error);
-        throw new Error(`Failed to create user: `);
-      } }),
+  .input(z.object({
+    name: z.string(),
+    email: z.string().email()
+  }))
+  .mutation(async ({ input }) => {
+    const data: Prisma.UserCreateInput = {
+      name: input.name,
+      email: input.email
+    };
+    return await prisma.user.create({ data });
+  }),
+
+
   // Add more user-related procedures as needed
 });

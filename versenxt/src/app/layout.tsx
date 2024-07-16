@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
+import Layout from '@/components/Layout';
 import '../styles/globals.css'
 
 interface RootLayoutProps {
@@ -11,7 +12,9 @@ interface RootLayoutProps {
 function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Layout>{children}</Layout>
+      </body>
     </html>
   );
 }

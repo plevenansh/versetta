@@ -3,16 +3,15 @@ import { publicProcedure, router } from './trpc';
 import { projectRouter } from './routes/projects';
 import { taskRouter } from './routes/tasks';
 import {userRouter} from './routes/users';
+import superjson from 'superjson';
+
 export const appRouter = router({
 
     users: userRouter,
     projects: projectRouter,
-    // //tasks: taskRouter,
-    // //   calendar: calendarRouter,
-    // //   dashboard: dashboardRouter
-
-
-
+    tasks: taskRouter,
+ // calendar: calendarRouter,
+//  dashboard: dashboardRouter
 
 
 //   hello: publicProcedure

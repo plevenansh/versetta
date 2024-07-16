@@ -34,8 +34,9 @@
 // }
 'use client';
 
-import DashboardT from '@/components/Dashboard-test';
+import Dashboard from '@/components/Dashboard';
 import { trpc } from '@/trpc/client';
+import '../styles/globals.css'
 
 export default function HomePage() {
   const { data: projects, isLoading: projectsLoading } = trpc.projects.getAll.useQuery();
@@ -46,6 +47,6 @@ export default function HomePage() {
   }
 
   return (
-    <DashboardT projects={projects}/>
+    <Dashboard projects={projects}/>
   );
 }

@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
+import '../styles/globals.css'
 
 interface RootLayoutProps {
   children: ReactNode;

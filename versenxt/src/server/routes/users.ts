@@ -1,10 +1,18 @@
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import prisma from '../../lib/prisma';
+import prisma from '@/lib/prisma';
 
 export const userRouter = router({
   getAll: publicProcedure.query(async () => {
-    return await prisma.user.findMany();
+    try {
+      console.log("Getting all users");
+      const users = await prisma.user.findMany();
+      console.log("Users fetched:", users);
+      return users;
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      throw new Error("Failed to fetch users");
+    }
   }),
   getById: publicProcedure
     .input(z.number())

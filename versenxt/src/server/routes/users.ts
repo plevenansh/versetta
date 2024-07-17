@@ -20,21 +20,7 @@ export const userRouter = router({
     .query(async ({ input }) => {
       return await prisma.user.findUnique({ where: { id: input } });
     }),
-  // create: publicProcedure
-  //   .input(z.object({ email: z.string().email(), name: z.string().optional() }))
-  //   .mutation(async ({ input }) => {
-  //     try {
-  //       const user = await prisma.user.create({
-  //         data: input
-  //       });
-  //       console.log('User created successfully:', user);
-  //       return user;
-  //     } catch (error) {
-  //       console.error('Error creating user:', error);
-  //       throw new Error(`Failed to create user: `);
-  //     } }),
-
-
+ 
   create: publicProcedure
   .input(z.object({
     name: z.string(),
@@ -47,7 +33,24 @@ export const userRouter = router({
     };
     return await prisma.user.create({ data });
   }),
-
+  
+  // create: publicProcedure
+  // .input(z.object({
+  //   name: z.string(),
+  //   email: z.string().email(),
+  //   password: z.string(),
+  //   role: z.string()
+  // }))
+  // .mutation(async ({ input }) => {
+  //   const hashedPassword = await bcrypt.hash(input.password, 10);
+  //   const data: Prisma.UserCreateInput = {
+  //     name: input.name,
+  //     email: input.email,
+  //     password: hashedPassword,
+  //     role: input.role
+  //   };
+  //   return await prisma.user.create({ data });
+  // }),
 
   // Add more user-related procedures as needed
 });

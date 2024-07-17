@@ -13,6 +13,7 @@ type Task = {
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { data: fetchedTasks, isLoading, error } = trpc.tasks.getAll.useQuery();
+  const updateTaskMutation = trpc.tasks.update.useMutation();
 
   useEffect(() => {
     if (fetchedTasks) {
@@ -25,17 +26,36 @@ export default function TaskList() {
   }, [fetchedTasks]);
 
   const toggleTask = async (id: number) => {
-    const taskToUpdate = tasks.find(task => task.id === id);
-    if (taskToUpdate) {
-      const updatedTask = await trpc.tasks.update.mutate({
-        id,
-        status: taskToUpdate.completed ? 'pending' : 'completed'
-      });
-      setTasks(tasks.map(task => 
-        task.id === id ? { ...task, completed: updatedTask.status === 'completed' } : task
-      ));
+    try {
+      const taskToUpdate = tasks.find(task => task.id === id);
+      if (taskToUpdate) {
+        const updatedTask = await updateTaskMutation.mutateAsync({
+          id,
+          status: taskToUpdate.completed ? 'pending' : 'completed'
+        });
+        setTasks(tasks.map(task => 
+          task.id === id ? { ...task, completed: updatedTask.status === 'completed' } : task
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Optionally, show an error message to the user
     }
   };
+  
+  
+  // const toggleTask = async (id: number) => {
+  //   const taskToUpdate = tasks.find(task => task.id === id);
+  //   if (taskToUpdate) {
+  //     const updatedTask = await trpc.tasks.update.mutate({
+  //       id,
+  //       status: taskToUpdate.completed ? 'pending' : 'completed'
+  //     });
+  //     setTasks(tasks.map(task => 
+  //       task.id === id ? { ...task, completed: updatedTask.status === 'completed' } : task
+  //     ));
+  //   }
+  // };
 
   if (isLoading) return <div>Loading tasks...</div>;
   if (error) return <div>Error loading tasks: {error.message}</div>;

@@ -48,19 +48,45 @@ export const taskRouter = router({
   }),
 
 
+  // update: publicProcedure
+  //   .input(z.object({
+  //     id: z.number(),
+  //     title: z.string().optional(),
+  //     description: z.string().optional(),
+  //     status: z.string().optional(),
+  //     dueDate: z.date().optional(),
+  //     completed: z.boolean().optional()
+  //   }))
+  //   .mutation(async ({ input }) => {
+  //     const { id, ...data } = input;
+  //     return await prisma.task.update({ where: { id }, data });
+  //   }),
+
+
   update: publicProcedure
-    .input(z.object({
-      id: z.number(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      status: z.string().optional(),
-      dueDate: z.date().optional(),
-      completed: z.boolean().optional()
-    }))
-    .mutation(async ({ input }) => {
-      const { id, ...data } = input;
-      return await prisma.task.update({ where: { id }, data });
-    }),
+  .input(z.object({
+    id: z.number(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    status: z.enum(['pending', 'completed']).optional(),
+    dueDate: z.date().optional(),
+    completed: z.boolean().optional()
+  }))
+  .mutation(async ({ input }) => {
+    const { id, ...data } = input;
+    // Convert 'completed' to 'status' if provided
+    if (data.completed !== undefined) {
+      data.status = data.completed ? 'completed' : 'pending';
+      delete data.completed;
+    }
+    return await prisma.task.update({ 
+      where: { id }, 
+      data 
+    });
+  }),
+
+
+    
   delete: publicProcedure
     .input(z.number())
     .mutation(async ({ input }) => {

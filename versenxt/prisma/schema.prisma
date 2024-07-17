@@ -14,6 +14,7 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   projects  Project[]
+  tasks     Task[]    // Add this line to create a relation to tasks
 }
 
 model Project {
@@ -43,6 +44,9 @@ model Task {
   updatedAt   DateTime  @updatedAt
   projectId   Int
   project     Project   @relation(fields: [projectId], references: [id])
+  userId      Int       // Add this line
+  user        User      @relation(fields: [userId], references: [id]) // Add this line
 
   @@index([projectId])
+  @@index([userId])    // Add this line
 }

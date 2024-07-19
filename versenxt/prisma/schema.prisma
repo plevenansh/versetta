@@ -8,36 +8,48 @@ generator client {
 }
 
 model User {
-  id              Int             @id @default(autoincrement())
-  email           String          @unique
+  id              Int          @id @default(autoincrement())
+  email           String       @unique
   name            String
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   teamMemberships TeamMember[]
-  createdProjects Project[]       @relation("ProjectCreator")
-  createdTasks    Task[]          @relation("TaskCreator")
-  assignedTasks   Task[]          @relation("TaskAssignee")
+  projects        Project[]
+  tasks           Task[]
+  Team            Team[]
+  // createdTeams    Team[]          @relation("TeamCreator")
+  // createdProjects Project[]       @relation("ProjectCreator")
+  // createdTasks    Task[]          @relation("TaskCreator")
+  // assignedTasks   Task[]          @relation("TaskAssignee")
+  
 }
 
 model Team {
-  id          Int       @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   name        String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  userId      Int // Represents the team creator
+  user        User         @relation(fields: [userId], references: [id])
   members     TeamMember[]
   projects    Project[]
   tasks       Task[]
+
+  // creatorId   Int
+  // creator     User      @relation("TeamCreator", fields: [creatorId], references: [id])
+
+  @@index([userId])
 }
 
 model TeamMember {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  teamId    Int
-  role      String   // e.g., "admin", "member"
-  joinedAt  DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  team      Team     @relation(fields: [teamId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  teamId   Int
+  role     String // e.g., "admin", "member"
+  joinedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  team     Team     @relation(fields: [teamId], references: [id])
 
   @@unique([userId, teamId])
   @@index([userId])
@@ -54,27 +66,16 @@ model Project {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   teamId      Int
-  creatorId   Int
+  userId      Int // Represents both creator and owner
   team        Team      @relation(fields: [teamId], references: [id])
-  creator     User      @relation("ProjectCreator", fields: [creatorId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
   tasks       Task[]
-  members     ProjectMember[]
+
+  // creatorId   Int
+  // creator     User      @relation("ProjectCreator", fields: [creatorId], references: [id])
 
   @@index([teamId])
-  @@index([creatorId])
-}
-
-model ProjectMember {
-  id        Int     @id @default(autoincrement())
-  userId    Int
-  projectId Int
-  role      String  // e.g., "manager", "contributor"
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
-
-  @@unique([userId, projectId])
   @@index([userId])
-  @@index([projectId])
 }
 
 model Task {
@@ -88,15 +89,16 @@ model Task {
   updatedAt   DateTime  @updatedAt
   projectId   Int?
   teamId      Int?
-  creatorId   Int
-  assigneeId  Int?
+  userId      Int // Represents creator, owner, and assignee
   project     Project?  @relation(fields: [projectId], references: [id])
   team        Team?     @relation(fields: [teamId], references: [id])
-  creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
-  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  // creatorId   Int
+  // assigneeId  Int?
+  // creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
+  // assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
   @@index([projectId])
   @@index([teamId])
-  @@index([creatorId])
-  @@index([assigneeId])
+  @@index([userId])
 }

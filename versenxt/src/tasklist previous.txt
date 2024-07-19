@@ -1,3 +1,102 @@
+// import React, { useState, useEffect } from 'react';
+// import { trpc } from '@/trpc/client'; // Adjust the import path as needed
+
+// interface Task {
+//   id: number;
+//   title: string;
+//   description?: string;
+//   status: 'pending' | 'completed';
+//   dueDate?: string;
+// }
+
+// const TaskList: React.FC = () => {
+//   const [tasks, setTasks] = useState<Task[]>([]);
+//   const [newTaskTitle, setNewTaskTitle] = useState('');
+
+//   const utils = trpc.useContext();
+//   const getAllTasks = trpc.tasks.getAll.useQuery();
+//   const createTask = trpc.tasks.create.useMutation({
+//     onSuccess: () => {
+//       utils.tasks.getAll.invalidate();
+//     },
+//   });
+//   const updateTask = trpc.tasks.update.useMutation({
+//     onSuccess: () => {
+//       utils.tasks.getAll.invalidate();
+//     },
+//   });
+//   const deleteTask = trpc.tasks.delete.useMutation({
+//     onSuccess: () => {
+//       utils.tasks.getAll.invalidate();
+//     },
+//   });
+
+//   useEffect(() => {
+//     if (getAllTasks.data) {
+//       setTasks(getAllTasks.data);
+//     }
+//   }, [getAllTasks.data]);
+
+//   const handleCreateTask = async () => {
+//     if (newTaskTitle.trim()) {
+//       await createTask.mutateAsync({
+//         title: newTaskTitle,
+//         projectId: 1, // Replace with actual project ID
+//         userId: 1, // Replace with actual user ID
+//       });
+//       setNewTaskTitle('');
+//     }
+//   };
+
+//   const handleUpdateTask = async (task: Task) => {
+//     await updateTask.mutateAsync({
+//       id: task.id,
+//       title: task.title,
+//       status: task.status === 'completed' ? 'pending' : 'completed',
+//     });
+//   };
+
+//   const handleDeleteTask = async (taskId: number) => {
+//     await deleteTask.mutateAsync(taskId);
+//   };
+
+//   return (
+//     <div className="task-list">
+//       <h2>Tasks</h2>
+//       <div className="create-task">
+//         <input
+//           type="text"
+//           value={newTaskTitle}
+//           onChange={(e) => setNewTaskTitle(e.target.value)}
+//           placeholder="Enter new task title"
+//         />
+//         <button onClick={handleCreateTask}>Create Task</button>
+//       </div>
+//       {getAllTasks.isLoading ? (
+//         <p>Loading tasks...</p>
+//       ) : (
+//         <ul>
+//           {tasks.map((task) => (
+//             <li key={task.id}>
+//               <span>{task.title}</span>
+//               <button onClick={() => handleUpdateTask(task)}>
+//                 {task.status === 'completed' ? 'Mark Incomplete' : 'Mark Complete'}
+//               </button>
+//               <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
+//             </li>
+//           ))}
+//         </ul>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default TaskList;
+
+
+
+
+
 
 "use client"
 import { useEffect, useState } from 'react';

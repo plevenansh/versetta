@@ -5,6 +5,7 @@ import prisma from '../../lib/prisma';
 
 export const projectRouter = router({
   getAll: publicProcedure.query(async () => {
+   
     return await prisma.project.findMany();
   }),
 

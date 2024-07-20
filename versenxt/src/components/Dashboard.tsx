@@ -1,17 +1,14 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import ProjectCard from './ProjectCard'
-import TaskList from './TaskList'
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import ProjectSection from './ProjectSection';
+import TaskList from './TaskList';
 
-export default function Dashboard({projects}) {
+export default function Dashboard() {
   return (
     <div className="p-6 space-y-6">
-
-
-
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-indigo-700">Videos in Production</CardTitle>
@@ -83,33 +80,14 @@ export default function Dashboard({projects}) {
         </Card>
       </div>
 
-
-
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          {projects && projects.map(project => (
-            <ProjectCard
-              key={project.id}
-              id={project.id}
-              name={project.title}
-              currentStage={project.status}
-              percentageDone={calculateProjectProgress(project)}
-              expectedPublishDate={project.endDate}
-              expanded={false}
-              userId={project.userId}
-            />
-          ))}
+          <ProjectSection />
         </div>
         <div className="md:col-span-1">
           <TaskList />
         </div>
       </div>
     </div>
-  )
-}
-function calculateProjectProgress(project) {
-  // Implement your logic to calculate project progress
-  // This is just a placeholder
-  return Math.floor(Math.random() * 100);
+  );
 }

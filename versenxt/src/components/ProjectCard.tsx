@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -10,38 +9,33 @@ import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
 
 interface ProjectCardProps {
-  id: number;
-  name: string;
-  currentStage: string;
-  expectedPublishDate: string | null;
-  expanded: boolean;
-  userId: number;
+  project: {
+    id: number;
+    title: string;
+    description: string | null;
+    status: string;
+    startDate: string | null;
+    endDate: string | null;
+    userId: number;
+  };
   refetchProjects: () => void;
 }
 
-export default function ProjectCard({ 
-  id, 
-  name, 
-  currentStage, 
-  expectedPublishDate, 
-  expanded: initialExpanded,
-  userId,
-  refetchProjects
-}: ProjectCardProps) {
-  const [expanded, setExpanded] = useState<boolean>(initialExpanded);
-  const [stages, setStages] = useState<string[]>(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
-  const [completedStages, setCompletedStages] = useState<Set<string>>(new Set());
+export default function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [stages, setStages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
+  const [completedStages, setCompletedStages] = useState(new Set());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [percentageDone, setPercentageDone] = useState<number>(0);
+  const [percentageDone, setPercentageDone] = useState(0);
 
-  const { data: projectWithTasks, refetch } = trpc.projects.getById.useQuery(id);
+  const { data: projectWithTasks, refetch } = trpc.projects.getById.useQuery(project.id);
   const deleteProjectMutation = trpc.projects.delete.useMutation();
 
   useEffect(() => {
-    const initialCompletedStages = new Set(stages.slice(0, stages.indexOf(currentStage) + 1));
+    const initialCompletedStages = new Set(stages.slice(0, stages.indexOf(project.status) + 1));
     setCompletedStages(initialCompletedStages);
     updatePercentage(initialCompletedStages);
-  }, [currentStage, stages]);
+  }, [project.status, stages]);
 
   const updatePercentage = (completedSet: Set<string>) => {
     const percentage = (completedSet.size / stages.length) * 100;
@@ -75,7 +69,7 @@ export default function ProjectCard({
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await deleteProjectMutation.mutateAsync(id);
+        await deleteProjectMutation.mutateAsync(project.id);
         refetchProjects();
       } catch (error) {
         console.error('Error deleting project:', error);
@@ -87,9 +81,9 @@ export default function ProjectCard({
     <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gray-50">
         <div>
-          <CardTitle className="text-xl font-bold text-gray-800">{name}</CardTitle>
-          <p className="text-sm text-gray-600">Project ID: {id}</p>
-          <p className="text-sm text-gray-600">User ID: {userId}</p>
+          <CardTitle className="text-xl font-bold text-gray-800">{project.title}</CardTitle>
+          <p className="text-sm text-gray-600">Project ID: {project.id}</p>
+          <p className="text-sm text-gray-600">User ID: {project.userId}</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="text-blue-600 border-blue-600 hover:bg-blue-50">
@@ -116,11 +110,11 @@ export default function ProjectCard({
       </CardHeader>
       <CardContent className="pt-4">
         <div className="flex justify-between items-center mb-4">
-          <span className="text-sm font-medium text-gray-700">Current: {currentStage}</span>
+          <span className="text-sm font-medium text-gray-700">Current: {project.status}</span>
           <span className="text-sm font-medium text-gray-700">{percentageDone}% Complete</span>
         </div>
         <Progress value={percentageDone} className="mb-4 bg-gray-200" indicatorClassName="bg-blue-500" />
-        <p className="text-sm text-gray-600 mb-4">Expected Publish: {formatDate(expectedPublishDate)}</p>
+        <p className="text-sm text-gray-600 mb-4">Expected Publish: {formatDate(project.endDate)}</p>
         <AnimatePresence>
           {expanded && (
             <motion.div
@@ -178,7 +172,7 @@ export default function ProjectCard({
       
       {isEditModalOpen && (
         <EditProjectModal
-          project={projectWithTasks}
+          project={projectWithTasks || project}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={() => {

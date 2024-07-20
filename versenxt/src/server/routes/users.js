@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,8 +31,15 @@ exports.userRouter = (0, trpc_1.router)({
     getAll: trpc_1.publicProcedure.query(() => __awaiter(void 0, void 0, void 0, function* () {
         try {
             console.log("Getting all users");
-            const users = yield prisma_1.default.user.findMany();
-            console.log("Users fetched:", users);
+            const users = yield prisma_1.default.user.findMany({
+                include: {
+                    teamMemberships: true,
+                    projects: true,
+                    tasks: true,
+                    Team: true
+                }
+            });
+            console.log(`Retrieved ${users.length} users`);
             return users;
         }
         catch (error) {
@@ -32,7 +50,25 @@ exports.userRouter = (0, trpc_1.router)({
     getById: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .query(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.default.user.findUnique({ where: { id: input } });
+        try {
+            const user = yield prisma_1.default.user.findUnique({
+                where: { id: input },
+                include: {
+                    teamMemberships: true,
+                    projects: true,
+                    tasks: true,
+                    Team: true
+                }
+            });
+            if (!user) {
+                throw new Error(`User with id ${input} not found`);
+            }
+            return user;
+        }
+        catch (error) {
+            console.error(`Error fetching user with id ${input}:`, error);
+            throw new Error('Failed to fetch user');
+        }
     })),
     create: trpc_1.publicProcedure
         .input(zod_1.z.object({
@@ -40,28 +76,90 @@ exports.userRouter = (0, trpc_1.router)({
         email: zod_1.z.string().email()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
-        const data = {
-            name: input.name,
-            email: input.email
-        };
-        return yield prisma_1.default.user.create({ data });
+        try {
+            const data = {
+                name: input.name,
+                email: input.email
+            };
+            const newUser = yield prisma_1.default.user.create({ data });
+            console.log('User created successfully:', newUser);
+            return newUser;
+        }
+        catch (error) {
+            console.error('Error creating user:', error);
+            throw new Error('Failed to create user');
+        }
     })),
-    // create: publicProcedure
-    // .input(z.object({
-    //   name: z.string(),
-    //   email: z.string().email(),
-    //   password: z.string(),
-    //   role: z.string()
-    // }))
-    // .mutation(async ({ input }) => {
-    //   const hashedPassword = await bcrypt.hash(input.password, 10);
-    //   const data: Prisma.UserCreateInput = {
-    //     name: input.name,
-    //     email: input.email,
-    //     password: hashedPassword,
-    //     role: input.role
-    //   };
-    //   return await prisma.user.create({ data });
-    // }),
-    // Add more user-related procedures as needed
+    update: trpc_1.publicProcedure
+        .input(zod_1.z.object({
+        id: zod_1.z.number(),
+        name: zod_1.z.string().optional(),
+        email: zod_1.z.string().email().optional()
+    }))
+        .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { id } = input, data = __rest(input, ["id"]);
+            const updatedUser = yield prisma_1.default.user.update({
+                where: { id },
+                data,
+                include: {
+                    teamMemberships: true,
+                    projects: true,
+                    tasks: true,
+                    Team: true
+                }
+            });
+            console.log('User updated successfully:', updatedUser);
+            return updatedUser;
+        }
+        catch (error) {
+            console.error(`Error updating user with id ${input.id}:`, error);
+            throw new Error('Failed to update user');
+        }
+    })),
+    delete: trpc_1.publicProcedure
+        .input(zod_1.z.number())
+        .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const deletedUser = yield prisma_1.default.user.delete({
+                where: { id: input },
+                include: {
+                    teamMemberships: true,
+                    projects: true,
+                    tasks: true,
+                    Team: true
+                }
+            });
+            console.log('User deleted successfully:', deletedUser);
+            return deletedUser;
+        }
+        catch (error) {
+            console.error(`Error deleting user with id ${input}:`, error);
+            throw new Error('Failed to delete user');
+        }
+    })),
+    getUserTeams: trpc_1.publicProcedure
+        .input(zod_1.z.number())
+        .query(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userWithTeams = yield prisma_1.default.user.findUnique({
+                where: { id: input },
+                include: {
+                    teamMemberships: {
+                        include: {
+                            team: true
+                        }
+                    }
+                }
+            });
+            if (!userWithTeams) {
+                throw new Error(`User with id ${input} not found`);
+            }
+            return userWithTeams.teamMemberships.map(membership => membership.team);
+        }
+        catch (error) {
+            console.error(`Error fetching teams for user with id ${input}:`, error);
+            throw new Error('Failed to fetch user teams');
+        }
+    }))
 });

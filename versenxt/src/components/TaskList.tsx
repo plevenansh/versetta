@@ -1,5 +1,5 @@
-
 "use client"
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +14,8 @@ type Task = {
   description?: string;
   status: 'pending' | 'completed';
   dueDate?: string | null;
-  projectId: number;
+  projectId?: number;
+  teamId?: number;
   userId: number;
 };
 
@@ -27,15 +28,14 @@ export default function TaskList() {
     description: '',
     status: 'pending',
     dueDate: null,
-    projectId: 0,
+    projectId: undefined,
+    teamId: undefined,
     userId: 1 // Set a default user ID or fetch from your auth context
   });
 
-  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery();
+  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({});
   const updateTaskMutation = trpc.tasks.update.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
+    onSuccess: () => refetch(),
   });
   const createTaskMutation = trpc.tasks.create.useMutation({
     onSuccess: () => {
@@ -46,15 +46,14 @@ export default function TaskList() {
         description: '',
         status: 'pending',
         dueDate: null,
-        projectId: 0,
-        userId: 1 // Reset to default user ID
+        projectId: undefined,
+        teamId: undefined,
+        userId: 1
       });
     },
   });
   const deleteTaskMutation = trpc.tasks.delete.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
+    onSuccess: () => refetch(),
   });
 
   useEffect(() => {
@@ -77,7 +76,8 @@ export default function TaskList() {
     try {
       const taskToUpdate = {
         ...updatedTask,
-        dueDate: updatedTask.dueDate ? new Date(updatedTask.dueDate).toISOString() : null
+        projectId: updatedTask.projectId ?? null,
+        teamId: updatedTask.teamId ?? null
       };
       console.log('Sending update to backend:', taskToUpdate);
       await updateTaskMutation.mutateAsync(taskToUpdate);
@@ -86,44 +86,22 @@ export default function TaskList() {
       console.error('Error updating task:', error);
     }
   };
+  
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Starting task creation with data:', newTask);
     try {
-      if (!newTask.title || !newTask.projectId || !newTask.userId) {
+      if (!newTask.title || !newTask.userId) {
         throw new Error("Missing required fields");
       }
-  
       const taskData = {
-        title: newTask.title,
-        description: newTask.description || undefined,
-        status: newTask.status || 'pending',
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
-        // projectId: Number(newTask.projectId),
-        // userId: Number(newTask.userId)
-        projectId: newTask.projectId,
-        userId: newTask.userId
+        ...newTask,
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
       };
-  
       console.log('Sending task data:', taskData);
-      const result = await createTaskMutation.mutateAsync(taskData);
-      console.log('Task creation successful:', result);
-      
-      // Reset form and close it after successful creation
-      setNewTask({
-        title: '',
-        description: '',
-        status: 'pending',
-        dueDate: null,
-        projectId: 0,
-        userId: 0 // Reset to default or current user's ID
-      });
-      setShowNewTaskForm(false);
-      refetch();
+      await createTaskMutation.mutateAsync(taskData);
     } catch (error) {
-      console.error('Detailed error in task creation:', error);
-      // Error handling...
+      console.error('Error creating task:', error);
     }
   };
 
@@ -145,64 +123,60 @@ export default function TaskList() {
   if (error) return <div>Error loading tasks: {error.message}</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Tasks</h2>
+    <Card className="w-full bg-white shadow-lg">
+      <CardHeader>
+        <CardTitle>Tasks</CardTitle>
         <Button onClick={() => setShowNewTaskForm(!showNewTaskForm)}>
-          {showNewTaskForm ? <X className="mr-2" /> : <Plus className="mr-2" />}
+          {showNewTaskForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {showNewTaskForm ? 'Cancel' : 'Add New Task'}
         </Button>
-      </div>
-
-      {showNewTaskForm && (
-        <Card className="w-full bg-green bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg mb-4">
-          <CardHeader>
-            <CardTitle>Add New Task</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateTask} className="space-y-4">
-              <Input
-                value={newTask.title}
-                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                placeholder="Task Title"
-                required
-              />
-              <Input
-                value={newTask.description || ''}
-                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                placeholder="Description"
-              />
-              <Input
-                type="date"
-                value={newTask.dueDate || ''}
-                onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
-              />
-              <Input
-                type="number"
-                value={newTask.projectId}
-                onChange={(e) => setNewTask({...newTask, projectId: parseInt(e.target.value)})}
-                placeholder="Project ID"
-                required
-              />
-              <Input
-                type="number"
-                value={newTask.user}
-                onChange={(e) => setNewTask({...newTask, userId: parseInt(e.target.value)})}
-                placeholder="User ID"
-                required
-              />
-              <Button type="submit">Add Task</Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-4">
-        {tasks.map(task => (
-          <Card key={task.id} className="w-full bg-green bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg">
-            <CardContent className="pt-6">
+      </CardHeader>
+      <CardContent>
+        {showNewTaskForm && (
+          <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
+            <Input
+              value={newTask.title}
+              onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+              placeholder="Task Title"
+              required
+            />
+            <Input
+              value={newTask.description || ''}
+              onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+              placeholder="Description"
+            />
+            <Input
+              type="date"
+              value={newTask.dueDate || ''}
+              onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
+            />
+            <Input
+              type="number"
+              value={newTask.projectId || ''}
+              onChange={(e) => setNewTask({...newTask, projectId: e.target.value ? parseInt(e.target.value) : undefined})}
+              placeholder="Project ID (optional)"
+            />
+            <Input
+              type="number"
+              value={newTask.teamId || ''}
+              onChange={(e) => setNewTask({...newTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
+              placeholder="Team ID (optional)"
+            />
+            <Input
+              type="number"
+              value={newTask.userId}
+              onChange={(e) => setNewTask({...newTask, userId: parseInt(e.target.value)})}
+              placeholder="User ID"
+              required
+            />
+            <Button type="submit">Add Task</Button>
+          </form>
+        )}
+        <ul className="space-y-2">
+          {tasks.map(task => (
+            <li key={task.id} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
               {editingTask?.id === task.id ? (
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-2 w-full">
                   <Input
                     value={editingTask.title}
                     onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
@@ -214,14 +188,20 @@ export default function TaskList() {
                   />
                   <Input
                     type="date"
-                    value={editingTask.dueDate || ''}
+                    value={editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : ''}
                     onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value || null})}
                   />
                   <Input
                     type="number"
-                    value={editingTask.projectId}
-                    onChange={(e) => setEditingTask({...editingTask, projectId: parseInt(e.target.value)})}
+                    value={editingTask.projectId || ''}
+                    onChange={(e) => setEditingTask({...editingTask, projectId: e.target.value ? parseInt(e.target.value) : undefined})}
                     placeholder="Project ID"
+                  />
+                  <Input
+                    type="number"
+                    value={editingTask.teamId || ''}
+                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
+                    placeholder="Team ID"
                   />
                   <Input
                     type="number"
@@ -235,39 +215,33 @@ export default function TaskList() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Checkbox
-                      id={`task-${task.id}`}
-                      checked={task.status === 'completed'}
-                      onCheckedChange={() => toggleTask(task.id)}
-                    />
-                    <div>
-                      <label
-                        htmlFor={`task-${task.id}`}
-                        className={`text-lg font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}
-                      >
-                        {task.title}
-                      </label>
-                      <p className="text-sm text-gray-500">Project ID: {task.projectId}, User ID: {task.userId}</p>
-                      {task.description && <p className="text-sm text-gray-600 mt-1">{task.description}</p>}
-                      {task.dueDate && <p className="text-sm text-gray-500 mt-1">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
-                    </div>
+                <>
+                  <Checkbox
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => toggleTask(task.id)}
+                  />
+                  <div className="flex-grow">
+                    <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
+                      {task.title}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, User ID: {task.userId}
+                    </p>
+                    {task.description && <p className="text-sm">{task.description}</p>}
+                    {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
                   </div>
-                  <div className="flex space-x-2">
-                    <Button onClick={() => startEditing(task)} size="sm" variant="outline">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                  <Button onClick={() => startEditing(task)} size="sm" variant="outline">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
               )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }

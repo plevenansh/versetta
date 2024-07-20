@@ -71,6 +71,7 @@ model Project {
   user        User      @relation(fields: [userId], references: [id])
   tasks       Task[]
 
+
   // creatorId   Int
   // creator     User      @relation("ProjectCreator", fields: [creatorId], references: [id])
 

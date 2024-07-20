@@ -14,8 +14,8 @@ type Task = {
   description?: string;
   status: 'pending' | 'completed';
   dueDate?: string | null;
-  projectId?: number;
-  teamId?: number;
+  projectId?: number | null;
+  teamId?: number | null;
   userId: number;
 };
 
@@ -74,19 +74,30 @@ export default function TaskList() {
 
   const updateTask = async (updatedTask: Task) => {
     try {
-      const taskToUpdate = {
-        ...updatedTask,
-        projectId: updatedTask.projectId ?? null,
-        teamId: updatedTask.teamId ?? null
+      const taskToUpdate: Partial<Task> = {
+        id: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description,
+        status: updatedTask.status,
+        dueDate: updatedTask.dueDate,
+        userId: updatedTask.userId
       };
+
+      // Only include projectId and teamId if they are not undefined
+      if (updatedTask.projectId !== undefined) {
+        taskToUpdate.projectId = updatedTask.projectId;
+      }
+      if (updatedTask.teamId !== undefined) {
+        taskToUpdate.teamId = updatedTask.teamId;
+      }
+
       console.log('Sending update to backend:', taskToUpdate);
-      await updateTaskMutation.mutateAsync(taskToUpdate);
+      await updateTaskMutation.mutateAsync(taskToUpdate as Task);
       setEditingTask(null);
     } catch (error) {
       console.error('Error updating task:', error);
     }
   };
-  
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,10 +135,13 @@ export default function TaskList() {
 
   return (
     <Card className="w-full bg-white shadow-lg">
-      <CardHeader>
+       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Tasks</CardTitle>
-        <Button onClick={() => setShowNewTaskForm(!showNewTaskForm)}>
-          {showNewTaskForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        <Button 
+          onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+          size="sm"
+        >
+          {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
           {showNewTaskForm ? 'Cancel' : 'Add New Task'}
         </Button>
       </CardHeader>
@@ -194,13 +208,13 @@ export default function TaskList() {
                   <Input
                     type="number"
                     value={editingTask.projectId || ''}
-                    onChange={(e) => setEditingTask({...editingTask, projectId: e.target.value ? parseInt(e.target.value) : undefined})}
+                    onChange={(e) => setEditingTask({...editingTask, projectId: e.target.value ? parseInt(e.target.value) : null})}
                     placeholder="Project ID"
                   />
                   <Input
                     type="number"
                     value={editingTask.teamId || ''}
-                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
+                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : null})}
                     placeholder="Team ID"
                   />
                   <Input

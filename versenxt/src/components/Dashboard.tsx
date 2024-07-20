@@ -7,7 +7,7 @@ import TaskList from './TaskList';
 
 export default function Dashboard() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 ">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

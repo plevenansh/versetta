@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import ProjectCard from './ProjectCard';
 import { trpc } from '@/trpc/client';
@@ -40,7 +41,7 @@ export default function ProjectSection() {
   };
 
   return (
-    <div>
+   <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
         <Button onClick={handleAddProject}>Add New Project</Button>
@@ -83,5 +84,6 @@ export default function ProjectSection() {
         </DialogContent>
       </Dialog>
     </div>
+    
   );
 }

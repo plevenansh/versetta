@@ -31,6 +31,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
   const { data: projectWithTasks, refetch } = trpc.projects.getById.useQuery(project.id);
   const deleteProjectMutation = trpc.projects.delete.useMutation();
 
+  
   useEffect(() => {
     const initialCompletedStages = new Set(stages.slice(0, stages.indexOf(project.status) + 1));
     setCompletedStages(initialCompletedStages);

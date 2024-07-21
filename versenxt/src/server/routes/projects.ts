@@ -119,6 +119,36 @@ export const projectRouter = router({
       }
     }),
 
+    updateProjectStage: publicProcedure
+    .input(z.object({
+      projectId: z.number(),
+      stage: z.string(),
+      completed: z.boolean(),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const updatedStage = await prisma.projectStage.upsert({
+          where: {
+            projectId_stage: {
+              projectId: input.projectId,
+              stage: input.stage,
+            },
+          },
+          update: { completed: input.completed },
+          create: {
+            projectId: input.projectId,
+            stage: input.stage,
+            completed: input.completed,
+          },
+        });
+        return updatedStage;
+      } catch (error) {
+        console.error('Error updating project stage:', error);
+        throw new Error('Failed to update project stage');
+      }
+    }),
+  
+
   delete: publicProcedure
     .input(z.number())
     .mutation(async ({ input }) => {

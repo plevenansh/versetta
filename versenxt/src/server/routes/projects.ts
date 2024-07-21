@@ -159,26 +159,43 @@ export const projectRouter = router({
      throw new Error('Failed to update project stage');
    }
  }),
-  delete: publicProcedure
-    .input(z.number())
-    .mutation(async ({ input }) => {
-      console.log("Input received for project deletion:", input);
-      try {
-        const deletedProject = await prisma.project.delete({ 
-          where: { id: input },
-          include: {
-            tasks: true,
-            team: true,
-            user: true
-          }
+ delete: publicProcedure
+  .input(z.number())
+  .mutation(async ({ input }) => {
+    console.log("Attempting to delete project with ID:", input);
+    try {
+      // Use a transaction to ensure all operations succeed or fail together
+      await prisma.$transaction(async (prisma) => {
+        // First, delete related ProjectStage records
+        console.log("Deleting ProjectStage records...");
+        const deletedStages = await prisma.projectStage.deleteMany({
+          where: { projectId: input },
         });
-        console.log('Project deleted successfully:', deletedProject);
-        return deletedProject;
-      } catch (error) {
-        console.error(`Error deleting project with id ${input}:`, error);
-        throw new Error('Failed to delete project');
-      }
-    }),
+        console.log(`Deleted ${deletedStages.count} ProjectStage records`);
+
+        // Then, delete related Task records (if they exist)
+        console.log("Deleting Task records...");
+        const deletedTasks = await prisma.task.deleteMany({
+          where: { projectId: input },
+        });
+        console.log(`Deleted ${deletedTasks.count} Task records`);
+
+        // Finally, delete the project
+        console.log("Deleting Project...");
+        const deletedProject = await prisma.project.delete({
+          where: { id: input },
+        });
+        console.log("Deleted Project:", deletedProject);
+      });
+
+      console.log('Project and related records deleted successfully');
+      return { success: true };
+    } catch (error) {
+      console.error(`Error deleting project with id ${input}:`, error);
+      throw new Error(`Failed to delete project: ${error.message}`);
+    }
+  }),
+
 
   getByUserId: publicProcedure
     .input(z.number())

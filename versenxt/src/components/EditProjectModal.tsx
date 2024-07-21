@@ -22,8 +22,8 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || '');
   const [status, setStatus] = useState(project.status);
-  const [startDate, setStartDate] = useState(project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '');
-  const [endDate, setEndDate] = useState(project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : '');
+  const [startDate, setStartDate] = useState(project.startDate || '');
+  const [endDate, setEndDate] = useState(project.endDate || '');
 
   const updateProjectMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
@@ -39,8 +39,8 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
       title,
       description,
       status,
-      startDate: startDate ? new Date(startDate).toISOString() : null,
-      endDate: endDate ? new Date(endDate).toISOString() : null,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
     });
   };
 

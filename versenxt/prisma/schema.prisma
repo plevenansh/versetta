@@ -57,23 +57,20 @@ model TeamMember {
 }
 
 model Project {
-  id          Int       @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
   description String?
-  status      String    @default("active")
+  status      String        @default("active")
   startDate   DateTime?
   endDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime?      @updatedAt
   teamId      Int
-  userId      Int // Represents both creator and owner
-  team        Team      @relation(fields: [teamId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  team        Team          @relation(fields: [teamId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
   tasks       Task[]
-  stages      ProjectStage[]
-
-  // creatorId   Int
-  // creator     User      @relation("ProjectCreator", fields: [creatorId], references: [id])
+  stages      ProjectStage[]  // This should remain as a relation to ProjectStage
 
   @@index([teamId])
   @@index([userId])
@@ -82,9 +79,9 @@ model Project {
 model ProjectStage {
   id        Int     @id @default(autoincrement())
   projectId Int
-  project   Project @relation(fields: [projectId], references: [id])
   stage     String
   completed Boolean @default(false)
+  project   Project @relation(fields: [projectId], references: [id])
 
   @@unique([projectId, stage])
   @@index([projectId])

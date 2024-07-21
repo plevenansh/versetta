@@ -3,6 +3,8 @@ import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
 
+const defaultStages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
+
 export const projectRouter = router({
   getAll: publicProcedure.query(async () => {
     try {
@@ -46,120 +48,121 @@ export const projectRouter = router({
     }),
 
     create: publicProcedure
-    .input(z.object({
-      title: z.string(),
-      description: z.string().optional(),
-      status: z.string().optional().default("active"),
-      startDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
-      endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
-      teamId: z.number(),
-      userId: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        console.log("Input received for project creation:", input);
-        const stages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
-        const data: Prisma.ProjectCreateInput = {
-          title: input.title,
-          description: input.description,
-          status: input.status,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          team: { connect: { id: input.teamId } },
-          user: { connect: { id: input.userId } },
-          stages: {
-            create: stages.map(stage => ({ stage, completed: false }))
-          }
-        };
-        const createdProject = await prisma.project.create({ 
-          data,
-          include: {
-            team: true,
-            user: true,
-            stages: true // Include stages in the response
-          }
-        });
-        console.log('Project created successfully:', createdProject);
-        return createdProject;
-      } catch (error) {
-        console.error('Error creating project:', error);
-        throw new Error('Failed to create project');
-      }
-    }),
-  
-
+  .input(z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    status: z.string().optional().default("active"),
+    startDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
+    endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
+    teamId: z.number(),
+    userId: z.number()
+  }))
+  .mutation(async ({ input }) => {
+    console.log("Input received for project creation:", input);
+    try {
+      const stages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
+      const data: Prisma.ProjectCreateInput = {
+        title: input.title,
+        description: input.description,
+        status: input.status,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        team: { connect: { id: input.teamId } },
+        user: { connect: { id: input.userId } },
+        stages: {
+          create: stages.map(stage => ({ stage, completed: false }))
+        }
+      };
+      const createdProject = await prisma.project.create({ 
+        data,
+        include: {
+          team: true,
+          user: true,
+          stages: true // Changed from ProjectStageStatus to stages
+        }
+      });
+      console.log('Project created successfully:', createdProject);
+      return createdProject;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw new Error('Failed to create project');
+    }
+  }),
   update: publicProcedure
-    .input(z.object({
-      id: z.number(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      status: z.string().optional(),
-      startDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
-      endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
-      teamId: z.number().optional(),
-      userId: z.number().optional()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const { id, ...data } = input;
-        const updateData: Prisma.ProjectUpdateInput = {
-          ...data,
-          team: data.teamId ? { connect: { id: data.teamId } } : undefined,
-          user: data.userId ? { connect: { id: data.userId } } : undefined
-        };
-        delete input.teamId;
-        delete input.userId;
+  .input(z.object({
+    id: z.number(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    status: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    teamId: z.number().optional(),
+    userId: z.number().optional()
+  }))
+  .mutation(async ({ input }) => {
+    console.log("Input received for project update:", input);
+    try {
+      const { id, teamId, userId, ...data } = input;
+      const updateData: Prisma.ProjectUpdateInput = {
+        ...data,
+        startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate === undefined ? undefined : data.endDate ? new Date(data.endDate) : null,
+        team: teamId ? { connect: { id: teamId } } : undefined,
+        user: userId ? { connect: { id: userId } } : undefined
+      };
 
-        const updatedProject = await prisma.project.update({ 
-          where: { id }, 
-          data: updateData,
-          include: { 
-            tasks: true,
-            team: true,
-            user: true
-          }
-        });
-        console.log('Project updated successfully:', updatedProject);
-        return updatedProject;
-      } catch (error) {
-        console.error(`Error updating project with id ${input.id}:`, error);
-        throw new Error('Failed to update project');
-      }
-    }),
+      const updatedProject = await prisma.project.update({ 
+        where: { id }, 
+        data: updateData,
+        include: { 
+          tasks: true,
+          team: true,
+          user: true,
+          stages: true
+        }
+      });
+      console.log('Project updated successfully:', updatedProject);
+      return updatedProject;
+    } catch (error) {
+      console.error(`Error updating project with id ${input.id}:`, error);
+      throw new Error(`Failed to update project: ${error.message}`);
+    }
+  }),
+ // In projectRouter.ts
 
-    updateProjectStage: publicProcedure
-    .input(z.object({
-      projectId: z.number(),
-      stage: z.string(),
-      completed: z.boolean(),
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const updatedStage = await prisma.projectStage.upsert({
-          where: {
-            projectId_stage: {
-              projectId: input.projectId,
-              stage: input.stage,
-            },
-          },
-          update: { completed: input.completed },
-          create: {
-            projectId: input.projectId,
-            stage: input.stage,
-            completed: input.completed,
-          },
-        });
-        return updatedStage;
-      } catch (error) {
-        console.error('Error updating project stage:', error);
-        throw new Error('Failed to update project stage');
-      }
-    }),
-  
-
+ updateProjectStage: publicProcedure
+ .input(z.object({
+   projectId: z.number(),
+   stage: z.string(),
+   completed: z.boolean(),
+ }))
+ .mutation(async ({ input }) => {
+   console.log("Input received for project stage update:", input);
+   try {
+     const updatedStage = await prisma.projectStage.upsert({
+       where: {
+         projectId_stage: {
+           projectId: input.projectId,
+           stage: input.stage,
+         },
+       },
+       update: { completed: input.completed },
+       create: {
+         projectId: input.projectId,
+         stage: input.stage,
+         completed: input.completed,
+       },
+     });
+     return updatedStage;
+   } catch (error) {
+     console.error('Error updating project stage:', error);
+     throw new Error('Failed to update project stage');
+   }
+ }),
   delete: publicProcedure
     .input(z.number())
     .mutation(async ({ input }) => {
+      console.log("Input received for project deletion:", input);
       try {
         const deletedProject = await prisma.project.delete({ 
           where: { id: input },

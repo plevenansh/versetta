@@ -27,6 +27,7 @@ exports.projectRouter = void 0;
 const trpc_1 = require("../trpc");
 const zod_1 = require("zod");
 const prisma_1 = __importDefault(require("../../lib/prisma"));
+const defaultStages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
 exports.projectRouter = (0, trpc_1.router)({
     getAll: trpc_1.publicProcedure.query(() => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -34,7 +35,8 @@ exports.projectRouter = (0, trpc_1.router)({
                 include: {
                     team: true,
                     user: true,
-                    tasks: true
+                    tasks: true,
+                    stages: true,
                 }
             });
             console.log(`Retrieved ${projects.length} projects`);
@@ -54,7 +56,8 @@ exports.projectRouter = (0, trpc_1.router)({
                 include: {
                     tasks: true,
                     team: true,
-                    user: true
+                    user: true,
+                    stages: true
                 }
             });
             if (!project) {
@@ -78,8 +81,9 @@ exports.projectRouter = (0, trpc_1.router)({
         userId: zod_1.z.number()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Input received for project creation:", input);
         try {
-            console.log("Input received for project creation:", input);
+            const stages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
             const data = {
                 title: input.title,
                 description: input.description,
@@ -87,13 +91,17 @@ exports.projectRouter = (0, trpc_1.router)({
                 startDate: input.startDate,
                 endDate: input.endDate,
                 team: { connect: { id: input.teamId } },
-                user: { connect: { id: input.userId } }
+                user: { connect: { id: input.userId } },
+                stages: {
+                    create: stages.map(stage => ({ stage, completed: false }))
+                }
             };
             const createdProject = yield prisma_1.default.project.create({
                 data,
                 include: {
                     team: true,
-                    user: true
+                    user: true,
+                    stages: true // Changed from ProjectStageStatus to stages
                 }
             });
             console.log('Project created successfully:', createdProject);
@@ -116,6 +124,7 @@ exports.projectRouter = (0, trpc_1.router)({
         userId: zod_1.z.number().optional()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Input received for project update:", input);
         try {
             const { id } = input, data = __rest(input, ["id"]);
             const updateData = Object.assign(Object.assign({}, data), { team: data.teamId ? { connect: { id: data.teamId } } : undefined, user: data.userId ? { connect: { id: data.userId } } : undefined });
@@ -138,9 +147,41 @@ exports.projectRouter = (0, trpc_1.router)({
             throw new Error('Failed to update project');
         }
     })),
+    // In projectRouter.ts
+    updateProjectStage: trpc_1.publicProcedure
+        .input(zod_1.z.object({
+        projectId: zod_1.z.number(),
+        stage: zod_1.z.string(),
+        completed: zod_1.z.boolean(),
+    }))
+        .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Input received for project stage update:", input);
+        try {
+            const updatedStage = yield prisma_1.default.projectStage.upsert({
+                where: {
+                    projectId_stage: {
+                        projectId: input.projectId,
+                        stage: input.stage,
+                    },
+                },
+                update: { completed: input.completed },
+                create: {
+                    projectId: input.projectId,
+                    stage: input.stage,
+                    completed: input.completed,
+                },
+            });
+            return updatedStage;
+        }
+        catch (error) {
+            console.error('Error updating project stage:', error);
+            throw new Error('Failed to update project stage');
+        }
+    })),
     delete: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Input received for project deletion:", input);
         try {
             const deletedProject = yield prisma_1.default.project.delete({
                 where: { id: input },

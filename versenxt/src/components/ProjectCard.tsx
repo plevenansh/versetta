@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -30,7 +31,7 @@ interface ProjectCardProps {
     startDate: string | null;
     endDate: string | null;
     userId: number;
-    stages?: ProjectStage[];
+    stages: ProjectStage[];
     tasks?: Task[];
   };
   refetchProjects: () => void;
@@ -39,6 +40,7 @@ interface ProjectCardProps {
 export default function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [stages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [percentageDone, setPercentageDone] = useState(0);
 
@@ -52,40 +54,47 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
   });
 
   useEffect(() => {
+    if (project.stages) {
+      setProjectStages(project.stages);
+    } else {
+      const initialStages = stages.map(stage => ({
+        id: 0,
+        projectId: project.id,
+        stage,
+        completed: false
+      }));
+      setProjectStages(initialStages);
+    }
+  }, [project, stages]);
+
+  useEffect(() => {
     updatePercentage();
-  }, [project.stages]);
+  }, [projectStages]);
 
   const updatePercentage = () => {
-    if (!project.stages || project.stages.length === 0) {
-      setPercentageDone(0);
-      return;
-    }
-    const completedStages = project.stages.filter(stage => stage.completed).length;
+    const completedStages = projectStages.filter(stage => stage.completed).length;
     const percentage = (completedStages / stages.length) * 100;
     setPercentageDone(Math.round(percentage));
   };
 
   const toggleStage = (stage: string) => {
-    console.log('Toggling stage:', stage);
-    if (!project.stages) {
-      console.error('Project stages are not initialized');
-      return;
-    }
-    const projectStage = project.stages.find(s => s.stage === stage);
-    const completed = !projectStage?.completed;
+    const currentStage = projectStages.find(s => s.stage === stage);
+    const newCompletedStatus = !currentStage?.completed;
 
     updateProjectStageMutation.mutate({
       projectId: project.id,
       stage,
-      completed,
+      completed: newCompletedStatus,
     });
+
+    // Update local state for immediate UI feedback
+    setProjectStages(prevStages =>
+      prevStages.map(s => s.stage === stage ? { ...s, completed: newCompletedStatus } : s)
+    );
   };
 
   const getCompletedWidth = (): string => {
-    if (!project.stages || project.stages.length === 0) {
-      return '0%';
-    }
-    const completedStages = project.stages.filter(stage => stage.completed).length;
+    const completedStages = projectStages.filter(stage => stage.completed).length;
     return `${(completedStages / stages.length) * 100}%`;
   };
 
@@ -156,7 +165,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
               <h4 className="text-sm font-semibold text-gray-700 mb-4">Production Stages</h4>
               <div className="flex justify-between items-center relative">
                 {stages.map((stage) => {
-                  const projectStage = project.stages?.find(s => s.stage === stage);
+                  const projectStage = projectStages.find(s => s.stage === stage);
                   return (
                     <motion.div 
                       key={stage} 

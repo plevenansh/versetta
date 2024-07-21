@@ -10,7 +10,8 @@ export const projectRouter = router({
         include: {
           team: true,
           user: true,
-          tasks: true
+          tasks: true,
+          stages: true,
         }
       });
       console.log(`Retrieved ${projects.length} projects`);

@@ -16,6 +16,7 @@ export default function ProjectSection() {
     description: '',
     teamId: 1,
     userId: 1,
+    endDate: '',
   });
 
   const { data: fetchedProjects, refetch } = trpc.projects.getAll.useQuery();
@@ -80,6 +81,12 @@ export default function ProjectSection() {
                 placeholder="Project Description"
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+              />
+               <Input
+                type="date"
+                placeholder="End Date"
+                value={newProject.endDate}
+                onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
               />
             </div>
             <DialogFooter>

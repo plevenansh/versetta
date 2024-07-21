@@ -70,13 +70,24 @@ model Project {
   team        Team      @relation(fields: [teamId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
   tasks       Task[]
-
+  stages    ProjectStage[]
 
   // creatorId   Int
   // creator     User      @relation("ProjectCreator", fields: [creatorId], references: [id])
 
   @@index([teamId])
   @@index([userId])
+}
+
+model ProjectStage {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
+  stage     String
+  completed Boolean @default(false)
+
+  @@unique([projectId, stage])
+  @@index([projectId])
 }
 
 model Task {

@@ -8,6 +8,19 @@ import { CheckCircle, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 
 import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
 
+interface ProjectStage {
+  id: number;
+  projectId: number;
+  stage: string;
+  completed: boolean;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+}
+
 interface ProjectCardProps {
   project: {
     id: number;
@@ -17,48 +30,63 @@ interface ProjectCardProps {
     startDate: string | null;
     endDate: string | null;
     userId: number;
+    stages?: ProjectStage[];
+    tasks?: Task[];
   };
   refetchProjects: () => void;
 }
 
 export default function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [stages, setStages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
-  const [completedStages, setCompletedStages] = useState(new Set());
+  const [stages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [percentageDone, setPercentageDone] = useState(0);
 
   const { data: projectWithTasks, refetch } = trpc.projects.getById.useQuery(project.id);
   const deleteProjectMutation = trpc.projects.delete.useMutation();
+  const updateProjectStageMutation = trpc.projects.updateProjectStage.useMutation({
+    onSuccess: () => {
+      refetch();
+      refetchProjects();
+    },
+  });
 
-  
   useEffect(() => {
-    const initialCompletedStages = new Set(stages.slice(0, stages.indexOf(project.status) + 1));
-    setCompletedStages(initialCompletedStages);
-    updatePercentage(initialCompletedStages);
-  }, [project.status, stages]);
+    updatePercentage();
+  }, [project.stages]);
 
-  const updatePercentage = (completedSet: Set<string>) => {
-    const percentage = (completedSet.size / stages.length) * 100;
+  const updatePercentage = () => {
+    if (!project.stages || project.stages.length === 0) {
+      setPercentageDone(0);
+      return;
+    }
+    const completedStages = project.stages.filter(stage => stage.completed).length;
+    const percentage = (completedStages / stages.length) * 100;
     setPercentageDone(Math.round(percentage));
   };
 
   const toggleStage = (stage: string) => {
-    setCompletedStages(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(stage)) {
-        newSet.delete(stage);
-      } else {
-        newSet.add(stage);
-      }
-      updatePercentage(newSet);
-      return newSet;
+    console.log('Toggling stage:', stage);
+    if (!project.stages) {
+      console.error('Project stages are not initialized');
+      return;
+    }
+    const projectStage = project.stages.find(s => s.stage === stage);
+    const completed = !projectStage?.completed;
+
+    updateProjectStageMutation.mutate({
+      projectId: project.id,
+      stage,
+      completed,
     });
   };
 
   const getCompletedWidth = (): string => {
-    const lastCompletedIndex = stages.findLastIndex(stage => completedStages.has(stage));
-    return `${(lastCompletedIndex + 1) / stages.length * 100}%`;
+    if (!project.stages || project.stages.length === 0) {
+      return '0%';
+    }
+    const completedStages = project.stages.filter(stage => stage.completed).length;
+    return `${(completedStages / stages.length) * 100}%`;
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -127,26 +155,29 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
             >
               <h4 className="text-sm font-semibold text-gray-700 mb-4">Production Stages</h4>
               <div className="flex justify-between items-center relative">
-                {stages.map((stage, index) => (
-                  <motion.div 
-                    key={stage} 
-                    className="flex flex-col items-center z-10"
-                    layout
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => toggleStage(stage)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        completedStages.has(stage) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-                      }`}
+                {stages.map((stage) => {
+                  const projectStage = project.stages?.find(s => s.stage === stage);
+                  return (
+                    <motion.div 
+                      key={stage} 
+                      className="flex flex-col items-center z-10"
+                      layout
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     >
-                      {completedStages.has(stage) ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
-                    </motion.button>
-                    <span className="text-xs mt-2 text-gray-600">{stage}</span>
-                  </motion.div>
-                ))}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => toggleStage(stage)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          projectStage?.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {projectStage?.completed ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
+                      </motion.button>
+                      <span className="text-xs mt-2 text-gray-600">{stage}</span>
+                    </motion.div>
+                  );
+                })}
                 <motion.div 
                   className="absolute top-5 left-5 right-5 h-0.5 bg-blue-500"
                   style={{ width: getCompletedWidth() }}
@@ -154,11 +185,11 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
                 />
               </div>
               
-              {projectWithTasks && projectWithTasks.tasks && (
+              {project.tasks && project.tasks.length > 0 && (
                 <div className="mt-6">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Tasks</h4>
                   <ul className="list-disc pl-5">
-                    {projectWithTasks.tasks.map((task) => (
+                    {project.tasks.map((task) => (
                       <li key={task.id} className="text-sm text-gray-600">
                         {task.title} - {task.status}
                       </li>

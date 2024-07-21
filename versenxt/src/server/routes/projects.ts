@@ -31,7 +31,8 @@ export const projectRouter = router({
           include: { 
             tasks: true,
             team: true,
-            user: true
+            user: true,
+            stages: true
           }
         });
         if (!project) {
@@ -44,7 +45,7 @@ export const projectRouter = router({
       }
     }),
 
-  create: publicProcedure
+    create: publicProcedure
     .input(z.object({
       title: z.string(),
       description: z.string().optional(),
@@ -57,6 +58,7 @@ export const projectRouter = router({
     .mutation(async ({ input }) => {
       try {
         console.log("Input received for project creation:", input);
+        const stages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
         const data: Prisma.ProjectCreateInput = {
           title: input.title,
           description: input.description,
@@ -64,13 +66,17 @@ export const projectRouter = router({
           startDate: input.startDate,
           endDate: input.endDate,
           team: { connect: { id: input.teamId } },
-          user: { connect: { id: input.userId } }
+          user: { connect: { id: input.userId } },
+          stages: {
+            create: stages.map(stage => ({ stage, completed: false }))
+          }
         };
         const createdProject = await prisma.project.create({ 
           data,
           include: {
             team: true,
-            user: true
+            user: true,
+            stages: true // Include stages in the response
           }
         });
         console.log('Project created successfully:', createdProject);
@@ -80,6 +86,7 @@ export const projectRouter = router({
         throw new Error('Failed to create project');
       }
     }),
+  
 
   update: publicProcedure
     .input(z.object({

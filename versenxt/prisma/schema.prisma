@@ -17,10 +17,10 @@ model User {
   projects        Project[]
   tasks           Task[]
   Team            Team[]
-  // createdTeams    Team[]          @relation("TeamCreator")
-  // createdProjects Project[]       @relation("ProjectCreator")
-  // createdTasks    Task[]          @relation("TaskCreator")
-  // assignedTasks   Task[]          @relation("TaskAssignee")
+  createdTeams    Team[]          @relation("TeamCreator")
+  createdProjects Project[]       @relation("ProjectCreator")
+  createdTasks    Task[]          @relation("TaskCreator")
+  assignedTasks   Task[]          @relation("TaskAssignee")
   
 }
 
@@ -30,16 +30,16 @@ model Team {
   description String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  userId      Int // Represents the team creator
-  user        User         @relation(fields: [userId], references: [id])
+    userId      Int // Represents the team creator
+    user        User         @relation(fields: [userId], references: [id])
+  creatorId   Int?
+  creator     User?          @relation("TeamCreator", fields: [creatorId], references: [id])
+  
   members     TeamMember[]
   projects    Project[]
   tasks       Task[]
-
-  // creatorId   Int
-  // creator     User      @relation("TeamCreator", fields: [creatorId], references: [id])
-
   @@index([userId])
+  @@index([creatorId])
 }
 
 model TeamMember {
@@ -66,14 +66,17 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime?      @updatedAt
   teamId      Int
-  userId      Int
+    userId      Int
+  creatorId   Int?
   team        Team          @relation(fields: [teamId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
-  tasks       Task[]
+    user        User          @relation(fields: [userId], references: [id])
   stages      ProjectStage[]  // This should remain as a relation to ProjectStage
+  creator     User?      @relation("ProjectCreator", fields: [creatorId], references: [id])
+  tasks       Task[]
 
   @@index([teamId])
-  @@index([userId])
+   @@index([userId])
+  @@index([creatorId])
 }
 
 model ProjectStage {
@@ -96,18 +99,20 @@ model Task {
   completed   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  creatorId   Int?
+  assigneeId  Int?
   projectId   Int?
   teamId      Int?
-  userId      Int // Represents creator, owner, and assignee
-   project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+    userId      Int // Represents creator, owner, and assignee
+  creator     User?      @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   team        Team?     @relation(fields: [teamId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-  // creatorId   Int
-  // assigneeId  Int?
-  // creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
-  // assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
-
+    user        User      @relation(fields: [userId], references: [id])
+ 
   @@index([projectId])
-  @@index([teamId])
+    @@index([teamId])
   @@index([userId])
+  @@index([assigneeId])
+  @@index([creatorId])
 }

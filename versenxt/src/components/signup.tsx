@@ -8,6 +8,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { AlertCircle, AtSign, Lock, User, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { trpc } from '@/trpc/client';
+
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -17,8 +19,7 @@ const SignUpPage = () => {
     confirmPassword: '',
     role: '',
   });
-  const [showOTPInput, setShowOTPInput] = useState(false);
-  const [otp, setOTP] = useState('');
+  
   const [notification, setNotification] = useState(null);
 
   const handleInputChange = (e) => {
@@ -29,22 +30,23 @@ const SignUpPage = () => {
     }));
   };
 
+ 
+  const createUser = trpc.users.create.useMutation({
+    onSuccess: () => {
+      setNotification({ type: 'success', message: 'Account created successfully! Welcome to CreatorStudio.' });
+    },
+    onError: (error) => {
+      setNotification({ type: 'error', message: error.message || 'Failed to create account. Please try again.' });
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log(formData);
-    setShowOTPInput(true);
-    setNotification({ type: 'info', message: 'OTP sent to your email. Please check your inbox.' });
+    createUser.mutate({
+      name: formData.name,
+      email: formData.email,
+    });
   };
-
-  const handleOTPSubmit = (e) => {
-    e.preventDefault();
-    // Here you would verify the OTP
-    console.log('OTP submitted:', otp);
-    // Show success message
-    setNotification({ type: 'success', message: 'Account created successfully! Welcome to CreatorStudio.' });
-  };
-
 
   const [showPassword, setShowPassword] = useState(false);
   
@@ -69,7 +71,7 @@ const SignUpPage = () => {
           </div>
         )}
 
-        {!showOTPInput ? (
+      
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -170,47 +172,17 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Your Role</Label>
-              <Select
-                name="role"
-                value={formData.role}
-                onValueChange={(value) => setFormData(prevData => ({ ...prevData, role: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="creator">Creator</SelectItem>
-                  <SelectItem value="teamMember">Team Member</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+       
 
             <Button type="submit" className="w-full">
               Sign Up
             </Button>
           </form>
-        ) : (
-          <form onSubmit={handleOTPSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="otp">Enter OTP</Label>
-              <Input
-                id="otp"
-                name="otp"
-                type="text"
-                placeholder="Enter the 6-digit code"
-                value={otp}
-                onChange={(e) => setOTP(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Verify OTP
-            </Button>
+        
+          <form onSubmit={handleSubmit} className="space-y-6">
+           
           </form>
-        )}
+        
 
         <Separator className="my-8" />
 

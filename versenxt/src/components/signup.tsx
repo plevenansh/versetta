@@ -45,6 +45,7 @@ const SignUpPage = () => {
           createUser.mutate({
             name: formData.name,
             email: formData.email,
+            gender: formData.gender,
           });
         };
 

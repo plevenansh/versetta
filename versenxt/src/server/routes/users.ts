@@ -10,9 +10,7 @@ export const userRouter = router({
       const users = await prisma.user.findMany({
         include: {
           teamMemberships: true,
-          projects: true,
-          tasks: true,
-          Team: true
+         
         }
       });
       console.log(`Retrieved ${users.length} users`);
@@ -31,9 +29,7 @@ export const userRouter = router({
           where: { id: input },
           include: {
             teamMemberships: true,
-            projects: true,
-            tasks: true,
-            Team: true
+           
           }
         });
         if (!user) {
@@ -46,23 +42,30 @@ export const userRouter = router({
       }
     }),
  
-  create: publicProcedure
+    create: publicProcedure
     .input(z.object({
       name: z.string(),
-      email: z.string().email()
+      email: z.string().email(),
+      gender: z.string().optional()
     }))
     .mutation(async ({ input }) => {
       try {
         const data: Prisma.UserCreateInput = {
           name: input.name,
-          email: input.email
+          email: input.email,
+          gender: input.gender,
         };
         const newUser = await prisma.user.create({ data });
         console.log('User created successfully:', newUser);
         return newUser;
       } catch (error) {
         console.error('Error creating user:', error);
-        throw new Error('Failed to create user');
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === 'P2002') {
+            throw new Error('A user with this email already exists');
+          }
+        }
+        throw new Error(`Failed to create user: ${error.message}`);
       }
     }),
 
@@ -70,7 +73,8 @@ export const userRouter = router({
     .input(z.object({
       id: z.number(),
       name: z.string().optional(),
-      email: z.string().email().optional()
+      email: z.string().email().optional(),
+      gender: z.string().optional()
     }))
     .mutation(async ({ input }) => {
       try {
@@ -80,9 +84,7 @@ export const userRouter = router({
           data,
           include: {
             teamMemberships: true,
-            projects: true,
-            tasks: true,
-            Team: true
+           
           }
         });
         console.log('User updated successfully:', updatedUser);
@@ -101,9 +103,7 @@ export const userRouter = router({
           where: { id: input },
           include: {
             teamMemberships: true,
-            projects: true,
-            tasks: true,
-            Team: true
+           
           }
         });
         console.log('User deleted successfully:', deletedUser);

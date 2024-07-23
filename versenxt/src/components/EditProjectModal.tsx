@@ -12,6 +12,7 @@ interface EditProjectModalProps {
     status: string;
     startDate: string | null;
     endDate: string | null;
+    teamId: number;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -24,6 +25,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const [status, setStatus] = useState(project.status);
   const [startDate, setStartDate] = useState(project.startDate || '');
   const [endDate, setEndDate] = useState(project.endDate || '');
+  const [teamId, setTeamId] = useState(project.teamId);
 
   const updateProjectMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
@@ -41,6 +43,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
       status,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      teamId
     });
   };
 

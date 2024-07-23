@@ -1,3 +1,4 @@
+//TaskList.tsx
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -16,7 +17,12 @@ type Task = {
   dueDate?: string | null;
   projectId?: number | null;
   teamId?: number | null;
-  userId: number;
+  creatorId: number;
+  assigneeId?: number | null;
+  project?: { id: number; name: string };
+  team?: { id: number; name: string };
+  creator?: { id: number; user: { id: number; name: string } };
+  assignee?: { id: number; user: { id: number; name: string } };
 };
 
 export default function TaskList() {
@@ -30,10 +36,16 @@ export default function TaskList() {
     dueDate: null,
     projectId: undefined,
     teamId: undefined,
-    userId: 1 // Set a default user ID or fetch from your auth context
-  });
+    creatorId: 1, // Set a default creator ID or fetch from your auth context
+    assigneeId: undefined
+ });
 
-  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({});
+  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({
+    projectId: undefined, // Add filters as needed
+    teamId: undefined,
+    creatorId: undefined,
+    assigneeId: undefined});
+
   const updateTaskMutation = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
@@ -80,7 +92,9 @@ export default function TaskList() {
         description: updatedTask.description,
         status: updatedTask.status,
         dueDate: updatedTask.dueDate,
-        userId: updatedTask.userId
+        projectId: updatedTask.projectId,
+        teamId: updatedTask.teamId,
+        assigneeId: updatedTask.assigneeId
       };
 
       // Only include projectId and teamId if they are not undefined
@@ -102,7 +116,7 @@ export default function TaskList() {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!newTask.title || !newTask.userId) {
+      if (!newTask.title || !newTask.creatorId) {
         throw new Error("Missing required fields");
       }
       const taskData = {
@@ -163,6 +177,7 @@ export default function TaskList() {
               type="date"
               value={newTask.dueDate || ''}
               onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
+              placeholder="Due Date"
             />
             <Input
               type="number"
@@ -178,10 +193,16 @@ export default function TaskList() {
             />
             <Input
               type="number"
-              value={newTask.userId}
-              onChange={(e) => setNewTask({...newTask, userId: parseInt(e.target.value)})}
-              placeholder="User ID"
+              value={newTask.creatorId}
+              onChange={(e) => setNewTask({...newTask, creatorId: parseInt(e.target.value)})}
+              placeholder="Creator ID"
               required
+            />
+            <Input
+              type="number"
+              value={newTask.assigneeId || ''}
+              onChange={(e) => setNewTask({...newTask, assigneeId: e.target.value ? parseInt(e.target.value) : undefined})}
+              placeholder="Assignee ID (optional)"
             />
             <Button type="submit">Add Task</Button>
           </form>
@@ -194,6 +215,7 @@ export default function TaskList() {
                   <Input
                     value={editingTask.title}
                     onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                    placeholder="Task Title"
                   />
                   <Input
                     value={editingTask.description || ''}
@@ -204,6 +226,7 @@ export default function TaskList() {
                     type="date"
                     value={editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : ''}
                     onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value || null})}
+                    placeholder="Due Date"
                   />
                   <Input
                     type="number"
@@ -217,11 +240,12 @@ export default function TaskList() {
                     onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : null})}
                     placeholder="Team ID"
                   />
+                  
                   <Input
                     type="number"
-                    value={editingTask.userId}
-                    onChange={(e) => setEditingTask({...editingTask, userId: parseInt(e.target.value)})}
-                    placeholder="User ID"
+                    value={editingTask.assigneeId}
+                    onChange={(e) => setEditingTask({...editingTask, assigneeId: parseInt(e.target.value)})}
+                    placeholder="Assigne ID"
                   />
                   <div className="flex justify-end space-x-2">
                     <Button onClick={() => updateTask(editingTask)}>Save</Button>
@@ -239,7 +263,7 @@ export default function TaskList() {
                       {task.title}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, User ID: {task.userId}
+                      Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, Creator ID: {task.creatorId}
                     </p>
                     {task.description && <p className="text-sm">{task.description}</p>}
                     {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}

@@ -15,7 +15,7 @@ export default function ProjectSection() {
     title: '',
     description: '',
     teamId: 1,
-    userId: 1,
+    creatorId: 1,
     endDate: '',
   });
 
@@ -24,7 +24,7 @@ export default function ProjectSection() {
     onSuccess: () => {
       refetch();
       setIsAddModalOpen(false);
-      setNewProject({ title: '', description: '', teamId: 1, userId: 1 });
+      setNewProject({ title: '', description: '', teamId: 1, creatorId: 1, endDate: '' });
     },
   });
 
@@ -39,7 +39,10 @@ export default function ProjectSection() {
   };
 
   const handleCreateProject = () => {
-    createProjectMutation.mutate(newProject);
+    createProjectMutation.mutate({
+      ...newProject,
+      startDate: new Date().toISOString(), // Set current date as start date
+    });
   };
 
   return (
@@ -81,6 +84,18 @@ export default function ProjectSection() {
                 placeholder="Project Description"
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+              />
+              <Input
+                placeholder="Team ID"
+                type="number"
+                value={newProject.teamId}
+                onChange={(e) => setNewProject({ ...newProject, teamId: parseInt(e.target.value) })}
+              />
+              <Input
+                placeholder="Creator ID"
+                type="number"
+                value={newProject.creatorId}
+                onChange={(e) => setNewProject({ ...newProject, creatorId: parseInt(e.target.value) })}
               />
                <Input
                 type="date"

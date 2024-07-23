@@ -31,7 +31,8 @@ interface ProjectCardProps {
     status: string;
     startDate: string | null;
     endDate: string | null;
-    userId: number;
+    creatorId: number;
+    teamId: number;
     stages: ProjectStage[];
     tasks?: Task[];
   };
@@ -122,7 +123,8 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         <div>
           <CardTitle className="text-xl font-bold text-gray-800">{project.title}</CardTitle>
           <p className="text-sm text-gray-600">Project ID: {project.id}</p>
-          <p className="text-sm text-gray-600">User ID: {project.userId}</p>
+          <p className="text-sm text-gray-600">Team ID: {project.teamId}</p>
+          <p className="text-sm text-gray-600">Creator ID: {project.creatorId}</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="text-blue-600 border-blue-600 hover:bg-blue-50">

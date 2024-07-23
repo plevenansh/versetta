@@ -11,7 +11,6 @@ export const projectRouter = router({
       const projects = await prisma.project.findMany({
         include: {
           team: true,
-          user: true,
           tasks: true,
           stages: true,
         }
@@ -31,9 +30,14 @@ export const projectRouter = router({
         const project = await prisma.project.findUnique({ 
           where: { id: input },
           include: { 
-            tasks: true,
+         
+             tasks: {
+              include: {
+                creator: { include: { user: true } },
+                assignee: { include: { user: true } }
+              }
+            },
             team: true,
-            user: true,
             stages: true
           }
         });
@@ -55,7 +59,8 @@ export const projectRouter = router({
     startDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
     endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
     teamId: z.number(),
-    userId: z.number()
+    creatorId: z.number(),
+   
   }))
   .mutation(async ({ input }) => {
     console.log("Input received for project creation:", input);
@@ -67,8 +72,9 @@ export const projectRouter = router({
         status: input.status,
         startDate: input.startDate,
         endDate: input.endDate,
+        creator: { connect: { id: input.creatorId } },
         team: { connect: { id: input.teamId } },
-        user: { connect: { id: input.userId } },
+     
         stages: {
           create: stages.map(stage => ({ stage, completed: false }))
         }
@@ -77,7 +83,8 @@ export const projectRouter = router({
         data,
         include: {
           team: true,
-          user: true,
+          creator: true,
+     
           stages: true // Changed from ProjectStageStatus to stages
         }
       });
@@ -97,27 +104,32 @@ export const projectRouter = router({
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     teamId: z.number().optional(),
-    userId: z.number().optional()
+  
   }))
   .mutation(async ({ input }) => {
     console.log("Input received for project update:", input);
     try {
-      const { id, teamId, userId, ...data } = input;
+     
+      const { id, teamId, ...data } = input;
       const updateData: Prisma.ProjectUpdateInput = {
         ...data,
         startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate === undefined ? undefined : data.endDate ? new Date(data.endDate) : null,
         team: teamId ? { connect: { id: teamId } } : undefined,
-        user: userId ? { connect: { id: userId } } : undefined
+      
       };
 
       const updatedProject = await prisma.project.update({ 
         where: { id }, 
         data: updateData,
         include: { 
-          tasks: true,
+          tasks: {
+            include: {
+              creator: { include: { user: true } },
+              assignee: { include: { user: true } }
+            }
+          },
           team: true,
-          user: true,
           stages: true
         }
       });
@@ -125,7 +137,7 @@ export const projectRouter = router({
       return updatedProject;
     } catch (error) {
       console.error(`Error updating project with id ${input.id}:`, error);
-      throw new Error(`Failed to update project: ${error.message}`);
+      throw new Error(`Failed to update project: ${(error as Error).message}`);
     }
   }),
  // In projectRouter.ts
@@ -164,49 +176,66 @@ export const projectRouter = router({
   .mutation(async ({ input }) => {
     console.log("Attempting to delete project with ID:", input);
     try {
+      // First, check if the project exists
+      const project = await prisma.project.findUnique({
+        where: { id: input },
+        include: { stages: true, tasks: true }
+      });
+
+      if (!project) {
+        throw new Error(`Project with id ${input} not found`);
+      }
+
       // Use a transaction to ensure all operations succeed or fail together
-      await prisma.$transaction(async (prisma) => {
-        // First, delete related ProjectStage records
+      const result = await prisma.$transaction(async (prisma) => {
+        // Delete related ProjectStage records
         console.log("Deleting ProjectStage records...");
         const deletedStages = await prisma.projectStage.deleteMany({
           where: { projectId: input },
         });
         console.log(`Deleted ${deletedStages.count} ProjectStage records`);
 
-        // Then, delete related Task records (if they exist)
+        // Delete related Task records
         console.log("Deleting Task records...");
         const deletedTasks = await prisma.task.deleteMany({
           where: { projectId: input },
         });
         console.log(`Deleted ${deletedTasks.count} Task records`);
 
-        // Finally, delete the project
+        // Delete the project
         console.log("Deleting Project...");
         const deletedProject = await prisma.project.delete({
           where: { id: input },
         });
         console.log("Deleted Project:", deletedProject);
+
+        return deletedProject;
       });
 
       console.log('Project and related records deleted successfully');
-      return { success: true };
+      return { success: true, deletedProject: result };
     } catch (error) {
       console.error(`Error deleting project with id ${input}:`, error);
-      throw new Error(`Failed to delete project: ${error.message}`);
+      throw new Error(`Failed to delete project: ${(error as Error).message}`);
     }
   }),
 
 
-  getByUserId: publicProcedure
+  getByTeamId: publicProcedure
     .input(z.number())
     .query(async ({ input }) => {
       try {
         const projects = await prisma.project.findMany({
-          where: { userId: input },
+          where: { teamId: input },
           include: { 
-            tasks: true,
+            tasks: {
+              include: {
+                creator: { include: { user: true } },
+                assignee: { include: { user: true } }
+              }
+            },
             team: true,
-            user: true
+            stages: true
           }
         });
         console.log(`Retrieved ${projects.length} projects for user ${input}`);
@@ -216,24 +245,37 @@ export const projectRouter = router({
         throw new Error('Failed to fetch projects for user');
       }
     }),
-
-  getByTeamId: publicProcedure
-    .input(z.number())
-    .query(async ({ input }) => {
-      try {
-        const projects = await prisma.project.findMany({
-          where: { teamId: input },
-          include: { 
-            tasks: true,
-            team: true,
-            user: true
-          }
-        });
-        console.log(`Retrieved ${projects.length} projects for team ${input}`);
-        return projects;
-      } catch (error) {
-        console.error(`Error fetching projects for team ${input}:`, error);
-        throw new Error('Failed to fetch projects for team');
-      }
-    }),
+   
+    getByTeamMemberId: publicProcedure
+  .input(z.number())
+  .query(async ({ input }) => {
+    try {
+      const projects = await prisma.project.findMany({
+        where: {
+          OR: [
+            { creatorId: input },
+            { tasks: { some: { creatorId: input } } },
+            { tasks: { some: { assigneeId: input } } }
+          ]
+        },
+        include: { 
+          tasks: {
+            include: {
+              creator: { include: { user: true } },
+              assignee: { include: { user: true } }
+            }
+          },
+          team: true,
+          stages: true,
+          creator: { include: { user: true } }
+        }
+      });
+      console.log(`Retrieved ${projects.length} projects for team member ${input}`);
+      return projects;
+    } catch (error) {
+      console.error(`Error fetching projects for team member ${input}:`, error);
+      throw new Error('Failed to fetch projects for team member');
+    }
+  }),
+  
 });

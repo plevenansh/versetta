@@ -34,7 +34,7 @@ exports.projectRouter = (0, trpc_1.router)({
             const projects = yield prisma_1.default.project.findMany({
                 include: {
                     team: true,
-                    user: true,
+                    //   user: true,
                     tasks: true,
                     stages: true,
                 }
@@ -54,9 +54,14 @@ exports.projectRouter = (0, trpc_1.router)({
             const project = yield prisma_1.default.project.findUnique({
                 where: { id: input },
                 include: {
-                    tasks: true,
+                    //user: true,
+                    tasks: {
+                        include: {
+                            creator: { include: { user: true } },
+                            assignee: { include: { user: true } }
+                        }
+                    },
                     team: true,
-                    user: true,
                     stages: true
                 }
             });
@@ -78,7 +83,8 @@ exports.projectRouter = (0, trpc_1.router)({
         startDate: zod_1.z.string().optional().transform(str => str ? new Date(str) : undefined),
         endDate: zod_1.z.string().optional().transform(str => str ? new Date(str) : undefined),
         teamId: zod_1.z.number(),
-        userId: zod_1.z.number()
+        creatorId: zod_1.z.number(),
+        // userId: z.number()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Input received for project creation:", input);
@@ -90,8 +96,9 @@ exports.projectRouter = (0, trpc_1.router)({
                 status: input.status,
                 startDate: input.startDate,
                 endDate: input.endDate,
+                creator: { connect: { id: input.creatorId } },
                 team: { connect: { id: input.teamId } },
-                user: { connect: { id: input.userId } },
+                //  user: { connect: { id: input.userId } },
                 stages: {
                     create: stages.map(stage => ({ stage, completed: false }))
                 }
@@ -100,7 +107,8 @@ exports.projectRouter = (0, trpc_1.router)({
                 data,
                 include: {
                     team: true,
-                    user: true,
+                    creator: true,
+                    //   user: true,
                     stages: true // Changed from ProjectStageStatus to stages
                 }
             });
@@ -118,25 +126,30 @@ exports.projectRouter = (0, trpc_1.router)({
         title: zod_1.z.string().optional(),
         description: zod_1.z.string().optional(),
         status: zod_1.z.string().optional(),
-        startDate: zod_1.z.string().optional().transform(str => str ? new Date(str) : undefined),
-        endDate: zod_1.z.string().optional().transform(str => str ? new Date(str) : undefined),
+        startDate: zod_1.z.string().optional(),
+        endDate: zod_1.z.string().optional(),
         teamId: zod_1.z.number().optional(),
-        userId: zod_1.z.number().optional()
+        // userId: z.number().optional()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Input received for project update:", input);
         try {
-            const { id } = input, data = __rest(input, ["id"]);
-            const updateData = Object.assign(Object.assign({}, data), { team: data.teamId ? { connect: { id: data.teamId } } : undefined, user: data.userId ? { connect: { id: data.userId } } : undefined });
-            delete input.teamId;
-            delete input.userId;
+            // const { id, teamId, userId, ...data } = input;
+            const { id, teamId } = input, data = __rest(input, ["id", "teamId"]);
+            const updateData = Object.assign(Object.assign({}, data), { startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null, endDate: data.endDate === undefined ? undefined : data.endDate ? new Date(data.endDate) : null, team: teamId ? { connect: { id: teamId } } : undefined });
             const updatedProject = yield prisma_1.default.project.update({
                 where: { id },
                 data: updateData,
                 include: {
-                    tasks: true,
+                    //user: true,
+                    tasks: {
+                        include: {
+                            creator: { include: { user: true } },
+                            assignee: { include: { user: true } }
+                        }
+                    },
                     team: true,
-                    user: true
+                    stages: true
                 }
             });
             console.log('Project updated successfully:', updatedProject);
@@ -144,7 +157,7 @@ exports.projectRouter = (0, trpc_1.router)({
         }
         catch (error) {
             console.error(`Error updating project with id ${input.id}:`, error);
-            throw new Error('Failed to update project');
+            throw new Error(`Failed to update project: ${error.message}`);
         }
     })),
     // In projectRouter.ts
@@ -181,34 +194,64 @@ exports.projectRouter = (0, trpc_1.router)({
     delete: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log("Input received for project deletion:", input);
+        console.log("Attempting to delete project with ID:", input);
         try {
-            const deletedProject = yield prisma_1.default.project.delete({
+            // First, check if the project exists
+            const project = yield prisma_1.default.project.findUnique({
                 where: { id: input },
-                include: {
-                    tasks: true,
-                    team: true,
-                    user: true
-                }
+                include: { stages: true, tasks: true }
             });
-            console.log('Project deleted successfully:', deletedProject);
-            return deletedProject;
+            if (!project) {
+                throw new Error(`Project with id ${input} not found`);
+            }
+            // Use a transaction to ensure all operations succeed or fail together
+            const result = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+                // Delete related ProjectStage records
+                console.log("Deleting ProjectStage records...");
+                const deletedStages = yield prisma.projectStage.deleteMany({
+                    where: { projectId: input },
+                });
+                console.log(`Deleted ${deletedStages.count} ProjectStage records`);
+                // Delete related Task records
+                console.log("Deleting Task records...");
+                const deletedTasks = yield prisma.task.deleteMany({
+                    where: { projectId: input },
+                });
+                console.log(`Deleted ${deletedTasks.count} Task records`);
+                // Delete the project
+                console.log("Deleting Project...");
+                const deletedProject = yield prisma.project.delete({
+                    where: { id: input },
+                });
+                console.log("Deleted Project:", deletedProject);
+                return deletedProject;
+            }));
+            console.log('Project and related records deleted successfully');
+            return { success: true, deletedProject: result };
         }
         catch (error) {
             console.error(`Error deleting project with id ${input}:`, error);
-            throw new Error('Failed to delete project');
+            throw new Error(`Failed to delete project: ${error.message}`);
         }
     })),
-    getByUserId: trpc_1.publicProcedure
+    // getByTeamId: publicProcedure
+    getByTeamId: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .query(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const projects = yield prisma_1.default.project.findMany({
-                where: { userId: input },
+                // where: { userId: input },
+                where: { teamId: input },
                 include: {
-                    tasks: true,
+                    // user: true
+                    tasks: {
+                        include: {
+                            creator: { include: { user: true } },
+                            assignee: { include: { user: true } }
+                        }
+                    },
                     team: true,
-                    user: true
+                    stages: true
                 }
             });
             console.log(`Retrieved ${projects.length} projects for user ${input}`);
@@ -219,24 +262,55 @@ exports.projectRouter = (0, trpc_1.router)({
             throw new Error('Failed to fetch projects for user');
         }
     })),
-    getByTeamId: trpc_1.publicProcedure
+    getByTeamMemberId: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .query(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const projects = yield prisma_1.default.project.findMany({
-                where: { teamId: input },
+                where: {
+                    OR: [
+                        { creatorId: input },
+                        { tasks: { some: { creatorId: input } } },
+                        { tasks: { some: { assigneeId: input } } }
+                    ]
+                },
                 include: {
-                    tasks: true,
+                    tasks: {
+                        include: {
+                            creator: { include: { user: true } },
+                            assignee: { include: { user: true } }
+                        }
+                    },
                     team: true,
-                    user: true
+                    stages: true,
+                    creator: { include: { user: true } }
                 }
             });
-            console.log(`Retrieved ${projects.length} projects for team ${input}`);
+            console.log(`Retrieved ${projects.length} projects for team member ${input}`);
             return projects;
         }
         catch (error) {
-            console.error(`Error fetching projects for team ${input}:`, error);
-            throw new Error('Failed to fetch projects for team');
+            console.error(`Error fetching projects for team member ${input}:`, error);
+            throw new Error('Failed to fetch projects for team member');
         }
     })),
+    // getByTeamId: publicProcedure
+    //   .input(z.number())
+    //   .query(async ({ input }) => {
+    //     try {
+    //       const projects = await prisma.project.findMany({
+    //         where: { teamId: input },
+    //         include: { 
+    //           tasks: true,
+    //           team: true,
+    //           user: true
+    //         }
+    //       });
+    //       console.log(`Retrieved ${projects.length} projects for team ${input}`);
+    //       return projects;
+    //     } catch (error) {
+    //       console.error(`Error fetching projects for team ${input}:`, error);
+    //       throw new Error('Failed to fetch projects for team');
+    //     }
+    //   }),
 });

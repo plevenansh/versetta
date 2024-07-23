@@ -65,7 +65,7 @@ export const userRouter = router({
             throw new Error('A user with this email already exists');
           }
         }
-        throw new Error(`Failed to create user: ${error.message}`);
+        throw new Error(`Failed to create user: ${(error as Error).message}`);
       }
     }),
 

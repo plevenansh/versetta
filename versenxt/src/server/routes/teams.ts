@@ -1,4 +1,3 @@
-// src/server/routers/teams.ts
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
@@ -9,13 +8,13 @@ export const teamRouter = router({
     try {
       const teams = await prisma.team.findMany({
         include: {
-          user: true,
           members: {
             include: {
               user: true
             }
           },
-          projects: true
+          projects: true,
+          tasks: true
         }
       });
       return teams;
@@ -32,7 +31,6 @@ export const teamRouter = router({
         const team = await prisma.team.findUnique({
           where: { id: input },
           include: {
-            user: true,
             members: {
               include: {
                 user: true
@@ -59,12 +57,25 @@ export const teamRouter = router({
       userId: z.number()
     }))
     .mutation(async ({ input }) => {
+      console.log('Creating team with input:', input);
       try {
         const newTeam = await prisma.team.create({
           data: {
             name: input.name,
             description: input.description,
-            userId: input.userId
+            members: {
+              create: {
+                userId: input.userId,
+                role: 'admin'
+              }
+            }
+          },
+          include: {
+            members: {
+              include: {
+                user: true
+              }
+            }
           }
         });
         return newTeam;
@@ -87,6 +98,13 @@ export const teamRouter = router({
           data: {
             name: input.name,
             description: input.description
+          },
+          include: {
+            members: {
+              include: {
+                user: true
+              }
+            }
           }
         });
         return updatedTeam;
@@ -123,6 +141,10 @@ export const teamRouter = router({
             teamId: input.teamId,
             userId: input.userId,
             role: input.role
+          },
+          include: {
+            team: true,
+            user: true
           }
         });
         return newMember;

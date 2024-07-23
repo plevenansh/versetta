@@ -67,7 +67,7 @@ exports.teamRouter = (0, trpc_1.router)({
         .input(zod_1.z.object({
         name: zod_1.z.string(),
         description: zod_1.z.string().optional(),
-        userId: zod_1.z.number()
+        creatorId: zod_1.z.number()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         console.log('Creating team with input:', input);
@@ -76,9 +76,12 @@ exports.teamRouter = (0, trpc_1.router)({
                 data: {
                     name: input.name,
                     description: input.description,
+                    creator: {
+                        connect: { id: input.creatorId }
+                    },
                     members: {
                         create: {
-                            userId: input.userId,
+                            userId: input.creatorId,
                             role: 'admin'
                         }
                     }
@@ -88,7 +91,8 @@ exports.teamRouter = (0, trpc_1.router)({
                         include: {
                             user: true
                         }
-                    }
+                    },
+                    creator: true
                 }
             });
             return newTeam;

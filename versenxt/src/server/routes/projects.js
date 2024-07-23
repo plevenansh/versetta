@@ -34,7 +34,6 @@ exports.projectRouter = (0, trpc_1.router)({
             const projects = yield prisma_1.default.project.findMany({
                 include: {
                     team: true,
-                    //   user: true,
                     tasks: true,
                     stages: true,
                 }
@@ -54,7 +53,6 @@ exports.projectRouter = (0, trpc_1.router)({
             const project = yield prisma_1.default.project.findUnique({
                 where: { id: input },
                 include: {
-                    //user: true,
                     tasks: {
                         include: {
                             creator: { include: { user: true } },
@@ -84,7 +82,6 @@ exports.projectRouter = (0, trpc_1.router)({
         endDate: zod_1.z.string().optional().transform(str => str ? new Date(str) : undefined),
         teamId: zod_1.z.number(),
         creatorId: zod_1.z.number(),
-        // userId: z.number()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Input received for project creation:", input);
@@ -98,7 +95,6 @@ exports.projectRouter = (0, trpc_1.router)({
                 endDate: input.endDate,
                 creator: { connect: { id: input.creatorId } },
                 team: { connect: { id: input.teamId } },
-                //  user: { connect: { id: input.userId } },
                 stages: {
                     create: stages.map(stage => ({ stage, completed: false }))
                 }
@@ -108,7 +104,6 @@ exports.projectRouter = (0, trpc_1.router)({
                 include: {
                     team: true,
                     creator: true,
-                    //   user: true,
                     stages: true // Changed from ProjectStageStatus to stages
                 }
             });
@@ -129,19 +124,16 @@ exports.projectRouter = (0, trpc_1.router)({
         startDate: zod_1.z.string().optional(),
         endDate: zod_1.z.string().optional(),
         teamId: zod_1.z.number().optional(),
-        // userId: z.number().optional()
     }))
         .mutation(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Input received for project update:", input);
         try {
-            // const { id, teamId, userId, ...data } = input;
             const { id, teamId } = input, data = __rest(input, ["id", "teamId"]);
             const updateData = Object.assign(Object.assign({}, data), { startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null, endDate: data.endDate === undefined ? undefined : data.endDate ? new Date(data.endDate) : null, team: teamId ? { connect: { id: teamId } } : undefined });
             const updatedProject = yield prisma_1.default.project.update({
                 where: { id },
                 data: updateData,
                 include: {
-                    //user: true,
                     tasks: {
                         include: {
                             creator: { include: { user: true } },
@@ -234,16 +226,13 @@ exports.projectRouter = (0, trpc_1.router)({
             throw new Error(`Failed to delete project: ${error.message}`);
         }
     })),
-    // getByTeamId: publicProcedure
     getByTeamId: trpc_1.publicProcedure
         .input(zod_1.z.number())
         .query(({ input }) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const projects = yield prisma_1.default.project.findMany({
-                // where: { userId: input },
                 where: { teamId: input },
                 include: {
-                    // user: true
                     tasks: {
                         include: {
                             creator: { include: { user: true } },
@@ -294,23 +283,4 @@ exports.projectRouter = (0, trpc_1.router)({
             throw new Error('Failed to fetch projects for team member');
         }
     })),
-    // getByTeamId: publicProcedure
-    //   .input(z.number())
-    //   .query(async ({ input }) => {
-    //     try {
-    //       const projects = await prisma.project.findMany({
-    //         where: { teamId: input },
-    //         include: { 
-    //           tasks: true,
-    //           team: true,
-    //           user: true
-    //         }
-    //       });
-    //       console.log(`Retrieved ${projects.length} projects for team ${input}`);
-    //       return projects;
-    //     } catch (error) {
-    //       console.error(`Error fetching projects for team ${input}:`, error);
-    //       throw new Error('Failed to fetch projects for team');
-    //     }
-    //   }),
 });

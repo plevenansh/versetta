@@ -36,7 +36,7 @@ export default function TeamOnboarding() {
     e.preventDefault();
     await createTeamMutation.mutateAsync({
       ...newTeam,
-      userId: 1 // Replace with actual user ID from your auth system
+      creatorId: 1 // Replace with actual user ID from your auth system
     });
   };
 

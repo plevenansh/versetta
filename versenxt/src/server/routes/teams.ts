@@ -54,7 +54,7 @@ export const teamRouter = router({
     .input(z.object({
       name: z.string(),
       description: z.string().optional(),
-      userId: z.number()
+      creatorId: z.number()
     }))
     .mutation(async ({ input }) => {
       console.log('Creating team with input:', input);
@@ -63,9 +63,12 @@ export const teamRouter = router({
           data: {
             name: input.name,
             description: input.description,
+            creator: {
+              connect: { id: input.creatorId }
+            },
             members: {
               create: {
-                userId: input.userId,
+                userId: input.creatorId,
                 role: 'admin'
               }
             }
@@ -75,7 +78,8 @@ export const teamRouter = router({
               include: {
                 user: true
               }
-            }
+            },
+            creator:true
           }
         });
         return newTeam;

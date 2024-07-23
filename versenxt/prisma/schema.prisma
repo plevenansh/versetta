@@ -15,6 +15,9 @@ model User {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   teamMemberships TeamMember[]
+  createdTeams    Team[]        @relation("TeamCreator")
+
+  @@map("users")
 }
 
 model Team {
@@ -23,10 +26,13 @@ model Team {
   description String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  creatorId   Int
+  creator     User          @relation("TeamCreator", fields: [creatorId], references: [id])
   members     TeamMember[]
   projects    Project[]
   tasks       Task[]        // Tasks directly associated with the team
 
+  @@index([creatorId])
   @@map("teams")
 }
 

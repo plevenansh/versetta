@@ -13,6 +13,6 @@ export default function HomePage() {
   }
 
   return (
-    <Dashboard projects={projects}/>
+    <Dashboard />
   );
 }

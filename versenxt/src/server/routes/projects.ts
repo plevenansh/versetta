@@ -4,7 +4,6 @@ import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
 
-const defaultStages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
 
 export const projectRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -61,13 +60,12 @@ export const projectRouter = router({
     endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
     teamId: z.number(),
     creatorId: z.number(),
-   
+    stages: z.array(z.string()),
   }))
   .mutation(async ({ input }) => {
     console.log("Input received for project creation:", input);
     try {
-      const stages = ['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description'];
-      const data: Prisma.ProjectCreateInput = {
+        const data: Prisma.ProjectCreateInput = {
         title: input.title,
         description: input.description,
         status: input.status,
@@ -75,17 +73,16 @@ export const projectRouter = router({
         endDate: input.endDate,
         creator: { connect: { id: input.creatorId } },
         team: { connect: { id: input.teamId } },
-     
         stages: {
-          create: stages.map(stage => ({ stage, completed: false }))
+          create: input.stages.map(stage => ({ stage, completed: false }))
         }
       };
+      console.log("Data to be created:", data);
       const createdProject = await prisma.project.create({ 
         data,
         include: {
           team: true,
           creator: true,
-     
           stages: true // Changed from ProjectStageStatus to stages
         }
       });

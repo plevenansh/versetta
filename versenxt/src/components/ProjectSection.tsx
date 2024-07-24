@@ -1,3 +1,4 @@
+//ProjectSection.tsx
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,9 @@ import ProjectCard from './ProjectCard';
 import { trpc } from '@/trpc/client';
 import { Plus, X } from 'lucide-react';
 
+
+
+
 export default function ProjectSection() {
   const [projects, setProjects] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -17,7 +21,11 @@ export default function ProjectSection() {
     teamId: 1,
     creatorId: 1,
     endDate: '',
+    
   });
+  const [availableStages, setAvailableStages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
+  const [selectedStages, setSelectedStages] = useState<string[]>([]);
+  const [newStage, setNewStage] = useState('');
 
   const { data: fetchedProjects, refetch } = trpc.projects.getAll.useQuery();
   const createProjectMutation = trpc.projects.create.useMutation({
@@ -42,8 +50,22 @@ export default function ProjectSection() {
     createProjectMutation.mutate({
       ...newProject,
       startDate: new Date().toISOString(), // Set current date as start date
+      stages: selectedStages,   
     });
   };
+
+  const handleStageSelect = (stage: string) => {
+    setSelectedStages(prev => prev.includes(stage) ? prev.filter(s => s !== stage) : [...prev, stage]);
+  };
+
+  const handleAddNewStage = () => {
+    if (newStage && !availableStages.includes(newStage)) {
+      setAvailableStages(prev => [...prev, newStage]);
+      setSelectedStages(prev => [...prev, newStage]);
+      setNewStage('');
+    }
+  };
+
 
   return (
     <Card className="w-full bg-white shadow-lg">
@@ -103,6 +125,29 @@ export default function ProjectSection() {
                 value={newProject.endDate}
                 onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
               />
+              <div>
+              <h3 className="text-sm font-medium mb-2">Select Stages:</h3>
+              <div className="flex flex-wrap gap-2">
+                {availableStages.map(stage => (
+                  <Button
+                    key={stage}
+                    variant={selectedStages.includes(stage) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleStageSelect(stage)}
+                  >
+                    {stage}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add New Stage"
+                value={newStage}
+                onChange={(e) => setNewStage(e.target.value)}
+              />
+              <Button onClick={handleAddNewStage}>Add</Button>
+            </div>
             </div>
             <DialogFooter>
               <Button onClick={handleCreateProject}>Create Project</Button>

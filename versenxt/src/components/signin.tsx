@@ -96,7 +96,7 @@ const SignInPage = () => {
         <Separator className="my-6" />
 
         <p className="text-center">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <a href="#" className="text-blue-600 hover:underline">Sign up</a>
         </p>
 

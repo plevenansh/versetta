@@ -1,7 +1,6 @@
-//ProjectCard.tsx
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ interface ProjectStage {
   projectId: number;
   stage: string;
   completed: boolean;
+  order: number;
 }
 
 interface Task {
@@ -35,13 +35,13 @@ interface ProjectCardProps {
     teamId: number;
     stages: ProjectStage[];
     tasks?: Task[];
+    isopen?: boolean;
   };
   refetchProjects: () => void;
 }
 
 export default function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [stages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [percentageDone, setPercentageDone] = useState(0);
@@ -57,48 +57,53 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
 
   useEffect(() => {
     if (project.stages) {
-      setProjectStages(project.stages);
-    } else {
-      const initialStages = stages.map(stage => ({
-        id: 0,
-        projectId: project.id,
-        stage,
-        completed: false
-      }));
-      setProjectStages(initialStages);
+      const sortedStages = [...project.stages].sort((a, b) => {
+        if (a.completed === b.completed) {
+          return a.order - b.order;
+        }
+        return a.completed ? -1 : 1;
+      });
+      setProjectStages(sortedStages);
     }
-  }, [project, stages]);
+  }, [project.stages]);
+
+  const updatePercentage = useCallback(() => {
+    const completedStages = projectStages.filter(stage => stage.completed).length;
+    const percentage = (completedStages / projectStages.length) * 100;
+    setPercentageDone(Math.round(percentage));
+  }, [projectStages]);
 
   useEffect(() => {
     updatePercentage();
-  }, [projectStages]);
-
-  const updatePercentage = () => {
-    const completedStages = projectStages.filter(stage => stage.completed).length;
-    const percentage = (completedStages / stages.length) * 100;
-    setPercentageDone(Math.round(percentage));
-  };
+  }, [projectStages, updatePercentage]);
 
   const toggleStage = (stage: string) => {
-    const currentStage = projectStages.find(s => s.stage === stage);
-    const newCompletedStatus = !currentStage?.completed;
+    const updatedStages = projectStages.map(s => {
+      if (s.stage === stage) {
+        return { ...s, completed: !s.completed };
+      }
+      return s;
+    });
 
+const sortedStages = updatedStages.sort((a, b) => {
+  if (a.completed === b.completed) {
+    return a.order - b.order;
+  }
+  return a.completed ? -1 : 1;
+});
+
+    setProjectStages(updatedStages);
     updateProjectStageMutation.mutate({
       projectId: project.id,
       stage,
-      completed: newCompletedStatus,
+      completed: !projectStages.find(s => s.stage === stage)?.completed,
     });
-
-    // Update local state for immediate UI feedback
-    setProjectStages(prevStages =>
-      prevStages.map(s => s.stage === stage ? { ...s, completed: newCompletedStatus } : s)
-    );
   };
 
-  const getCompletedWidth = (): string => {
-    const completedStages = projectStages.filter(stage => stage.completed).length;
-    return `${(completedStages / stages.length) * 100}%`;
-  };
+const getCompletedWidth = (): string => {
+  const completedStages = projectStages.filter(stage => stage.completed).length;
+  return `${(completedStages / projectStages.length) * 100}%`;
+};
 
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return 'Not set';
@@ -118,93 +123,86 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
   };
 
   return (
-    <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gray-50">
-        <div>
-          <CardTitle className="text-xl font-bold text-gray-800">{project.title}</CardTitle>
-          <p className="text-sm text-gray-600">Project ID: {project.id}</p>
-          <p className="text-sm text-gray-600">Team ID: {project.teamId}</p>
-          <p className="text-sm text-gray-600">Creator ID: {project.creatorId}</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="text-blue-600 border-blue-600 hover:bg-blue-50">
+    <Card className="mb-4">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-2xl font-bold">{project.title}</CardTitle>
+        <div className="flex space-x-2">
+          <Button onClick={() => setIsEditModalOpen(true)} variant="outline" className="text-blue-600">
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+          <Button variant="outline" className="text-green-600">
             <Send className="w-4 h-4 mr-2" />
             Publish
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleDelete} 
-            className="text-red-600 border-red-600 hover:bg-red-50"
-          >
+          <Button onClick={handleDelete} variant="outline" className="text-red-600">
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
-          <Button variant="ghost" onClick={() => setExpanded(!expanded)} className="text-gray-600">
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-sm font-medium text-gray-700">Current: {project.status}</span>
-          <span className="text-sm font-medium text-gray-700">{percentageDone}% Complete</span>
+      <CardContent>
+        <div className="mb-4">
+          <p>Project ID: {project.id}</p>
+          <p>Team ID: {project.teamId}</p>
+          <p>Creator ID: {project.creatorId}</p>
         </div>
-        <Progress value={percentageDone} className="mb-4 bg-gray-200" indicatorClassName="bg-blue-500" />
-        <p className="text-sm text-gray-600 mb-4">Expected Publish: {formatDate(project.endDate)}</p>
+        <Button 
+          onClick={() => setExpanded(!expanded)} 
+          variant="outline" 
+          className="w-full justify-between mb-4"
+        >
+          <span>Details</span>
+          {expanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+        </Button>
+        <div className="space-y-2">
+          <p>Current: {project.status}</p>
+          <Progress value={percentageDone} className="w-full" />
+          <p className="text-right">{percentageDone}% Complete</p>
+          <p>Expected Publish: {formatDate(project.endDate)}</p>
+        </div>
         <AnimatePresence>
           {expanded && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="mt-4"
             >
-              <h4 className="text-sm font-semibold text-gray-700 mb-4">Production Stages</h4>
-              <div className="flex justify-between items-center relative">
-                {stages.map((stage) => {
-                  const projectStage = projectStages.find(s => s.stage === stage);
-                  return (
-                    <motion.div 
-                      key={stage} 
-                      className="flex flex-col items-center z-10"
-                      layout
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              <h3 className="font-bold mb-2">Production Stages</h3>
+              <div className="flex items-center space-x-2">
+                {projectStages.map((stage, index) => (
+                  <React.Fragment key={stage.id}>
+                    <Button
+                      onClick={() => toggleStage(stage.stage)}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        stage.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}
                     >
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => toggleStage(stage)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          projectStage?.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-                        }`}
-                      >
-                        {projectStage?.completed ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
-                      </motion.button>
-                      <span className="text-xs mt-2 text-gray-600">{stage}</span>
-                    </motion.div>
-                  );
-                })}
-                <motion.div 
-                  className="absolute top-5 left-5 right-5 h-0.5 bg-blue-500"
-                  style={{ width: getCompletedWidth() }}
-                  transition={{ duration: 0.5 }}
-                />
+                      {stage.completed ? (
+                        <CheckCircle className="w-8 h-8" />
+                      ) : (
+                        <Circle className="w-6 h-6" />
+                      )}
+                    </Button>
+                    {index < projectStages.length - 1 && (
+                      <div className="flex-grow h-1 bg-blue-300"></div>
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
-              
+              <div className="flex justify-between mt-2">
+                {projectStages.map((stage) => (
+                  <span key={stage.id} className="text-xs">{stage.stage}</span>
+                ))}
+              </div>
               {project.tasks && project.tasks.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Tasks</h4>
+                <div className="mt-4">
+                  <h3 className="font-bold mb-2">Tasks</h3>
                   <ul className="list-disc pl-5">
                     {project.tasks.map((task) => (
-                      <li key={task.id} className="text-sm text-gray-600">
-                        {task.title} - {task.status}
-                      </li>
+                      <li key={task.id}>{task.title} - {task.status}</li>
                     ))}
                   </ul>
                 </div>
@@ -213,11 +211,10 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
           )}
         </AnimatePresence>
       </CardContent>
-      
       {isEditModalOpen && (
         <EditProjectModal
-          project={projectWithTasks || project}
-          isOpen={isEditModalOpen}
+          project={project}
+          isOpen={isEditModalOpen}  //remember it i made it a manual change to solve the  type issue, chnage remove this line if needed
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={() => {
             refetch();

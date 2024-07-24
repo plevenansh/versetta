@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X, Plus } from 'lucide-react';
 
 interface EditProjectModalProps {
   project: {
@@ -13,6 +14,7 @@ interface EditProjectModalProps {
     startDate: string | null;
     endDate: string | null;
     teamId: number;
+    stages: { id: number; stage: string; completed: boolean }[];
   };
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +28,8 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const [startDate, setStartDate] = useState(project.startDate || '');
   const [endDate, setEndDate] = useState(project.endDate || '');
   const [teamId, setTeamId] = useState(project.teamId);
+  const [stages, setStages] = useState(project.stages);
+  const [newStage, setNewStage] = useState('');
 
   const updateProjectMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
@@ -43,8 +47,20 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
       status,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-      teamId
+      teamId,
+      stages: stages.map(s => s.stage)
     });
+  };
+
+  const handleAddStage = () => {
+    if (newStage.trim()) {
+      setStages([...stages, { id: Date.now(), stage: newStage.trim(), completed: false }]);
+      setNewStage('');
+    }
+  };
+
+  const handleRemoveStage = (stageId: number) => {
+    setStages(stages.filter(s => s.id !== stageId));
   };
 
   return (
@@ -82,6 +98,34 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onChange={(e) => setEndDate(e.target.value)}
             placeholder="End Date"
           />
+          <div>
+            <h3 className="text-sm font-medium mb-2">Stages:</h3>
+            <div className="space-y-2">
+              {stages.map((stage) => (
+                <div key={stage.id} className="flex items-center space-x-2">
+                  <span>{stage.stage}</span>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleRemoveStage(stage.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <Input
+                value={newStage}
+                onChange={(e) => setNewStage(e.target.value)}
+                placeholder="New Stage"
+              />
+              <Button type="button" onClick={handleAddStage}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           <Button type="submit">Update Project</Button>
         </form>
       </DialogContent>

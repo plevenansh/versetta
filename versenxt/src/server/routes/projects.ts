@@ -102,35 +102,51 @@ export const projectRouter = router({
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     teamId: z.number().optional(),
-  
+    stages: z.array(z.string()).optional(),
   }))
   .mutation(async ({ input }) => {
     console.log("Input received for project update:", input);
     try {
-     
-      const { id, teamId, ...data } = input;
+      const { id, teamId, stages, ...data } = input;
       const updateData: Prisma.ProjectUpdateInput = {
         ...data,
         startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate === undefined ? undefined : data.endDate ? new Date(data.endDate) : null,
         team: teamId ? { connect: { id: teamId } } : undefined,
-      
       };
 
-      const updatedProject = await prisma.project.update({ 
-        where: { id }, 
+      // Update stages if provided
+      if (stages) {
+        // Delete existing stages
+        await prisma.projectStage.deleteMany({
+          where: { projectId: id },
+        });
+
+        // Create new stages
+        updateData.stages = {
+          create: stages.map((stage, index) => ({
+            stage,
+            completed: false,
+            order: index,
+          })),
+        };
+      }
+
+      const updatedProject = await prisma.project.update({
+        where: { id },
         data: updateData,
-        include: { 
+        include: {
           tasks: {
             include: {
               creator: { include: { user: true } },
               assignee: { include: { user: true } }
-            }
+            },
           },
           team: true,
-          stages: true
-        }
+          stages: true,
+        },
       });
+
       console.log('Project updated successfully:', updatedProject);
       return updatedProject;
     } catch (error) {

@@ -4,7 +4,7 @@ import { projectRouter } from './routes/projects';
 import { taskRouter } from './routes/tasks';
 import {userRouter} from './routes/users';
 import {teamRouter} from './routes/teams';
-import superjson from 'superjson';
+import { youtubeRouter } from './routes/youtube';
 
 export const appRouter = router({
 
@@ -12,21 +12,12 @@ export const appRouter = router({
     projects: projectRouter,
     tasks: taskRouter,
     teams: teamRouter,
- // calendar: calendarRouter,
-//  dashboard: dashboardRouter
+    youtube: youtubeRouter,
 
 
-//   hello: publicProcedure
-//     .input(
-//       z.object({
-//         text: z.string(),
-//       }),
-//     )
-//     .query((opts) => {
-//       return {
-//         greeting: `hello ${opts.input.text}`,
-//       };
-//     }),
+   // calendar: calendarRouter,
+   //  dashboard: dashboardRouter
+
 
 
 });

@@ -48,13 +48,22 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       teamId,
-      stages: stages.map(s => s.stage)
+      stages: stages.map((s, index) => ({
+        id: s.id,
+        stage: s.stage,
+        completed: s.completed,
+        order: s.order !== undefined ? s.order : index // Use existing order or fallback to index
+      }))
     });
   };
-
   const handleAddStage = () => {
     if (newStage.trim()) {
-      setStages([...stages, { id: Date.now(), stage: newStage.trim(), completed: false }]);
+      setStages([...stages, {
+        id: Date.now(), // Temporary ID for new stages
+        stage: newStage.trim(),
+        completed: false,
+        order: stages.length // Assign the next available order
+      }]);
       setNewStage('');
     }
   };

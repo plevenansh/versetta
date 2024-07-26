@@ -212,16 +212,16 @@ const getCompletedWidth = (): string => {
         </AnimatePresence>
       </CardContent>
       {isEditModalOpen && (
-        <EditProjectModal
-          project={project}
-          isOpen={isEditModalOpen}  //remember it i made it a manual change to solve the  type issue, chnage remove this line if needed
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdate={() => {
-            refetch();
-            refetchProjects();
-          }}
-        />
-      )}
+  <EditProjectModal
+    project={{...project, stages: projectStages}}
+    isOpen={isEditModalOpen}
+    onClose={() => setIsEditModalOpen(false)}
+    onUpdate={() => {
+      refetch();
+      refetchProjects();
+    }}
+  />
+)}
     </Card>
   );
 }

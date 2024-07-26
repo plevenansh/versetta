@@ -106,12 +106,29 @@ export const projectRouter = router({
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     teamId: z.number().optional(),
-    stages: z.array(z.string()).optional(),
+    // Add stages to the input if you want to allow stage updates
+    stages: z.array(z.object({
+      id: z.number(),
+      stage: z.string(),
+      completed: z.boolean(),
+      order: z.number()
+    })).optional()
   }))
   .mutation(async ({ input }) => {
     console.log("Input received for project update:", input);
     try {
       const { id, teamId, stages, ...data } = input;
+
+      // Fetch existing project with stages
+      const existingProject = await prisma.project.findUnique({
+        where: { id },
+        include: { stages: true }
+      });
+
+      if (!existingProject) {
+        throw new Error(`Project with id ${id} not found`);
+      }
+
       const updateData: Prisma.ProjectUpdateInput = {
         ...data,
         startDate: data.startDate === undefined ? undefined : data.startDate ? new Date(data.startDate) : null,
@@ -119,20 +136,27 @@ export const projectRouter = router({
         team: teamId ? { connect: { id: teamId } } : undefined,
       };
 
-      // Update stages if provided
-      if (stages) {
-        // Delete existing stages
-        await prisma.projectStage.deleteMany({
-          where: { projectId: id },
+      // If stages are provided in the input, update them
+      if (input.stages) {
+        await prisma.projectStage.deleteMany({ where: { projectId: input.id } });
+        await prisma.projectStage.createMany({
+          data: input.stages.map(stage => ({
+            projectId: input.id,
+            stage: stage.stage,
+            completed: stage.completed,
+            order: stage.order
+          }))
         });
-
-        // Create new stages
+      }else {
+        // If stages are not provided, keep the existing stages
         updateData.stages = {
-          create: stages.map((stage, index) => ({
-            stage,
-            completed: false,
-            order: index,
-          })),
+          updateMany: existingProject.stages.map(stage => ({
+            where: { id: stage.id },
+            data: {
+              completed: stage.completed,
+              order: stage.order
+            }
+          }))
         };
       }
 
@@ -144,11 +168,11 @@ export const projectRouter = router({
             include: {
               creator: { include: { user: true } },
               assignee: { include: { user: true } }
-            },
+            }
           },
           team: true,
-          stages: true,
-        },
+          stages: true
+        }
       });
 
       console.log('Project updated successfully:', updatedProject);

@@ -74,7 +74,11 @@ export const projectRouter = router({
         creator: { connect: { id: input.creatorId } },
         team: { connect: { id: input.teamId } },
         stages: {
-          create: input.stages.map(stage => ({ stage, completed: false }))
+          create: input.stages.map((stage,index) => ({ 
+            stage, 
+            completed: false,
+            order: index
+           }))
         }
       };
       console.log("Data to be created:", data);
@@ -157,34 +161,49 @@ export const projectRouter = router({
  // In projectRouter.ts
 
  updateProjectStage: publicProcedure
- .input(z.object({
-   projectId: z.number(),
-   stage: z.string(),
-   completed: z.boolean(),
- }))
- .mutation(async ({ input }) => {
-   console.log("Input received for project stage update:", input);
-   try {
-     const updatedStage = await prisma.projectStage.upsert({
-       where: {
-         projectId_stage: {
-           projectId: input.projectId,
-           stage: input.stage,
-         },
-       },
-       update: { completed: input.completed },
-       create: {
-         projectId: input.projectId,
-         stage: input.stage,
-         completed: input.completed,
-       },
-     });
-     return updatedStage;
-   } catch (error) {
-     console.error('Error updating project stage:', error);
-     throw new Error('Failed to update project stage');
-   }
- }),
+  .input(z.object({
+    projectId: z.number(),
+    stage: z.string(),
+    completed: z.boolean(),
+  }))
+  .mutation(async ({ input }) => {
+    console.log("Input received for project stage update:", input);
+    try {
+      // First, get the current stages for the project
+      const project = await prisma.project.findUnique({
+        where: { id: input.projectId },
+        include: { stages: true },
+      });
+
+      if (!project) {
+        throw new Error(`Project with id ${input.projectId} not found`);
+      }
+
+      // Find the index of the stage we're updating
+      const stageIndex = project.stages.findIndex(s => s.stage === input.stage);
+
+      const updatedStage = await prisma.projectStage.upsert({
+        where: {
+          projectId_stage: {
+            projectId: input.projectId,
+            stage: input.stage,
+          },
+        },
+        update: { completed: input.completed },
+        create: {
+          projectId: input.projectId,
+          stage: input.stage,
+          completed: input.completed,
+          order: stageIndex !== -1 ? stageIndex : project.stages.length, // Use existing index or add to end
+        },
+      });
+
+      return updatedStage;
+    } catch (error) {
+      console.error('Error updating project stage:', error);
+      throw new Error('Failed to update project stage');
+    }
+  }),
  delete: publicProcedure
   .input(z.number())
   .mutation(async ({ input }) => {

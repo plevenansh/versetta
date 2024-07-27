@@ -73,6 +73,11 @@ export default function TaskList() {
   useEffect(() => {
     if (fetchedTasks) {
       const sortedTasks = [...fetchedTasks].sort((a, b) => {
+        // First, sort by completion status
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        
+        // For tasks with the same completion status, sort by due date and creation order
         if (a.dueDate && b.dueDate) {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         } else if (a.dueDate) {
@@ -90,13 +95,31 @@ export default function TaskList() {
   const toggleTask = async (id: number) => {
     const taskToUpdate = tasks.find(task => task.id === id);
     if (taskToUpdate) {
-      await updateTask({
+      const updatedTask = {
         ...taskToUpdate,
         status: taskToUpdate.status === 'completed' ? 'pending' : 'completed'
+      };
+      await updateTask(updatedTask);
+      
+      // Re-sort tasks after updating
+      const updatedTasks = tasks.map(t => t.id === id ? updatedTask : t);
+      const sortedTasks = [...updatedTasks].sort((a, b) => {
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        } else {
+          return a.creationOrder - b.creationOrder;
+        }
       });
+      setTasks(sortedTasks);
     }
   };
-
+  
   const updateTask = async (updatedTask: Task) => {
     try {
       const taskToUpdate: Partial<Task> = {

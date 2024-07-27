@@ -28,6 +28,7 @@ export const taskRouter = router({
           assignee: { include: { user: true } }
         },
         orderBy: [
+          { status: 'asc' }, // This will put 'completed' tasks at the bottom
           { dueDate: 'asc' },
           { creationOrder: 'asc' }
         ]

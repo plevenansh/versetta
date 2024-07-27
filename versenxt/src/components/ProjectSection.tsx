@@ -38,10 +38,22 @@ export default function ProjectSection() {
 
   useEffect(() => {
     if (fetchedProjects) {
-      setProjects(fetchedProjects);
+      const sortedProjects = [...fetchedProjects].sort((a, b) => {
+        if (a.endDate && b.endDate) {
+          return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+        } else if (a.endDate) {
+          return -1;
+        } else if (b.endDate) {
+          return 1;
+        } else {
+          return a.creationOrder - b.creationOrder;
+        }
+      });
+      setProjects(sortedProjects);
     }
   }, [fetchedProjects]);
 
+  
   const handleAddProject = () => {
     setIsAddModalOpen(true);
   };

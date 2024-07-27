@@ -13,7 +13,11 @@ export const projectRouter = router({
           team: true,
           tasks: true,
           stages: true,
-        }
+        },
+        orderBy:[
+          {endDate: 'asc'},
+          {creationOrder: 'asc'} //
+        ],
       });
       console.log(`Retrieved ${projects.length} projects`);
       return projects;
@@ -73,6 +77,7 @@ export const projectRouter = router({
         endDate: input.endDate,
         creator: { connect: { id: input.creatorId } },
         team: { connect: { id: input.teamId } },
+        //creationOrder: {increment:1},
         stages: {
           create: input.stages.map((stage,index) => ({ 
             stage, 

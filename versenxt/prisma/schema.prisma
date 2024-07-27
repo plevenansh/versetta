@@ -64,7 +64,8 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   teamId      Int
-  creatorId   Int
+  creatorId   Int 
+  creationOrder Int @default(autoincrement())
   creator     TeamMember    @relation("ProjectCreator", fields: [creatorId], references: [id])
   team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   tasks       Task[]        // Tasks associated with this project

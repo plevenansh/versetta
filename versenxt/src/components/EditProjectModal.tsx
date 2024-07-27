@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { trpc } from '@/trpc/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const [stages, setStages] = useState(project.stages);
   const [newStage, setNewStage] = useState('');
 
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const updateProjectMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
       onUpdate();
@@ -56,6 +58,20 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
       }))
     });
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (index < inputRefs.current.length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      } else {
+        handleSubmit(e);
+      }
+    } else if (e.ctrlKey && e.key === 'Enter') {
+      handleSubmit(e);
+    }
+  };
+
   const handleAddStage = () => {
     if (newStage.trim()) {
       setStages([...stages, {
@@ -79,33 +95,43 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
           <DialogTitle>Edit Project</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
+        <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Project Title"
             required
+            onKeyDown={(e) => handleKeyDown(e, 0)}
+            ref={(el) => inputRefs.current[0] = el}
           />
           <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description"
+            onKeyDown={(e) => handleKeyDown(e, 1)}
+            ref={(el) => inputRefs.current[1] = el}
           />
           <Input
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             placeholder="Status"
+            onKeyDown={(e) => handleKeyDown(e, 2)}
+            ref={(el) => inputRefs.current[2] = el}
           />
           <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             placeholder="Start Date"
+            onKeyDown={(e) => handleKeyDown(e, 3)}
+            ref={(el) => inputRefs.current[3] = el}
           />
           <Input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             placeholder="End Date"
+            onKeyDown={(e) => handleKeyDown(e, 4)}
+            ref={(el) => inputRefs.current[4] = el}
           />
           <div>
             <h3 className="text-sm font-medium mb-2">Stages:</h3>

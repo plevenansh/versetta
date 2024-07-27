@@ -102,3 +102,11 @@
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
+.hover\:scrollbar-default:hover {
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.hover\:scrollbar-default:hover::-webkit-scrollbar {
+  display: block;
+}

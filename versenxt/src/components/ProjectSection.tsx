@@ -107,6 +107,7 @@ export default function ProjectSection() {
         {projects.length === 0 ? (
           <p className="text-gray-600 text-center py-4">No projects exist. Create a new project to get started!</p>
         ) : (
+          <div className="h-[calc(100vh-200px)] overflow-y-auto pr-4">
           <div className="space-y-4">
             {projects.map(project => (
               <ProjectCard
@@ -115,6 +116,7 @@ export default function ProjectSection() {
                 refetchProjects={refetch}
               />
             ))}
+          </div>
           </div>
         )}
 

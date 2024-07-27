@@ -14,10 +14,11 @@ export const projectRouter = router({
           tasks: true,
           stages: true,
         },
-        orderBy:[
-          {endDate: 'asc'},
-          {creationOrder: 'asc'} //
-        ],
+        orderBy: [
+          { completed: 'asc' }, // This will put completed projects at the bottom
+          { endDate: 'asc' },
+          { creationOrder: 'asc' }
+        ]
       });
       console.log(`Retrieved ${projects.length} projects`);
       return projects;
@@ -283,6 +284,29 @@ export const projectRouter = router({
   }),
 
 
+  toggleProjectCompletion: publicProcedure
+  .input(z.object({
+    id: z.number(),
+    completed: z.boolean()
+  }))
+  .mutation(async ({ input }) => {
+    try {
+      const updatedProject = await prisma.project.update({
+        where: { id: input.id },
+        data: { completed: input.completed },
+        include: {
+          team: true,
+          tasks: true,
+          stages: true
+        }
+      });
+      return updatedProject;
+    } catch (error) {
+      console.error('Error toggling project completion:', error);
+      throw new Error('Failed to toggle project completion');
+    }
+  }),
+  
   getByTeamId: publicProcedure
     .input(z.number())
     .query(async ({ input }) => {

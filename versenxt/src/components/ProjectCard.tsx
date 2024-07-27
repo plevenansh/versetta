@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Switch } from "@/components/ui/switch";
 import { CheckCircle, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 'lucide-react';
 import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
@@ -100,6 +101,12 @@ const sortedStages = updatedStages.sort((a, b) => {
     });
   };
 
+  const toggleProjectCompletion = trpc.projects.toggleProjectCompletion.useMutation({
+    onSuccess: () => {
+      refetchProjects();
+    },
+  });
+
 const getCompletedWidth = (): string => {
   const completedStages = projectStages.filter(stage => stage.completed).length;
   return `${(completedStages / projectStages.length) * 100}%`;
@@ -142,6 +149,19 @@ const getCompletedWidth = (): string => {
         </div>
       </CardHeader>
       <CardContent>
+        
+
+      <div className="flex items-center space-x-2 mt-2">
+  <Switch
+    checked={project.completed}
+    onCheckedChange={(checked) => {
+      toggleProjectCompletion.mutate({ id: project.id, completed: checked });
+    }}
+  />
+  <span>{project.completed ? "Completed" : "In Progress"}</span>
+</div>
+
+
         <div className="mb-4">
           <p>Project ID: {project.id}</p>
           <p>Team ID: {project.teamId}</p>

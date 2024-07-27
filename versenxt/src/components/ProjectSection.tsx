@@ -41,6 +41,10 @@ export default function ProjectSection() {
   useEffect(() => {
     if (fetchedProjects) {
       const sortedProjects = [...fetchedProjects].sort((a, b) => {
+       
+        if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
+       
         if (a.endDate && b.endDate) {
           return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
         } else if (a.endDate) {

@@ -6,35 +6,39 @@ import prisma from '../../lib/prisma';
 
 export const taskRouter = router({
   getAll: publicProcedure
-    .input(z.object({
-      projectId: z.number().optional(),
-      teamId: z.number().optional(),
-     creatorId: z.number().optional(),
+  .input(z.object({
+    projectId: z.number().optional(),
+    teamId: z.number().optional(),
+    creatorId: z.number().optional(),
     assigneeId: z.number().optional()
-    }))
-    .query(async ({ input }) => {
-      try {
-        const tasks = await prisma.task.findMany({
-          where: {
-            projectId: input.projectId,
-            teamId: input.teamId,
-            creatorId: input.creatorId,
-            assigneeId: input.assigneeId
-            },
-          include: {
-            project: true,
-            team: true,
-            creator: { include: { user: true } },
-            assignee: { include: { user: true } }
-            }
-        });
-        console.log(`Retrieved ${tasks.length} tasks`);
-        return tasks;
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-        throw new Error('Failed to fetch tasks');
-      }
-    }),
+  }))
+  .query(async ({ input }) => {
+    try {
+      const tasks = await prisma.task.findMany({
+        where: {
+          projectId: input.projectId,
+          teamId: input.teamId,
+          creatorId: input.creatorId,
+          assigneeId: input.assigneeId
+        },
+        include: {
+          project: true,
+          team: true,
+          creator: { include: { user: true } },
+          assignee: { include: { user: true } }
+        },
+        orderBy: [
+          { dueDate: 'asc' },
+          { creationOrder: 'asc' }
+        ]
+      });
+      console.log(`Retrieved ${tasks.length} tasks`);
+      return tasks;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      throw new Error('Failed to fetch tasks');
+    }
+  }),
 
     getTasksAssignedToTeamMember: publicProcedure
     .input(z.number())
@@ -83,7 +87,7 @@ export const taskRouter = router({
     }),
 
 
-  create: publicProcedure
+    create: publicProcedure
     .input(z.object({
       title: z.string(),
       description: z.string().optional(),
@@ -92,7 +96,7 @@ export const taskRouter = router({
       projectId: z.number().optional(),
       teamId: z.number().optional(),
       creatorId: z.number()
-      }))
+    }))
     .mutation(async ({ input }) => {
       try {
         const data: Prisma.TaskCreateInput = {
@@ -100,11 +104,12 @@ export const taskRouter = router({
           description: input.description,
           status: input.status,
           dueDate: input.dueDate ? new Date(input.dueDate) : null,
-          team: { connect: { id: input.teamId } },
+          team: input.teamId ? { connect: { id: input.teamId } } : undefined,
           creator: { connect: { id: input.creatorId } },
           ...(input.projectId && { project: { connect: { id: input.projectId } } }),
-          ...(input.teamId && { team: { connect: { id: input.teamId } } })
         };
+        // Remove the creationOrder field from here
+        
         console.log('Creating task with data:', data);
         const newTask = await prisma.task.create({ 
           data,

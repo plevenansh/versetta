@@ -72,7 +72,18 @@ export default function TaskList() {
 
   useEffect(() => {
     if (fetchedTasks) {
-      setTasks(fetchedTasks);
+      const sortedTasks = [...fetchedTasks].sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        } else {
+          return a.creationOrder - b.creationOrder;
+        }
+      });
+      setTasks(sortedTasks);
     }
   }, [fetchedTasks]);
 

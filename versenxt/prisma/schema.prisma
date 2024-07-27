@@ -99,6 +99,7 @@ model Task {
   projectId   Int?        // Optional: task may or may not be associated with a project
   creatorId   Int         // TeamMember who created the task
   assigneeId  Int?        // Optional: task may or may not be assigned to a team member
+  creationOrder Int @default(autoincrement())
   team        Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
   project     Project?    @relation(fields: [projectId], references: [id])
   creator     TeamMember  @relation("TaskCreator", fields: [creatorId], references: [id])

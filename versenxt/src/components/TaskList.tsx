@@ -1,7 +1,7 @@
 //TaskList.tsx
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,8 @@ export default function TaskList() {
     creatorId: 1, // Set a default creator ID or fetch from your auth context
     assigneeId: undefined
  });
+
+ const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({
     projectId: undefined, // Add filters as needed
@@ -130,6 +132,19 @@ export default function TaskList() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter' && !e.ctrlKey) {
+      e.preventDefault();
+      if (index < inputRefs.current.length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      } else {
+        handleCreateTask(e);
+      }
+    } else if (e.ctrlKey && e.key === 'Enter') {
+      handleCreateTask(e);
+    }
+  };
+
   const handleDeleteTask = async (taskId: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
@@ -162,34 +177,44 @@ export default function TaskList() {
       <CardContent>
         {showNewTaskForm && (
           <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
-            <Input
+             <Input
               value={newTask.title}
               onChange={(e) => setNewTask({...newTask, title: e.target.value})}
               placeholder="Task Title"
               required
+              onKeyDown={(e) => handleKeyDown(e, 0)}
+              ref={(el) => inputRefs.current[0] = el}
             />
             <Input
               value={newTask.description || ''}
               onChange={(e) => setNewTask({...newTask, description: e.target.value})}
               placeholder="Description"
+              onKeyDown={(e) => handleKeyDown(e, 1)}
+              ref={(el) => inputRefs.current[1] = el}
             />
             <Input
               type="date"
               value={newTask.dueDate || ''}
               onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
               placeholder="Due Date"
+              onKeyDown={(e) => handleKeyDown(e, 2)}
+              ref={(el) => inputRefs.current[2] = el}
             />
             <Input
               type="number"
               value={newTask.projectId || ''}
               onChange={(e) => setNewTask({...newTask, projectId: e.target.value ? parseInt(e.target.value) : undefined})}
               placeholder="Project ID (optional)"
+              onKeyDown={(e) => handleKeyDown(e, 3)}
+              ref={(el) => inputRefs.current[3] = el}
             />
             <Input
               type="number"
               value={newTask.teamId || ''}
               onChange={(e) => setNewTask({...newTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
               placeholder="Team ID (optional)"
+              onKeyDown={(e) => handleKeyDown(e, 4)}
+              ref={(el) => inputRefs.current[4] = el}
             />
             <Input
               type="number"
@@ -197,19 +222,23 @@ export default function TaskList() {
               onChange={(e) => setNewTask({...newTask, creatorId: parseInt(e.target.value)})}
               placeholder="Creator ID"
               required
+              onKeyDown={(e) => handleKeyDown(e, 5)}
+              ref={(el) => inputRefs.current[5] = el}
             />
             <Input
               type="number"
               value={newTask.assigneeId || ''}
               onChange={(e) => setNewTask({...newTask, assigneeId: e.target.value ? parseInt(e.target.value) : undefined})}
               placeholder="Assignee ID (optional)"
+              onKeyDown={(e) => handleKeyDown(e, 6)}
+              ref={(el) => inputRefs.current[6] = el}
             />
             <Button type="submit">Add Task</Button>
           </form>
         )}
-        <ul className="space-y-2">
+        <div className="h-[calc(100vh-300px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default pr-4">
           {tasks.map(task => (
-            <li key={task.id} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+            <Card key={task.id} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
               {editingTask?.id === task.id ? (
                 <div className="flex flex-col space-y-2 w-full">
                   <Input
@@ -276,9 +305,9 @@ export default function TaskList() {
                   </Button>
                 </>
               )}
-            </li>
-          ))}
-        </ul>
+             </Card>
+           ))}
+        </div>
       </CardContent>
     </Card>
   );

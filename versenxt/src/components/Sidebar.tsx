@@ -1,4 +1,4 @@
-import { Home, FileText, HardDrive, PenTool, Lightbulb, BarChart2, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, FileText, HardDrive, MessageSquare, Settings, BarChart2, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -6,8 +6,8 @@ const menuItems = [
   { icon: Home, label: 'Projects' },
   { icon: FileText, label: 'Tasks' },
   { icon: HardDrive, label: 'Storage' },
-  { icon: PenTool, label: 'Scripting' },
-  { icon: Lightbulb, label: 'Ideation' },
+  { icon: MessageSquare, label: 'Comments' },
+  { icon: Settings, label: 'Production' },
   { icon: BarChart2, label: 'Analyzer' },
 ];
 

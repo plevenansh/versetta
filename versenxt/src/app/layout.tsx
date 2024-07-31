@@ -1,5 +1,6 @@
-"use client"
 
+"use client"
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
@@ -12,11 +13,14 @@ interface RootLayoutProps {
 
 function RootLayout({ children }: RootLayoutProps) {
   return (
+    <ClerkProvider>
     <html lang="en">
       <body>
+      
         <Layout>{children}</Layout>
       </body>
     </html>
+    </ClerkProvider>
   );
 }
 

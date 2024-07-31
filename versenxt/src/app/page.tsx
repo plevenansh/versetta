@@ -1,5 +1,5 @@
 'use client';
-
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import Dashboard from '@/components/Dashboard';
 import { trpc } from '@/trpc/client';
 import '../styles/globals.css'

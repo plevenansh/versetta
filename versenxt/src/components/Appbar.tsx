@@ -2,6 +2,7 @@ import { Search, Bell, Settings } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 export default function Appbar({ showLogo }) {
   return (
@@ -17,10 +18,12 @@ export default function Appbar({ showLogo }) {
         <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5 text-white" />
         </Button>
-        <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+        <SignedOut>
+              <SignInButton />
+            </SignedOut>
+        <SignedIn>
+              <UserButton />
+            </SignedIn>
       </div>
     </header>
   );

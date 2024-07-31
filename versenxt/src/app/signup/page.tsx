@@ -1,6 +1,6 @@
 "use client";
 
-import SignUpPage from '@/components/signup';
+import SignUpPage from '@/lib/signup';
 import { trpc } from '@/trpc/client';
 
 export default function SignUp() {

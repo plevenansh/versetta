@@ -30,7 +30,7 @@ export const taskRouter = router({
         orderBy: [
           { status: 'asc' }, // This will put 'completed' tasks at the bottom
           { dueDate: 'asc' },
-          { creationOrder: 'asc' }
+         { createdAt: 'desc' }
         ]
       });
       console.log(`Retrieved ${tasks.length} tasks`);

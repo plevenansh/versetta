@@ -73,20 +73,21 @@ export default function TaskList() {
   useEffect(() => {
     if (fetchedTasks) {
       const sortedTasks = [...fetchedTasks].sort((a, b) => {
-        // First, sort by completion status
+        // First, sort by completion status (pending first)
         if (a.status === 'completed' && b.status !== 'completed') return 1;
         if (a.status !== 'completed' && b.status === 'completed') return -1;
         
-        // For tasks with the same completion status, sort by due date and creation order
+        // Then, sort by due date
         if (a.dueDate && b.dueDate) {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         } else if (a.dueDate) {
           return -1;
         } else if (b.dueDate) {
           return 1;
-        } else {
-          return a.creationOrder - b.creationOrder;
         }
+        
+        // For tasks without due date, sort by creation time (latest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
       setTasks(sortedTasks);
     }
@@ -112,9 +113,8 @@ export default function TaskList() {
           return -1;
         } else if (b.dueDate) {
           return 1;
-        } else {
-          return a.creationOrder - b.creationOrder;
         }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
       setTasks(sortedTasks);
     }

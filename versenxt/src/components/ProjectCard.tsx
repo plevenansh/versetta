@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { CheckCircle, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 'lucide-react';
 import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
+import Link from 'next/link';
 
 interface ProjectStage {
   id: number;
@@ -146,6 +147,11 @@ const getCompletedWidth = (): string => {
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
+          <Link href={`/projects/${project.id}`}>
+        <Button variant="outline" className="w-full justify-between mb-4">
+          Expand
+        </Button>
+      </Link>
         </div>
       </CardHeader>
       <CardContent>

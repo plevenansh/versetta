@@ -18,8 +18,6 @@ export default function ProjectSection() {
   const [newProject, setNewProject] = useState({
     title: '',
     description: '',
-    teamId: 1,
-    creatorId: 1,
     endDate: '',
     
   });
@@ -27,7 +25,12 @@ export default function ProjectSection() {
   const [availableStages, setAvailableStages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
   const [selectedStages, setSelectedStages] = useState<string[]>([]);
   const [newStage, setNewStage] = useState('');
-  
+    
+  // TODO: Replace these with actual values from authentication when implemented
+  const HARDCODED_TEAM_ID = 2;
+  const HARDCODED_CREATOR_ID = 3;
+
+
   const { data: fetchedProjects, refetch } = trpc.projects.getAll.useQuery();
 
   const createProjectMutation = trpc.projects.create.useMutation({
@@ -67,7 +70,9 @@ export default function ProjectSection() {
   const handleCreateProject = () => {
     createProjectMutation.mutate({
       ...newProject,
-      startDate: new Date().toISOString(), // Set current date as start date
+      teamId: HARDCODED_TEAM_ID,
+      creatorId: HARDCODED_CREATOR_ID,
+      startDate: new Date().toISOString(),
       stages: selectedStages,   
     });
   };
@@ -145,29 +150,14 @@ export default function ProjectSection() {
                 onKeyDown={(e) => handleKeyDown(e, 1)}
                 ref={(el) => inputRefs.current[1] = el}
               />
-              <Input
-                placeholder="Team ID"
-                type="number"
-                value={newProject.teamId}
-                onChange={(e) => setNewProject({ ...newProject, teamId: parseInt(e.target.value) })}
-                onKeyDown={(e) => handleKeyDown(e, 2)}
-                ref={(el) => inputRefs.current[2] = el}
-              />
-              <Input
-                placeholder="Creator ID"
-                type="number"
-                value={newProject.creatorId}
-                onChange={(e) => setNewProject({ ...newProject, creatorId: parseInt(e.target.value) })}
-                onKeyDown={(e) => handleKeyDown(e, 3)}
-                ref={(el) => inputRefs.current[3] = el}
-              />
+            
                <Input
                 type="date"
                 placeholder="End Date"
                 value={newProject.endDate}
                 onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
-                onKeyDown={(e) => handleKeyDown(e, 4)}
-                ref={(el) => inputRefs.current[4] = el}
+                onKeyDown={(e) => handleKeyDown(e, 2)}
+                ref={(el) => inputRefs.current[2] = el}
               />
               <div>
               <h3 className="text-sm font-medium mb-2">Select Stages:</h3>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X, Plus } from 'lucide-react';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 interface EditProjectModalProps {
   project: {
     id: number;
@@ -62,8 +62,9 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (index < inputRefs.current.length - 1) {
-        inputRefs.current[index + 1]?.focus();
+      const nextIndex = index + 1;
+      if (nextIndex < inputRefs.current.length) {
+        inputRefs.current[nextIndex]?.focus();
       } else {
         handleSubmit(e);
       }
@@ -110,28 +111,30 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onKeyDown={(e) => handleKeyDown(e, 1)}
             ref={(el) => inputRefs.current[1] = el}
           />
-          <Input
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            placeholder="Status"
-            onKeyDown={(e) => handleKeyDown(e, 2)}
-            ref={(el) => inputRefs.current[2] = el}
-          />
+          <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+          </Select>
           <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             placeholder="Start Date"
-            onKeyDown={(e) => handleKeyDown(e, 3)}
-            ref={(el) => inputRefs.current[3] = el}
+            onKeyDown={(e) => handleKeyDown(e, 2)}
+            ref={(el) => inputRefs.current[2] = el}
           />
           <Input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             placeholder="End Date"
-            onKeyDown={(e) => handleKeyDown(e, 4)}
-            ref={(el) => inputRefs.current[4] = el}
+            onKeyDown={(e) => handleKeyDown(e, 3)}
+            ref={(el) => inputRefs.current[3] = el}
           />
           <div>
             <h3 className="text-sm font-medium mb-2">Stages:</h3>

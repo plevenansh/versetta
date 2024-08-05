@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { trpc } from '@/trpc/client';
 import { Trash2, Edit, Plus, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Task = {
   id: number;
@@ -27,6 +28,9 @@ type Task = {
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTask, setNewTask] = useState<Omit<Task, 'id'>>({
@@ -40,7 +44,43 @@ export default function TaskList() {
     assigneeId: undefined
  });
 
+
+  // TODO: Replace these with actual values from authentication when implemented
+   const HARDCODED_TEAM_ID = 2;
+   const HARDCODED_CREATOR_ID = 3;
  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
+ 
+
+ const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
+  const { data: fetchedTeamMembers } = trpc.teams.getTeamMembers.useQuery(HARDCODED_TEAM_ID);
+
+  useEffect(() => {
+    if (fetchedProjects) setProjects(fetchedProjects);
+    if (fetchedTeamMembers) setTeamMembers(fetchedTeamMembers);
+  }, [fetchedProjects, fetchedTeamMembers]);
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!newTask.title) {
+        throw new Error("Missing required fields");
+      }
+
+      const taskData = {
+        ...newTask,
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
+        teamId: HARDCODED_TEAM_ID,
+        creatorId: HARDCODED_CREATOR_ID,
+      };
+
+      console.log('Sending task data:', taskData);
+      await createTaskMutation.mutateAsync(taskData);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
+  };
 
   const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({
     projectId: undefined, // Add filters as needed
@@ -149,23 +189,7 @@ export default function TaskList() {
     }
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (!newTask.title || !newTask.creatorId) {
-        throw new Error("Missing required fields");
-      }
-      const taskData = {
-        ...newTask,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
-      };
-      console.log('Sending task data:', taskData);
-      await createTaskMutation.mutateAsync(taskData);
-    } catch (error) {
-      console.error('Error creating task:', error);
-    }
-  };
-
+  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Enter' && !e.ctrlKey) {
       e.preventDefault();
@@ -234,39 +258,34 @@ export default function TaskList() {
               onKeyDown={(e) => handleKeyDown(e, 2)}
               ref={(el) => inputRefs.current[2] = el}
             />
-            <Input
-              type="number"
-              value={newTask.projectId || ''}
-              onChange={(e) => setNewTask({...newTask, projectId: e.target.value ? parseInt(e.target.value) : undefined})}
-              placeholder="Project ID (optional)"
-              onKeyDown={(e) => handleKeyDown(e, 3)}
-              ref={(el) => inputRefs.current[3] = el}
-            />
-            <Input
-              type="number"
-              value={newTask.teamId || ''}
-              onChange={(e) => setNewTask({...newTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
-              placeholder="Team ID (optional)"
-              onKeyDown={(e) => handleKeyDown(e, 4)}
-              ref={(el) => inputRefs.current[4] = el}
-            />
-            <Input
-              type="number"
-              value={newTask.creatorId}
-              onChange={(e) => setNewTask({...newTask, creatorId: parseInt(e.target.value)})}
-              placeholder="Creator ID"
-              required
-              onKeyDown={(e) => handleKeyDown(e, 5)}
-              ref={(el) => inputRefs.current[5] = el}
-            />
-            <Input
-              type="number"
-              value={newTask.assigneeId || ''}
-              onChange={(e) => setNewTask({...newTask, assigneeId: e.target.value ? parseInt(e.target.value) : undefined})}
-              placeholder="Assignee ID (optional)"
-              onKeyDown={(e) => handleKeyDown(e, 6)}
-              ref={(el) => inputRefs.current[6] = el}
-            />
+          <Select
+          onValueChange={(value) => setNewTask({...newTask, projectId: parseInt(value)})}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Project" />
+          </SelectTrigger>
+          <SelectContent>
+            {projects.map((project) => (
+              <SelectItem key={project.id} value={project.id.toString()}>
+                {project.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(value) => setNewTask({...newTask, assigneeId: parseInt(value)})}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Assignee" />
+          </SelectTrigger>
+          <SelectContent>
+            {teamMembers.map((member) => (
+              <SelectItem key={member.id} value={member.id.toString()}>
+                {member.user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
             <Button type="submit">Add Task</Button>
           </form>
         )}

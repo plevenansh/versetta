@@ -96,8 +96,9 @@ export const taskRouter = router({
       dueDate: z.string().optional().nullable(),
       projectId: z.number().optional(),
       teamId: z.number().optional(),
-      creatorId: z.number()
-    }))
+      creatorId: z.number(),
+      assigneeId: z.number().optional() 
+   }))
     .mutation(async ({ input }) => {
       try {
         const data: Prisma.TaskCreateInput = {
@@ -108,6 +109,7 @@ export const taskRouter = router({
           team: input.teamId ? { connect: { id: input.teamId } } : undefined,
           creator: { connect: { id: input.creatorId } },
           ...(input.projectId && { project: { connect: { id: input.projectId } } }),
+          ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
         };
         // Remove the creationOrder field from here
         

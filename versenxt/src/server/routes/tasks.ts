@@ -209,5 +209,49 @@ export const taskRouter = router({
         console.error('Error deleting task:', error);
         throw new Error('Failed to delete task');
       }
-    })
+    }),
+
+    getFiltered: publicProcedure
+    .input(z.object({
+      filter: z.enum(['all', 'pending', 'assigned']),
+      teamMemberId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        let whereClause: Prisma.TaskWhereInput = {};
+
+        switch (input.filter) {
+          case 'pending':
+            whereClause.status = 'pending';
+            break;
+          case 'assigned':
+            whereClause.assigneeId = input.teamMemberId;
+            break;
+          // 'all' doesn't need any additional filters
+        }
+
+        const tasks = await prisma.task.findMany({
+          where: whereClause,
+          include: {
+            project: true,
+            team: true,
+            creator: { include: { user: true } },
+            assignee: { include: { user: true } }
+          },
+          orderBy: [
+            { status: 'asc' },
+            { dueDate: 'asc' },
+            { createdAt: 'desc' }
+          ]
+        });
+
+        console.log(`Retrieved ${tasks.length} tasks for filter: ${input.filter}`);
+        return tasks;
+      } catch (error) {
+        console.error('Error fetching filtered tasks:', error);
+        throw new Error('Failed to fetch filtered tasks');
+      }
+    }),
+
+
 });

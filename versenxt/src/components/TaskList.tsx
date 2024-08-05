@@ -44,6 +44,11 @@ export default function TaskList() {
     assigneeId: undefined
  });
 
+const [sliderStyle, setSliderStyle] = useState({});
+ const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
+  
+ // TODO: Replace this with actual TeamMember ID from authentication when implemented
+ const HARDCODED_TEAM_MEMBER_ID = 3;
 
   // TODO: Replace these with actual values from authentication when implemented
    const HARDCODED_TEAM_ID = 2;
@@ -52,6 +57,7 @@ export default function TaskList() {
 
 
  
+
 
  const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
   const { data: fetchedTeamMembers } = trpc.teams.getTeamMembers.useQuery(HARDCODED_TEAM_ID);
@@ -82,12 +88,15 @@ export default function TaskList() {
     }
   };
 
-  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getAll.useQuery({
-    projectId: undefined, // Add filters as needed
+
+  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getFiltered.useQuery({
+    filter,
+    teamMemberId: HARDCODED_TEAM_MEMBER_ID,
+    projectId: undefined,
     teamId: undefined,
     creatorId: undefined,
-    assigneeId: undefined});
-
+    assigneeId: undefined
+  });
   const updateTaskMutation = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
@@ -220,9 +229,18 @@ export default function TaskList() {
   if (isLoading) return <div>Loading tasks...</div>;
   if (error) return <div>Error loading tasks: {error.message}</div>;
 
+
+
+  const filterButtons = [
+    { label: 'All', value: 'all' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Assigned', value: 'assigned' },
+  ];
+
   return (
     <Card className="w-full bg-white shadow-lg">
-       <CardHeader className="flex flex-row items-center justify-between">
+       <CardHeader className="flex flex-col space-y-4 pb-2">
+       <div className="flex justify-between items-center">
         <CardTitle>Tasks</CardTitle>
         <Button 
           onClick={() => setShowNewTaskForm(!showNewTaskForm)}
@@ -230,8 +248,30 @@ export default function TaskList() {
         >
           {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
           {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-        </Button>
-      </CardHeader>
+        </Button> 
+        </div>
+        </CardHeader>
+        <div className="px-6 pb-2 w-full">
+  <div className="flex w-full rounded-full bg-gray-100 p-1 h-12">
+    {filterButtons.map((btn) => (
+      <button
+        key={btn.value}
+        onClick={() => setFilter(btn.value as 'all' | 'pending' | 'assigned')}
+        className={`
+          flex-1 rounded-full px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
+          ${filter === btn.value 
+            ? 'bg-black text-white' 
+            : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'}
+        `}
+      >
+        {btn.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+        
+     
       <CardContent>
         {showNewTaskForm && (
           <form onSubmit={handleCreateTask} className="space-y-2 mb-4">

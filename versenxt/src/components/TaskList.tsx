@@ -267,6 +267,7 @@ const [sliderStyle, setSliderStyle] = useState({});
         {btn.label}
       </button>
     ))}
+    
   </div>
 </div>
 

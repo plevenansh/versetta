@@ -10,7 +10,7 @@ import { CheckCircle, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 
 import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
-
+import { slugify } from '@/utils/slugify';
 interface ProjectStage {
   id: number;
   projectId: number;
@@ -147,7 +147,7 @@ const getCompletedWidth = (): string => {
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
-          <Link href={`/projects/${project.id}`}>
+          <Link href={`/projects/${project.id}/${slugify(project.title)}`}>
         <Button variant="outline" className="w-full justify-between mb-4">
           Expand
         </Button>

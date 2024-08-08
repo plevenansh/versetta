@@ -1,10 +1,12 @@
 "use client"
-import { useRouter } from 'next/router';
+
+import { useParams } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const { data: project, isLoading } = trpc.projects.getById.useQuery(parseInt(id));
+export default function ProjectPage() {
+  const params = useParams();
+  const id = parseInt(params.id as string);
+  const { data: project, isLoading } = trpc.projects.getById.useQuery(id);
 
   if (isLoading) return <div>Loading...</div>;
   if (!project) return <div>Project not found</div>;

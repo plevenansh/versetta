@@ -215,6 +215,10 @@ export const taskRouter = router({
     .input(z.object({
       filter: z.enum(['all', 'pending', 'assigned']),
       teamMemberId: z.number(),
+      projectId: z.number().optional(),
+      teamId: z.number().optional(),
+      creatorId: z.number().optional(),
+      assigneeId: z.number().optional()
     }))
     .query(async ({ input }) => {
       try {

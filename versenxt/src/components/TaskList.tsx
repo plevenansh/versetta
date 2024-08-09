@@ -13,53 +13,91 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type Task = {
   id: number;
   title: string;
-  description?: string;
-  status: 'pending' | 'completed';
-  dueDate?: string | null;
-  projectId?: number | null;
-  teamId?: number | null;
+  description: string | null;
+  status: string;
+  dueDate: string | null;
+  projectId: number | null;
+  teamId: number;
   creatorId: number;
-  assigneeId?: number | null;
-  project?: { id: number; name: string };
-  team?: { id: number; name: string };
-  creator?: { id: number; user: { id: number; name: string } };
-  assignee?: { id: number; user: { id: number; name: string } };
+  assigneeId: number | null;
+  project: { id: number; name: string } | null;
+  team: { id: number; name: string } | null;
+  creator: { id: number; user: { id: number; name: string } } | null;
+  assignee: { id: number; user: { id: number; name: string } } | null;
+  createdAt: string;
+  updatedAt: string;
+  creationOrder: number;
 };
+interface Project {
+  title: string;
+  description: string | null;
+  endDate: string | null;
+  teamId: number;
+  creatorId: number;
+  status: string;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  team: {
+    description: string | null;
+    // Add other team properties here
+  };
+  // Add other project properties here
+  creationOrder: number;
+}
+
+interface TeamMember {
+  teamId: number;
+  id: number;
+  user: {
+    name: string;
+    email: string;
+    gender: string | null;
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+  role: string;
+  joinedAt: string;
+  userId: number;
+}
+
 
 export default function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState([]);
-  const [teamMembers, setTeamMembers] = useState([]);
-  
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
-  const [newTask, setNewTask] = useState<Omit<Task, 'id'>>({
-    title: '',
-    description: '',
-    status: 'pending',
-    dueDate: null,
-    projectId: undefined,
-    teamId: undefined,
-    creatorId: 1, // Set a default creator ID or fetch from your auth context
-    assigneeId: undefined
- });
-
-const [sliderStyle, setSliderStyle] = useState({});
- const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
-  
- // TODO: Replace this with actual TeamMember ID from authentication when implemented
+  // TODO: Replace this with actual TeamMember ID from authentication when implemented
  const HARDCODED_TEAM_MEMBER_ID = 3;
 
-  // TODO: Replace these with actual values from authentication when implemented
-   const HARDCODED_TEAM_ID = 2;
-   const HARDCODED_CREATOR_ID = 3;
+ // TODO: Replace these with actual values from authentication when implemented
+  const HARDCODED_TEAM_ID = 2;
+  const HARDCODED_CREATOR_ID = 3;
  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
 
- 
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'creationOrder'>>({
+    title: '',
+    description: null,
+    status: 'pending',
+    dueDate: null,
+    projectId: null,
+    teamId: HARDCODED_TEAM_ID,
+    creatorId: HARDCODED_CREATOR_ID,
+    assigneeId: null,
+    project: null,
+    team: null,
+    creator: null,
+    assignee: null
+  });
 
- const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
+  const [sliderStyle, setSliderStyle] = useState({});
+  const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
+  
+  const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
   const { data: fetchedTeamMembers } = trpc.teams.getTeamMembers.useQuery(HARDCODED_TEAM_ID);
 
   useEffect(() => {
@@ -282,14 +320,14 @@ const [sliderStyle, setSliderStyle] = useState({});
               placeholder="Task Title"
               required
               onKeyDown={(e) => handleKeyDown(e, 0)}
-              ref={(el) => inputRefs.current[0] = el}
+              ref={(el) => {inputRefs.current[0] = el}}
             />
             <Input
               value={newTask.description || ''}
               onChange={(e) => setNewTask({...newTask, description: e.target.value})}
               placeholder="Description"
               onKeyDown={(e) => handleKeyDown(e, 1)}
-              ref={(el) => inputRefs.current[1] = el}
+              ref={(el) => {inputRefs.current[1] = el}}
             />
             <Input
               type="date"
@@ -297,7 +335,7 @@ const [sliderStyle, setSliderStyle] = useState({});
               onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
               placeholder="Due Date"
               onKeyDown={(e) => handleKeyDown(e, 2)}
-              ref={(el) => inputRefs.current[2] = el}
+              ref={(el) => {inputRefs.current[2] = el}}
             />
           <Select
           onValueChange={(value) => setNewTask({...newTask, projectId: parseInt(value)})}

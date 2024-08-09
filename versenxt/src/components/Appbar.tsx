@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button"
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
-export default function Appbar({ collapsed, onToggle }) {
+
+interface AppbarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export default function Appbar({ collapsed, onToggle }: AppbarProps) {
   return (
     <header className="flex items-center justify-between px-1 py-4 bg-white bg-opacity-20 backdrop-blur-lg">
       <div className="flex items-center">

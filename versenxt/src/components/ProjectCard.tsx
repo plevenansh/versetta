@@ -38,6 +38,7 @@ interface ProjectCardProps {
     stages: ProjectStage[];
     tasks?: Task[];
     isopen?: boolean;
+    completed?: boolean;
   };
   refetchProjects: () => void;
 }

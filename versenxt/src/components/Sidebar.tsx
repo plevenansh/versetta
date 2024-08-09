@@ -4,7 +4,14 @@ import { Home, FileText,Folder, HardDrive, MessageSquare, Settings, BarChart2, L
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
-export default function Sidebar({ collapsed, onToggle }) {
+
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;

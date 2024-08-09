@@ -10,27 +10,70 @@ import { trpc } from '@/trpc/client';
 import { Plus, X } from 'lucide-react';
 
 
+interface Project {
+  id: number;
+  title: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  creatorId: number;
+  teamId: number;
+  stages: ProjectStage[];
+ // tasks?: Task[];
+  isopen?: boolean;
+  completed?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  team: {
+    name: string;
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    description: string | null;
+    creatorId: number;
+  };
+  creationOrder: number;
+}
 
+interface NewProject {
+  title: string;
+  description: string;
+  endDate: string;
+  teamId: number;
+  creatorId: number;
+}
+
+interface ProjectStage {
+  id: number;
+  projectId: number;
+  stage: string;
+  completed: boolean;
+  order: number;
+}
 
 export default function ProjectSection() {
-  const [projects, setProjects] = useState([]);
+ 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newProject, setNewProject] = useState({
-    title: '',
-    description: '',
-    endDate: '',
-    
-  });
+  
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [availableStages, setAvailableStages] = useState(['Ideation', 'Scripting', 'Shooting', 'Editing', 'Subtitles', 'Thumbnail', 'Tags', 'Description']);
   const [selectedStages, setSelectedStages] = useState<string[]>([]);
   const [newStage, setNewStage] = useState('');
-    
+   
+  const [projects, setProjects] = useState<Project[]>([]);
+  
   // TODO: Replace these with actual values from authentication when implemented
   const HARDCODED_TEAM_ID = 2;
   const HARDCODED_CREATOR_ID = 3;
 
-
+  const [newProject, setNewProject] = useState<NewProject>({
+    title: '',
+    description: '',
+    endDate: '',
+    teamId: HARDCODED_TEAM_ID,
+    creatorId: HARDCODED_CREATOR_ID
+  });
   const { data: fetchedProjects, refetch } = trpc.projects.getAll.useQuery();
 
   const createProjectMutation = trpc.projects.create.useMutation({
@@ -141,14 +184,14 @@ export default function ProjectSection() {
                 value={newProject.title}
                 onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, 0)}
-                ref={(el) => inputRefs.current[0] = el}
+                ref={(el) => {inputRefs.current[0] = el}}
               />
              <Input
                 placeholder="Project Description"
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, 1)}
-                ref={(el) => inputRefs.current[1] = el}
+                ref={(el) => {inputRefs.current[1] = el}}
               />
             
                <Input
@@ -157,7 +200,7 @@ export default function ProjectSection() {
                 value={newProject.endDate}
                 onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, 2)}
-                ref={(el) => inputRefs.current[2] = el}
+                ref={(el) => {inputRefs.current[2] = el}}
               />
               <div>
               <h3 className="text-sm font-medium mb-2">Select Stages:</h3>

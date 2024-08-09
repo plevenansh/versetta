@@ -39,7 +39,7 @@ export default function ProjectPage({ projectId }: ProjectPageProps) {
     <Card className="w-full bg-white shadow-lg">
       <CardHeader>
         <CardTitle>{project.title}</CardTitle>
-        <Button onClick={() => router.back()} variant="outline">Back to Projects</Button>
+        {/* <Button onClick={() => router.back()} variant="outline">Back to Projects</Button> */}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -61,7 +61,7 @@ export default function ProjectPage({ projectId }: ProjectPageProps) {
 
           <div>
             <h3 className="text-lg font-semibold">Idea</h3>
-            <p>{project.idea || 'No idea description available.'}</p>
+            {/* <p>{project.idea || 'No idea description available.'}</p> */}
           </div>
 
           <div>

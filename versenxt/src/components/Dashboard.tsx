@@ -75,7 +75,8 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-indigo-900">68%</div>
-            <Progress value={68} className="mt-2 bg-indigo-200" indicatorClassName="bg-indigo-600" />
+            {/* <Progress value={68} className="mt-2 bg-indigo-200" indicatorClassName="bg-indigo-600" /> */}
+            <Progress value={68} className="mt-2 bg-indigo-200 custom-progress" />
           </CardContent>
         </Card>
       </div>

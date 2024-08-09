@@ -3,9 +3,8 @@
 
 import { trpc } from '@/trpc/client';
 import Dashboard from '@/components/Dashboard';
-import { signOut } from '@/app/actions/auth';
-
-export default function ClientDashboard({ user }) {
+ 
+export default function ClientDashboard() {
   const { data: projects, isLoading: projectsLoading } = trpc.projects.getAll.useQuery();
 
   if (projectsLoading) {
@@ -15,10 +14,7 @@ export default function ClientDashboard({ user }) {
   return (
     <>
     
-      <form action={signOut}>
-        <p>Welcome back{user.firstName && `, ${user.firstName}`}</p>
-        <button type="submit">Sign out</button>
-      </form>
+     
       <Dashboard />
     </>
   );

@@ -14,7 +14,7 @@ interface EditProjectModalProps {
     startDate: string | null;
     endDate: string | null;
     teamId: number;
-    stages: { id: number; stage: string; completed: boolean }[];
+    stages: { id: number; stage: string; completed: boolean; order?: number }[];
   };
   isOpen: boolean;
   onClose: () => void;
@@ -102,14 +102,14 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             placeholder="Project Title"
             required
             onKeyDown={(e) => handleKeyDown(e, 0)}
-            ref={(el) => inputRefs.current[0] = el}
+            ref={(el) => { inputRefs.current[0] = el; }}
           />
           <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description"
             onKeyDown={(e) => handleKeyDown(e, 1)}
-            ref={(el) => inputRefs.current[1] = el}
+            ref={(el) => {inputRefs.current[1] = el;}}
           />
           <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="w-full">
@@ -126,7 +126,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onChange={(e) => setStartDate(e.target.value)}
             placeholder="Start Date"
             onKeyDown={(e) => handleKeyDown(e, 2)}
-            ref={(el) => inputRefs.current[2] = el}
+            ref={(el) => {(inputRefs.current[2] = el);}}
           />
           <Input
             type="date"
@@ -134,7 +134,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onChange={(e) => setEndDate(e.target.value)}
             placeholder="End Date"
             onKeyDown={(e) => handleKeyDown(e, 3)}
-            ref={(el) => inputRefs.current[3] = el}
+            ref={(el) => {inputRefs.current[3] = el;}}
           />
           <div>
             <h3 className="text-sm font-medium mb-2">Stages:</h3>

@@ -3,8 +3,12 @@
 import { useState } from 'react'
 import Appbar from './Appbar'
 import Sidebar from './Sidebar'
+import { ReactNode } from 'react'
 
-export default function Layout({ children }) {
+interface LayoutProps {
+  children: ReactNode
+}
+export default function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed)

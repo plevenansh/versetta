@@ -1,21 +1,13 @@
+// app/projects/[id]/[title]/page.tsx
 "use client"
 
+import React from 'react';
 import { useParams } from 'next/navigation';
-import { trpc } from '@/trpc/client';
+import ProjectPage from '@/components/ProjectPage';
 
-export default function ProjectPage() {
+export default function ProjectDetailPage() {
   const params = useParams();
-  const id = parseInt(params.id as string);
-  const { data: project, isLoading } = trpc.projects.getById.useQuery(id);
+  const projectId = parseInt(params.id as string);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!project) return <div>Project not found</div>;
-
-  return (
-    <div>
-      <h1>{project.title}</h1>
-      <p>{project.description}</p>
-      {/* Add more project details here */}
-    </div>
-  );
+  return <ProjectPage projectId={projectId} />;
 }

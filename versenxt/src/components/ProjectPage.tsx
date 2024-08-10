@@ -1,32 +1,65 @@
-// ProjectPage.tsx
+// components/ProjectPage.tsx
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { trpc } from '@/trpc/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { trpc } from '@/trpc/client';
+import { CheckCircle, Circle } from 'lucide-react';
 
 interface ProjectPageProps {
   projectId: number;
 }
 
-export default function ProjectPage({ projectId }: ProjectPageProps) {
-  //const router = useRouter();
-  const { data: project, isLoading, error } = trpc.projects.getById.useQuery(projectId);
+const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
+  const { data: project, isLoading, refetch } = trpc.projects.getById.useQuery(projectId);
+  const [projectStages, setProjectStages] = useState([]);
   const [percentageDone, setPercentageDone] = useState(0);
 
+  const updateProjectStageMutation = trpc.projects.updateProjectStage.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
   useEffect(() => {
-    if (project && project.stages) {
-      const completedStages = project.stages.filter(stage => stage.completed).length;
-      const percentage = (completedStages / project.stages.length) * 100;
-      setPercentageDone(Math.round(percentage));
+    if (project?.stages) {
+      const sortedStages = [...project.stages].sort((a, b) => {
+        if (a.completed === b.completed) {
+          return a.order - b.order;
+        }
+        return a.completed ? -1 : 1;
+      });
+      setProjectStages(sortedStages);
     }
   }, [project]);
 
+  useEffect(() => {
+    const completedStages = projectStages.filter(stage => stage.completed).length;
+    const percentage = (completedStages / projectStages.length) * 100;
+    setPercentageDone(Math.round(percentage));
+  }, [projectStages]);
+
+  const toggleStage = (stageId: number) => {
+    const updatedStages = projectStages.map(s => {
+      if (s.id === stageId) {
+        return { ...s, completed: !s.completed };
+      }
+      return s;
+    });
+    setProjectStages(updatedStages);
+
+    const stage = updatedStages.find(s => s.id === stageId);
+    if (stage) {
+      updateProjectStageMutation.mutate({
+        projectId: projectId,
+        stage: stage.stage,
+        completed: stage.completed,
+      });
+    }
+  };
+
   if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
   if (!project) return <div>Project not found</div>;
 
   const formatDate = (dateString: string | null): string => {
@@ -36,64 +69,84 @@ export default function ProjectPage({ projectId }: ProjectPageProps) {
   };
 
   return (
-    <Card className="w-full bg-white shadow-lg">
-      <CardHeader>
-        <CardTitle>{project.title}</CardTitle>
-        {/* <Button onClick={() => router.back()} variant="outline">Back to Projects</Button> */}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold">Project Details</h3>
-            <p>Status: {project.status}</p>
-            <p>Progress: {percentageDone}% Complete</p>
-            <Progress value={percentageDone} className="w-full" />
-            <p>Start Date: {formatDate(project.startDate)}</p>
-            <p>Expected Publish Date: {formatDate(project.endDate)}</p>
-            <p>Team ID: {project.teamId}</p>
-            <p>Creator ID: {project.creatorId}</p>
+    <div className="container mx-auto p-4">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{project.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 mb-4">{project.description}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p><strong>Status:</strong> {project.status}</p>
+              <p><strong>Start Date:</strong> {formatDate(project.startDate)}</p>
+              <p><strong>End Date:</strong> {formatDate(project.endDate)}</p>
+            </div>
+            <div>
+              <p><strong>Project ID:</strong> {project.id}</p>
+              <p><strong>Team ID:</strong> {project.teamId}</p>
+              <p><strong>Creator ID:</strong> {project.creatorId}</p>
+            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div>
-            <h3 className="text-lg font-semibold">Description</h3>
-            <p>{project.description || 'No description available.'}</p>
-          </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Progress value={percentageDone} className="w-full" />
+          <p className="text-center mt-2">{percentageDone}% Complete</p>
+        </CardContent>
+      </Card>
 
-          <div>
-            <h3 className="text-lg font-semibold">Idea</h3>
-            {/* <p>{project.idea || 'No idea description available.'}</p> */}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Production Stages</h3>
-            {project.stages.map((stage, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <span className={`w-4 h-4 rounded-full ${stage.completed ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                <span>{stage.stage}</span>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Production Stages</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            {projectStages.map((stage, index) => (
+              <div key={stage.id} className="flex items-center">
+                <div
+                  onClick={() => toggleStage(stage.id)}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer ${
+                    stage.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {stage.completed ? <CheckCircle /> : <Circle />}
+                </div>
+                <span className="ml-2">{stage.stage}</span>
+                {index < projectStages.length - 1 && (
+                  <div className="w-8 h-0.5 bg-gray-300 mx-2" />
+                )}
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
 
-          <div>
-            <h3 className="text-lg font-semibold">Tasks</h3>
-            {project.tasks && project.tasks.length > 0 ? (
-              project.tasks.map((task, index) => (
-                <div key={index}>
-                  <p>{task.title} - {task.status}</p>
-                </div>
-              ))
-            ) : (
-              <p>No tasks available.</p>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Short Videos / Clips</h3>
-            {/* Placeholder for video/clip content */}
-            <p>Video content will be displayed here once implemented.</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      {project.tasks && project.tasks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5">
+              {project.tasks.map((task) => (
+                <li key={task.id} className="mb-2">
+                  <div className="flex justify-between items-center">
+                    <span>{task.title} - {task.status}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
-}
+};
+
+export default ProjectPage;

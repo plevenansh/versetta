@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { trpc } from '@/trpc/client';
 import { Trash2, Edit, Plus, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type Task = {
   id: number;
@@ -76,7 +77,7 @@ export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-
+  const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'creationOrder'>>({
@@ -207,6 +208,13 @@ export default function TaskList() {
     }
   };
   
+  const toggleDescription = (taskId: number) => {
+    setExpandedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId) 
+        : [...prev, taskId]
+    );
+  };
   const updateTask = async (updatedTask: Task) => {
     try {
       const taskToUpdate: Partial<Task> = {
@@ -370,7 +378,7 @@ export default function TaskList() {
         )}
         <div className="h-[calc(100vh-300px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default pr-4">
           {tasks.map(task => (
-            <Card key={task.id} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+            <Card key={task.id} className="flex flex-col bg-gray-50 p-2 rounded mb-2">
               {editingTask?.id === task.id ? (
                 <div className="flex flex-col space-y-2 w-full">
                   <Input
@@ -415,26 +423,39 @@ export default function TaskList() {
                 </div>
               ) : (
                 <>
-                  <Checkbox
-                    checked={task.status === 'completed'}
-                    onCheckedChange={() => toggleTask(task.id)}
-                  />
-                  <div className="flex-grow">
-                    <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
-                      {task.title}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, Creator ID: {task.creatorId}
-                    </p>
-                    {task.description && <p className="text-sm">{task.description}</p>}
-                    {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={task.status === 'completed'}
+                      onCheckedChange={() => toggleTask(task.id)}
+                    />
+                    <div className="flex-grow">
+                      <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
+                        {task.title}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, Creator ID: {task.creatorId}
+                      </p>
+                      {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
+                      {task.description && (
+                        <p className="text-sm text-gray-600">
+                          {expandedTasks.includes(task.id) 
+                            ? task.description 
+                            : `${task.description.slice(0, 40)}${task.description.length > 40 ? '...' : ''}`}
+                        </p>
+                      )}
+                    </div>
+                    {task.description && task.description.length > 50 && (
+                      <Button onClick={() => toggleDescription(task.id)} size="sm" variant="ghost">
+                        {expandedTasks.includes(task.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    )}
+                    <Button onClick={() => startEditing(task)} size="sm" variant="outline">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button onClick={() => startEditing(task)} size="sm" variant="outline">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </>
               )}
              </Card>

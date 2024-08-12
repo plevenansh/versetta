@@ -14,13 +14,13 @@ interface Project {
   id: number;
   title: string;
   description: string | null;
-  status: string;
+  status: 'active' | 'completed';
   startDate: string | null;
   endDate: string | null;
   creatorId: number;
   teamId: number;
   stages: ProjectStage[];
- // tasks?: Task[];
+  //tasks?: Task[];
   isopen?: boolean;
   completed?: boolean;
   createdAt: string;
@@ -100,7 +100,7 @@ export default function ProjectSection() {
         } else {
           return a.creationOrder - b.creationOrder;
         }
-      });
+      }) as Project[];
       setProjects(sortedProjects);
     }
   }, [fetchedProjects]);

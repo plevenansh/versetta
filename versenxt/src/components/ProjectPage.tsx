@@ -7,13 +7,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle } from 'lucide-react';
 
+interface ProjectStage {
+  id: number;
+  projectId: number;
+  stage: string;
+  completed: boolean;
+  order: number;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: 'pending' | 'completed';
+  description: string | undefined;
+  dueDate: string | null;
+  projectId: number | null;
+  teamId: number| undefined;
+  creatorId: number;
+  assigneeId: number | null;
+}
+
+interface Project {
+  id: number;
+  title: string;
+  description: string | null;
+  status: 'active' | 'completed';
+  startDate: string | null;
+  endDate: string | null;
+  creatorId: number;
+  teamId: number;
+  stages: ProjectStage[];
+  tasks?: Task[];
+  completed?: boolean;
+}
+
 interface ProjectPageProps {
   projectId: number;
 }
 
 const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
   const { data: project, isLoading, refetch } = trpc.projects.getById.useQuery(projectId);
-  const [projectStages, setProjectStages] = useState([]);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
   const [percentageDone, setPercentageDone] = useState(0);
 
   const updateProjectStageMutation = trpc.projects.updateProjectStage.useMutation({

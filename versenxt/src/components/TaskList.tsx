@@ -11,20 +11,20 @@ import { Trash2, Edit, Plus, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-type Task = {
+interface Task  {
   id: number;
   title: string;
-  description: string | null;
-  status: string;
+  description: string | undefined;
+  status: 'pending' | 'completed';
   dueDate: string | null;
   projectId: number | null;
-  teamId: number;
+  teamId: number | undefined;
   creatorId: number;
-  assigneeId: number | null;
-  project: { id: number; name: string } | null;
-  team: { id: number; name: string } | null;
-  creator: { id: number; user: { id: number; name: string } } | null;
-  assignee: { id: number; user: { id: number; name: string } } | null;
+  assigneeId: number | undefined;
+  // project: { id: number; name: string } | null;
+  // team: { id: number; name: string } | null;
+  // creator: { id: number; user: { id: number; name: string } } | null;
+  // assignee: { id: number; user: { id: number; name: string } } | null;
   createdAt: string;
   updatedAt: string;
   creationOrder: number;
@@ -35,7 +35,7 @@ interface Project {
   endDate: string | null;
   teamId: number;
   creatorId: number;
-  status: string;
+  status: 'active' | 'completed';
   id: number;
   createdAt: string;
   updatedAt: string;
@@ -65,15 +65,11 @@ interface TeamMember {
 
 
 export default function TaskList() {
-  // TODO: Replace this with actual TeamMember ID from authentication when implemented
- const HARDCODED_TEAM_MEMBER_ID = 3;
-
- // TODO: Replace these with actual values from authentication when implemented
-  const HARDCODED_TEAM_ID = 2;
-  const HARDCODED_CREATOR_ID = 3;
- const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-
+   const HARDCODED_TEAM_MEMBER_ID = 3;
+   const HARDCODED_TEAM_ID = 2;
+   const HARDCODED_CREATOR_ID = 3;
+   
+ 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -82,18 +78,20 @@ export default function TaskList() {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'creationOrder'>>({
     title: '',
-    description: null,
+    description: undefined,
     status: 'pending',
     dueDate: null,
     projectId: null,
     teamId: HARDCODED_TEAM_ID,
     creatorId: HARDCODED_CREATOR_ID,
-    assigneeId: null,
-    project: null,
-    team: null,
-    creator: null,
-    assignee: null
+    assigneeId: undefined,
+    // project: null,
+    // team: null,
+    // creator: null,
+    // assignee: null
   });
+
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [sliderStyle, setSliderStyle] = useState({});
   const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
@@ -102,7 +100,7 @@ export default function TaskList() {
   const { data: fetchedTeamMembers } = trpc.teams.getTeamMembers.useQuery(HARDCODED_TEAM_ID);
 
   useEffect(() => {
-    if (fetchedProjects) setProjects(fetchedProjects);
+    if (fetchedProjects) setProjects(fetchedProjects as Project[]);
     if (fetchedTeamMembers) setTeamMembers(fetchedTeamMembers);
   }, [fetchedProjects, fetchedTeamMembers]);
 
@@ -114,12 +112,16 @@ export default function TaskList() {
       }
 
       const taskData = {
-        ...newTask,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status as "pending" | "completed",
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
         teamId: HARDCODED_TEAM_ID,
         creatorId: HARDCODED_CREATOR_ID,
+        projectId: newTask.projectId ?? undefined,
+        assigneeId: newTask.assigneeId ?? undefined
       };
-
+      
       console.log('Sending task data:', taskData);
       await createTaskMutation.mutateAsync(taskData);
     } catch (error) {
@@ -139,7 +141,16 @@ export default function TaskList() {
   const updateTaskMutation = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
-  const createTaskMutation = trpc.tasks.create.useMutation({
+  const createTaskMutation = trpc.tasks.create.useMutation<{
+    id: number;
+    status?: 'pending' | 'completed';
+    assigneeId?: number | null;
+    dueDate?: string | null;
+    title?: string;
+    description?: string | undefined;
+    teamId?: number;
+    projectId?: number | null;
+  }>({
     onSuccess: () => {
       refetch();
       setShowNewTaskForm(false);
@@ -148,9 +159,10 @@ export default function TaskList() {
         description: '',
         status: 'pending',
         dueDate: null,
-        projectId: undefined,
-        teamId: undefined,
-        userId: 1
+        projectId: null,
+        teamId: HARDCODED_TEAM_ID,
+        creatorId: HARDCODED_CREATOR_ID,
+        assigneeId: undefined,
       });
     },
   });
@@ -177,7 +189,7 @@ export default function TaskList() {
         // For tasks without due date, sort by creation time (latest first)
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-      setTasks(sortedTasks);
+      setTasks(sortedTasks as Task[]);
     }
   }, [fetchedTasks]);
 
@@ -186,7 +198,7 @@ export default function TaskList() {
     if (taskToUpdate) {
       const updatedTask = {
         ...taskToUpdate,
-        status: taskToUpdate.status === 'completed' ? 'pending' : 'completed'
+        status: taskToUpdate.status === 'completed' ? 'pending' as const : 'completed' as const
       };
       await updateTask(updatedTask);
       
@@ -221,7 +233,7 @@ export default function TaskList() {
         id: updatedTask.id,
         title: updatedTask.title,
         description: updatedTask.description,
-        status: updatedTask.status,
+        status: updatedTask.status as 'pending' | 'completed',  
         dueDate: updatedTask.dueDate,
         projectId: updatedTask.projectId,
         teamId: updatedTask.teamId,
@@ -229,10 +241,10 @@ export default function TaskList() {
       };
 
       // Only include projectId and teamId if they are not undefined
-      if (updatedTask.projectId !== undefined) {
+      if (updatedTask.projectId !== null) {
         taskToUpdate.projectId = updatedTask.projectId;
       }
-      if (updatedTask.teamId !== undefined) {
+      if (updatedTask.teamId !== null) {
         taskToUpdate.teamId = updatedTask.teamId;
       }
 
@@ -332,7 +344,7 @@ export default function TaskList() {
             />
             <Input
               value={newTask.description || ''}
-              onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+              onChange={(e) => setNewTask({...newTask, description: e.target.value })}
               placeholder="Description"
               onKeyDown={(e) => handleKeyDown(e, 1)}
               ref={(el) => {inputRefs.current[1] = el}}
@@ -406,7 +418,7 @@ export default function TaskList() {
                   <Input
                     type="number"
                     value={editingTask.teamId || ''}
-                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : null})}
+                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
                     placeholder="Team ID"
                   />
                   

@@ -7,11 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from '@/trpc/client';
 
+interface Notification {
+  type: 'success' | 'error';
+  message: string;
+}
+
 export default function TeamOnboarding() {
   const [newTeam, setNewTeam] = useState({ name: '', description: '' });
   const [teamIdToJoin, setTeamIdToJoin] = useState('');
-  const [notification, setNotification] = useState(null);
-  const [createdTeamId, setCreatedTeamId] = useState(null);
+  const [notification, setNotification] = useState<Notification | null>(null);
+  const [createdTeamId, setCreatedTeamId] = useState<number | null>(null);
 
   const createTeamMutation = trpc.teams.create.useMutation({
     onSuccess: (data) => {
@@ -42,8 +47,13 @@ export default function TeamOnboarding() {
 
   const handleJoinTeam = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedTeamId = parseInt(teamIdToJoin);
+    if (isNaN(parsedTeamId)) {
+      setNotification({ type: 'error', message: 'Invalid team ID' });
+      return;
+    }
     await addMemberMutation.mutateAsync({
-      teamId: parseInt(teamIdToJoin),
+      teamId: parsedTeamId,
       userId: 1, // Replace with actual user ID from your auth system
       role: 'member'
     });

@@ -10,7 +10,7 @@ interface EditProjectModalProps {
     id: number;
     title: string;
     description: string | null;
-    status: string;
+    status: 'active' | 'completed';
     startDate: string | null;
     endDate: string | null;
     teamId: number;
@@ -111,7 +111,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onKeyDown={(e) => handleKeyDown(e, 1)}
             ref={(el) => {inputRefs.current[1] = el;}}
           />
-          <Select value={status} onValueChange={setStatus}>
+          {/* <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -119,7 +119,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
-          </Select>
+          </Select> */}
           <Input
             type="date"
             value={startDate}

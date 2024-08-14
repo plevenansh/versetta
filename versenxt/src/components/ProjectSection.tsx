@@ -64,8 +64,8 @@ export default function ProjectSection() {
   const [projects, setProjects] = useState<Project[]>([]);
   
   // TODO: Replace these with actual values from authentication when implemented
-  const HARDCODED_TEAM_ID = 2;
-  const HARDCODED_CREATOR_ID = 3;
+  const HARDCODED_TEAM_ID = 1;
+  const HARDCODED_CREATOR_ID = 1;
 
   const [newProject, setNewProject] = useState<NewProject>({
     title: '',

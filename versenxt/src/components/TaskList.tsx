@@ -65,9 +65,9 @@ interface TeamMember {
 
 
 export default function TaskList() {
-   const HARDCODED_TEAM_MEMBER_ID = 3;
-   const HARDCODED_TEAM_ID = 2;
-   const HARDCODED_CREATOR_ID = 3;
+   const HARDCODED_TEAM_MEMBER_ID = 1;
+   const HARDCODED_TEAM_ID = 1;
+   const HARDCODED_CREATOR_ID = 1;
    
  
   const [tasks, setTasks] = useState<Task[]>([]);

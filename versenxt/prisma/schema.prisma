@@ -1,7 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -9,29 +9,29 @@ generator client {
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
-  email           String        @unique
+  id              Int          @id @default(autoincrement())
+  email           String       @unique
   name            String
   gender          String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   teamMemberships TeamMember[]
-  createdTeams    Team[]        @relation("TeamCreator")
+  createdTeams    Team[]       @relation("TeamCreator")
 
   @@map("users")
 }
 
 model Team {
-  id          Int           @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   name        String
   description String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   creatorId   Int
-  creator     User          @relation("TeamCreator", fields: [creatorId], references: [id])
+  creator     User         @relation("TeamCreator", fields: [creatorId], references: [id])
   members     TeamMember[]
   projects    Project[]
-  tasks       Task[]        // Tasks directly associated with the team
+  tasks       Task[] // Tasks directly associated with the team
 
   @@index([creatorId])
   @@map("teams")
@@ -41,36 +41,36 @@ model TeamMember {
   id              Int       @id @default(autoincrement())
   userId          Int
   teamId          Int
-  role            String    // e.g., "admin", "member"
+  role            String // e.g., "admin", "member"
   joinedAt        DateTime  @default(now())
   user            User      @relation(fields: [userId], references: [id])
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  createdTasks    Task[]  @relation("TaskCreator")
-  assignedTasks   Task[] @relation("TaskAssignee")
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdTasks    Task[]    @relation("TaskCreator")
+  assignedTasks   Task[]    @relation("TaskAssignee")
   createdProjects Project[] @relation("ProjectCreator")
-  
+
   @@unique([userId, teamId])
   @@index([userId])
   @@index([teamId])
 }
 
 model Project {
-  id          Int           @id @default(autoincrement())
-  title       String
-  description String?
-  status      String        @default("active")
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  teamId      Int
-  creatorId   Int 
-  completed   Boolean @default(false)
-  creationOrder Int @default(autoincrement())
-  creator     TeamMember    @relation("ProjectCreator", fields: [creatorId], references: [id])
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  tasks       Task[]        // Tasks associated with this project
-  stages      ProjectStage[]
+  id            Int            @id @default(autoincrement())
+  title         String
+  description   String?
+  status        String         @default("active")
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  teamId        Int
+  creatorId     Int
+  completed     Boolean        @default(false)
+  creationOrder Int            @default(autoincrement())
+  creator       TeamMember     @relation("ProjectCreator", fields: [creatorId], references: [id])
+  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tasks         Task[] // Tasks associated with this project
+  stages        ProjectStage[]
 
   @@index([teamId])
   @@index([creatorId])
@@ -89,22 +89,22 @@ model ProjectStage {
 }
 
 model Task {
-  id          Int         @id @default(autoincrement())
-  title       String
-  description String?
-  status      String      @default("pending")
-  dueDate     DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  teamId      Int         // All tasks must belong to a team
-  projectId   Int?        // Optional: task may or may not be associated with a project
-  creatorId   Int         // TeamMember who created the task
-  assigneeId  Int?        // Optional: task may or may not be assigned to a team member
-  creationOrder Int @default(autoincrement())
-  team        Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  project     Project?    @relation(fields: [projectId], references: [id])
-  creator     TeamMember  @relation("TaskCreator", fields: [creatorId], references: [id])
-  assignee    TeamMember? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  id            Int         @id @default(autoincrement())
+  title         String
+  description   String?
+  status        String      @default("pending")
+  dueDate       DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  teamId        Int // All tasks must belong to a team
+  projectId     Int? // Optional: task may or may not be associated with a project
+  creatorId     Int // TeamMember who created the task
+  assigneeId    Int? // Optional: task may or may not be assigned to a team member
+  creationOrder Int         @default(autoincrement())
+  team          Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  project       Project?    @relation(fields: [projectId], references: [id])
+  creator       TeamMember  @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee      TeamMember? @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
   @@index([teamId])
   @@index([projectId])

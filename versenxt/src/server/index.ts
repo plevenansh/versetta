@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { publicProcedure, router } from './trpc';
-import { projectRouter } from './routes/projects';
-import { taskRouter } from './routes/tasks';
-import {userRouter} from './routes/users';
-import {teamRouter} from './routes/teams';
-import { youtubeRouter } from './routes/youtube';
+import { projectRouter } from './routers/projects';
+import { taskRouter } from './routers/tasks';
+import {userRouter} from './routers/users';
+import {teamRouter} from './routers/teams';
+import { youtubeRouter } from './routers/youtube';
+//import { authRouter } from './routers/auth';
 
 export const appRouter = router({
 
@@ -13,7 +14,7 @@ export const appRouter = router({
     tasks: taskRouter,
     teams: teamRouter,
     youtube: youtubeRouter,
-
+   // auth: authRouter,
 
    // calendar: calendarRouter,
    //  dashboard: dashboardRouter

@@ -1,19 +1,17 @@
-'use client';
-import { ClerkProvider, OrganizationProfile,CreateOrganization, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { getUser } from '@workos-inc/authkit-nextjs';
 import Dashboard from '@/components/Dashboard';
-import { trpc } from '@/trpc/client';
-import '../styles/globals.css'
+import LandingPage from '@/components/LandingPage';
 
-export default function HomePage() {
-  const { data: projects, isLoading: projectsLoading } = trpc.projects.getAll.useQuery();
-  //const { data: tasks, isLoading: tasksLoading } = trpc.tasks.getAll.useQuery();
+export default async function HomePage() {
+  const { user, isLoading } = await getUser();
 
-  if (projectsLoading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  return (
-   
-    <Dashboard />
-  );
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  return <Dashboard />;
 }

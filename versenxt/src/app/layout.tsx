@@ -13,14 +13,13 @@ interface RootLayoutProps {
 
 function RootLayout({ children }: RootLayoutProps) {
   return (
-    <ClerkProvider>
+    
     <html lang="en">
       <body>
-      
         <Layout>{children}</Layout>
       </body>
     </html>
-    </ClerkProvider>
+
   );
 }
 

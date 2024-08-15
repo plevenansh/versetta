@@ -17,8 +17,15 @@ interface AppbarProps {
   onToggle: () => void;
 }
 
+interface User {
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  profilePictureUrl?: string;
+}
+
 export default function Appbar({ collapsed, onToggle }: AppbarProps) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -27,7 +34,7 @@ export default function Appbar({ collapsed, onToggle }: AppbarProps) {
       try {
         const response = await fetch('/api/auth?action=getUser');
         const data = await response.json();
-        setUser(data.user);
+        setUser(data.user as User);
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {

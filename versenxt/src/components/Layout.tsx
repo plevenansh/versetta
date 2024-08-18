@@ -8,19 +8,17 @@ import { ReactNode } from 'react'
 interface LayoutProps {
   children: ReactNode
 }
+
 export default function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed)
 
   return (
-    <div className="flex flex-col h-screen">
-      <Appbar 
-        collapsed={sidebarCollapsed} 
-        onToggle={toggleSidebar} 
-      />
-      <div className="flex flex-grow overflow-hidden">
-        <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+    <div className="flex h-screen">
+      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <div className="flex flex-col flex-grow">
+        <Appbar collapsed={sidebarCollapsed} />
         <main className="flex-grow p-6 overflow-auto">
           {children}
         </main>

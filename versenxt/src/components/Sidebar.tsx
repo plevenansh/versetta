@@ -1,134 +1,54 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText,Folder, HardDrive, MessageSquare, Settings, BarChart2, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, SquareCheck, Folder, Database, MessageSquare, Clapperboard, BarChart2, Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-
 
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
 }
 
-
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
 
+  const menuItems = [
+    { href: '/', icon: Home, label: 'Home' },
+    { href: '/projects', icon: Folder, label: 'Projects' },
+    { href: '/tasks', icon: SquareCheck, label: 'Tasks' },
+    { href: '/comments', icon: MessageSquare, label: 'Comments' },
+    { href: '/storage', icon: Database, label: 'Storage' },
+    { href: '/production', icon: Clapperboard, label: 'Production' },
+    { href: '/analyzer', icon: BarChart2, label: 'Analyzer' },
+  ];
+
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out bg-white shadow-md flex flex-col h-screen`}>
-     
-      
-      <div className="flex-grow space-y-4 p-4 overflow-y-auto">
-
-      <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <Home className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Home</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/projects" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/projects') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <Folder className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Projects</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/tasks" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/tasks') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <FileText className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Tasks</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/comments" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/comments') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <MessageSquare className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Comments</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/storage" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/storage') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <HardDrive className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Storage</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/production" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/production') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <Settings className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Production</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <Link href="/analyzer" passHref>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${collapsed ? 'p-2' : 'px-4 py-2'} ${isActive('/analyzer') ? 'bg-gray-100 text-gray-900' : ''}`}
-              >
-                <BarChart2 className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-                {!collapsed && <span>Analyzer</span>}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+    <div className={`${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out bg-[#f8f8f8] flex flex-col h-screen border-r border-gray-200`}>
+      <div className="flex items-center p-4 pl-2 mt-[1px] h-14 border-b border-gray-200">
+        <Button variant="ghost" size="icon" onClick={onToggle} className="text-gray-600 hover:text-gray-900">
+          <Menu className="h-6 w-6" />
+        </Button>
+        {!collapsed && (
+          <Link href="/" passHref>
+            <h1 className="ml-2 text-xl font-semibold text-gray-800 cursor-pointer">Versetta</h1>
+          </Link>
+        )}
       </div>
-      <div className="p-4 flex justify-center">
-        <Card className="shadow-sm hover:shadow-md transition-shadow w-full">
-          <CardContent className="p-0">
-            <Button variant="ghost" className="w-full text-gray-600 hover:bg-gray-100 hover:text-gray-900">
-              <LogOut className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
-              {!collapsed && <span>Logout</span>}
+      <div className="flex-grow space-y-1 p-2  overflow-y-auto">
+        {menuItems.map((item) => (
+          <Link key={item.href} href={item.href} passHref>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start text-gray-600 hover:bg-gray-200 ${
+                collapsed ? 'px-2 py-2' : 'px-4 py-2'
+              } ${isActive(item.href) ? 'bg-gray-200 text-gray-900' : ''} text-lg`}
+            >
+              <item.icon className={`${collapsed ? 'mr-0' : 'mr-3'} h-5 w-5`} />
+              {!collapsed && <span>{item.label}</span>}
             </Button>
-          </CardContent>
-        </Card>
+          </Link>
+        ))}
       </div>
     </div>
   );

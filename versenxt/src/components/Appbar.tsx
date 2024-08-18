@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Search, Bell } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
@@ -14,7 +14,6 @@ import { useRouter } from 'next/navigation'
 
 interface AppbarProps {
   collapsed: boolean;
-  onToggle: () => void;
 }
 
 interface User {
@@ -24,7 +23,7 @@ interface User {
   profilePictureUrl?: string;
 }
 
-export default function Appbar({ collapsed, onToggle }: AppbarProps) {
+export default function Appbar({ collapsed }: AppbarProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -75,62 +74,62 @@ export default function Appbar({ collapsed, onToggle }: AppbarProps) {
   };
 
   return (
-    <header className="flex items-center justify-between px-10 py-4 bg-white bg-opacity-20 backdrop-blur-lg">
-      <div className="flex items-center">
-        <Button variant="ghost" size="icon" onClick={onToggle} className="mr-2">
-          {collapsed ? <ChevronRight /> : <ChevronLeft />}
-        </Button>
+    <header className="flex items-center justify-between px-4 py-2 bg-white shadow-sm">
+      {collapsed && (
         <Link href="/" passHref>
-          <h1 className="text-2xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
+          <h1 className="text-xl font-semibold text-gray-800 cursor-pointer">Versetta</h1>
         </Link>
-      </div>
-      <p className="text-sm italic text-white mx-auto">`Creativity is intelligence having fun`</p>
-      <div className="flex items-center space-x-4">
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="bg-white bg-opacity-20 text-white placeholder-white"
-        />
-        <Button variant="ghost" size="icon">
-          <Bell className="h-5 w-5 text-white" />
+      )}
+      <p className="text-sm italic text-gray-600 mx-auto hidden md:block">&quot;Creativity is intelligence having fun&quot;</p>
+      <div className="flex items-center space-x-3">
+        <div className="relative hidden md:block">
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="pl-8 pr-4 py-1 bg-gray-100 text-gray-700 placeholder-gray-500 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+          />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+        </div>
+        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-900">
+          <Bell className="h-5 w-5" />
         </Button>
         {isLoading ? (
-          <span>Loading...</span>
+          <span className="text-gray-600">Loading...</span>
         ) : user ? (
           <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger className="focus:outline-none">
               {user.profilePictureUrl ? (
                 <Image
                   src={user.profilePictureUrl}
                   alt="Profile"
-                  width={64}
-                  height={64}
+                  width={32}
+                  height={32}
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-600">
                     {user.firstName?.charAt(0) || user.email.charAt(0)}
                   </span>
                 </div>
               )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>
+            <DropdownMenuContent className="mt-2 bg-white shadow-lg rounded-md">
+              <DropdownMenuItem className="text-gray-700">
                 <span>{user.firstName} {user.lastName}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-700">
                 <span>{user.email}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-600 hover:bg-red-50">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
           <>
-            <Button onClick={handleSignIn} variant="ghost" className="text-black">Sign In</Button>
-            <Button onClick={handleSignUp} variant="ghost" className="text-black">Sign Up</Button>
+            <Button onClick={handleSignIn} variant="ghost" className="text-gray-600 hover:text-gray-900">Sign In</Button>
+            <Button onClick={handleSignUp} variant="outline" className="text-gray-800 bg-gray-100 hover:bg-gray-200">Sign Up</Button>
           </>
         )}
       </div>

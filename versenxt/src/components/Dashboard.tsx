@@ -11,7 +11,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-indigo-700">Videos in Production</CardTitle>
+            <CardTitle className="text-2xl font-bold text-[#2967eb]">Videos in Production</CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"

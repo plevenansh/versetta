@@ -1,25 +1,21 @@
-
 "use client"
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
 import Layout from '@/components/Layout';
 import '../styles/globals.css'
-
+//import { manrope } from './fonts'
+import { manrope } from '@/components/fonts'
 interface RootLayoutProps {
   children: ReactNode;
 }
 
 function RootLayout({ children }: RootLayoutProps) {
   return (
-    
-    <html lang="en">
+    <html lang="en" className={`${manrope.variable} font-sans`}>
       <body>
         <Layout>{children}</Layout>
       </body>
     </html>
-
   );
 }
 

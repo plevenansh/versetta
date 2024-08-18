@@ -80,7 +80,7 @@ export default function Appbar({ collapsed }: AppbarProps) {
           <h1 className="text-xl font-semibold text-gray-800 cursor-pointer">Versetta</h1>
         </Link>
       )}
-      <p className="text-sm italic text-gray-600 mx-auto hidden md:block">&quot;Creativity is intelligence having fun&quot;</p>
+      <p className="text-sm italic text-gray-600 mx-auto hidden md:block"></p>
       <div className="flex items-center space-x-3">
         <div className="relative hidden md:block">
           <Input

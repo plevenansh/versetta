@@ -249,25 +249,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         <Card className="w-full bg-gray-100 border-0 shadow-sm rounded-2xl mb-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-2xl font-bold">{project.title}</CardTitle>
-            <div className="flex space-x-2">
-              <Button onClick={() => setIsEditModalOpen(true)} variant="outline" className="text-blue-600">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-              <Button variant="outline" className="text-green-600">
-                <Send className="w-4 h-4 mr-2" />
-                Publish
-              </Button>
-              <Button onClick={handleDelete} variant="outline" className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-              <Link href={`/projects/${project.id}/${slugify(project.title)}`}>
-            <Button variant="outline" className="w-full justify-between mb-4">
-              Expand
-            </Button>
-          </Link>
-            </div>
+           
           </CardHeader>
           <CardContent>
             
@@ -297,12 +279,39 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
               <span>Details</span>
               {expanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
             </Button>
-            <div className="space-y-2">
-              <p>Current: {project.status}</p>
-              <Progress value={percentageDone} className="w-full" />
-              <p className="text-right">{percentageDone}% Complete</p>
-              <p>Expected Publish: {formatDate(project.endDate)}</p>
-            </div>
+          <div className="space-y-2">
+             <div className="flex justify-between items-center">
+                <p className='font-semibold'>Current: {project.status}</p>
+               <p>Expected Publish: {formatDate(project.endDate)}</p>
+ 
+              </div > 
+        <div className='pt-2'> <Progress value={percentageDone} className="w-full" />
+       </div>
+        </div>
+
+    <div className="flex justify-between items-center mt-4">
+      
+           <p>{percentageDone}% Complete</p>
+          <div className="flex space-x-2">
+            <Button onClick={() => setIsEditModalOpen(true)} variant="outline" className=" border-[1px] border-[#B3CCEB] rounded-3xl">
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+            <Button variant="outline" className="bg-[#B3E5FC] rounded-3xl">
+              <Send className="w-4 h-4 mr-2" />
+              Publish
+            </Button>
+            <Button onClick={handleDelete} variant="outline" className="rounded-3xl bg-[#ec6058]">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+            <Link href={`/projects/${project.id}/${slugify(project.title)}`}>
+              <Button variant="outline" className="justify-between bg-gray-100  rounded-3xl">
+                Expand
+              </Button>
+            </Link>
+          </div>
+        </div>
             <AnimatePresence>
               {expanded && (
                 <motion.div
@@ -319,7 +328,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
                         <Button
                           onClick={() => toggleStage(stage.stage)}
                           className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                            stage.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                            stage.completed ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-600'
                           }`}
                         >
                           {stage.completed ? (
@@ -329,7 +338,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
                           )}
                         </Button>
                         {index < projectStages.length - 1 && (
-                          <div className="flex-grow h-1 bg-blue-300"></div>
+                          <div className="flex-grow h-1 bg-pink-100"></div>
                         )}
                       </React.Fragment>
                     ))}

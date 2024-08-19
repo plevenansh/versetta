@@ -463,10 +463,10 @@ export default function TaskList() {
                         {expandedTasks.includes(task.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     )}
-                    <Button onClick={() => startEditing(task)} size="sm" variant="outline" className="rounded-xl">
+                    <Button onClick={() => startEditing(task)} size="sm" variant="outline" className="rounded-xl ">
                       <FilePen className="h-4 w-4" />
                     </Button>
-                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive" className="rounded-xl">
+                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive" className="rounded-xl bg-[#ec6058]">
                       <Trash className="h-4 w-4" />
                     </Button>
                   </div>

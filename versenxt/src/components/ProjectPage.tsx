@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Circle } from 'lucide-react';
+import { CheckCircle, Circle, Calendar, Users, User } from 'lucide-react';
 
 interface ProjectStage {
   id: number;
@@ -104,7 +104,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
 
   return (
     <div className="container mx-auto p-4">
-      <Card className="mb-6">
+      <Card className="mb-4">
         <CardHeader>
           <CardTitle>{project.title}</CardTitle>
         </CardHeader>
@@ -125,7 +125,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
+      {/* <Card className="mb-6">
         <CardHeader>
           <CardTitle>Progress</CardTitle>
         </CardHeader>
@@ -133,9 +133,9 @@ const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
           <Progress value={percentageDone} className="w-full" />
           <p className="text-center mt-2">{percentageDone}% Complete</p>
         </CardContent>
-      </Card>
+      </Card> */}
 
-      <Card className="mb-6">
+      <Card className="mb-4">
         <CardHeader>
           <CardTitle>Production Stages</CardTitle>
         </CardHeader>
@@ -145,7 +145,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
               <div key={stage.id} className="flex items-center">
                 <div
                   onClick={() => toggleStage(stage.id)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer ${
                     stage.completed ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
                   }`}
                 >

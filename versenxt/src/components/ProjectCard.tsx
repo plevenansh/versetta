@@ -246,7 +246,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
       };
 
       return (
-        <Card className="w-full bg-gray-100 border-0 shadow-sm rounded-2xl mb-4">
+        <Card className="w-full bg-[#f8f8f8] border-0 shadow-sm rounded-2xl mb-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-2xl font-bold">{project.title}</CardTitle>
            

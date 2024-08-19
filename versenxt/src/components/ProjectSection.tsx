@@ -147,20 +147,26 @@ export default function ProjectSection() {
 
 
   return (
-    <Card className="w-full bg-white shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Projects</CardTitle>
-        <Button onClick={handleAddProject} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Project
-        </Button>
-      </CardHeader>
+    <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-sm">
+  <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <CardTitle className="text-2xl pl-1 font-bold">Projects</CardTitle>
+    <Button onClick={handleAddProject} size="sm" className="bg-pink-100 text-pink-600 hover:bg-pink-200">
+      <Plus className="h-4 w-4 mr-2" />
+      Add New Project
+    </Button>
+  </CardHeader>
       <CardContent>
         {projects.length === 0 ? (
-          <p className="text-gray-600 text-center py-4">No projects exist. Create a new project to get started!</p>
+          <p className="text-gray-600 text-center py-4">No projects exist. CreAdd New Project
+          is it the first project
+          ￼Edit
+          ￼Publish
+          ￼Delete
+          ￼Expand
+          ￼
+          ae a new project to get started!</p>
         ) : (
-       //   <div className="h-[calc(100vh-200px)] overflow-y-auto pr-4"> (to make the scrollbar visible remove the below div statement enavle this)
-          <div className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default">
+           <div className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default">
           <div className="space-y-4">
             {projects.map(project => (
               <ProjectCard

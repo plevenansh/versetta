@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { trpc } from '@/trpc/client';
-import { Trash2, Edit, Plus, X } from 'lucide-react';
+import { Trash, FilePen, Plus, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -296,21 +296,22 @@ export default function TaskList() {
   ];
 
   return (
-    <Card className="w-full bg-white shadow-lg">
+    <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-lg">
        <CardHeader className="flex flex-col space-y-4 pb-2">
        <div className="flex justify-between items-center">
         <CardTitle>Tasks</CardTitle>
         <Button 
-          onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-          size="sm"
-        >
-          {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-          {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-        </Button> 
+  onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+  size="sm"
+  className="bg-pink-100 text-pink-600 hover:bg-pink-200"
+>
+  {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+  {showNewTaskForm ? 'Cancel' : 'Add New Task'}
+</Button>
         </div>
         </CardHeader>
-        <div className="px-6 pb-2 w-full">
-  <div className="flex w-full rounded-full bg-gray-100 p-1 h-12">
+        <div className="px-6 pb-4 w-full">
+  <div className="flex w-full rounded-full bg-[#D6EBFF] p-1 h-12">
     {filterButtons.map((btn) => (
       <button
         key={btn.value}
@@ -318,8 +319,8 @@ export default function TaskList() {
         className={`
           flex-1 rounded-full px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
           ${filter === btn.value 
-            ? 'bg-black text-white' 
-            : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'}
+            ? 'bg-[#F0F8FF] text-black-500' 
+            : 'text-gray-600 hover:bg-gray-700 hover:text-white'}
         `}
       >
         {btn.label}
@@ -390,7 +391,7 @@ export default function TaskList() {
         )}
         <div className="h-[calc(100vh-300px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default pr-4">
           {tasks.map(task => (
-            <Card key={task.id} className="flex flex-col bg-gray-50 p-2 rounded mb-2">
+            <Card key={task.id} className="flex flex-col bg-gray-100 p-2 rounded-2xl mb-2 border-0">
               {editingTask?.id === task.id ? (
                 <div className="flex flex-col space-y-2 w-full">
                   <Input
@@ -439,6 +440,7 @@ export default function TaskList() {
                     <Checkbox
                       checked={task.status === 'completed'}
                       onCheckedChange={() => toggleTask(task.id)}
+                      className="round-checkbox"
                     />
                     <div className="flex-grow">
                       <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
@@ -461,11 +463,11 @@ export default function TaskList() {
                         {expandedTasks.includes(task.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     )}
-                    <Button onClick={() => startEditing(task)} size="sm" variant="outline">
-                      <Edit className="h-4 w-4" />
+                    <Button onClick={() => startEditing(task)} size="sm" variant="outline" className="rounded-xl">
+                      <FilePen className="h-4 w-4" />
                     </Button>
-                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
-                      <Trash2 className="h-4 w-4" />
+                    <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive" className="rounded-xl">
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </>

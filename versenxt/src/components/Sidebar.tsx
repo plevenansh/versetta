@@ -31,7 +31,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </Button>
         {!collapsed && (
           <Link href="/" passHref>
-            <h1 className="ml-2 text-xl font-semibold text-gray-800 cursor-pointer">Versetta</h1>
+            <h1 className="ml-2 text-2xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
           </Link>
         )}
       </div>

@@ -74,10 +74,10 @@ export default function Appbar({ collapsed }: AppbarProps) {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-2 bg-white shadow-sm">
+    <header className="flex items-center justify-between px-4 py-4 bg-white ">
       {collapsed && (
         <Link href="/" passHref>
-          <h1 className="text-xl font-semibold text-gray-800 cursor-pointer">Versetta</h1>
+          <h1 className="text-2xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
         </Link>
       )}
       <p className="text-sm italic text-gray-600 mx-auto hidden md:block"></p>
@@ -86,7 +86,7 @@ export default function Appbar({ collapsed }: AppbarProps) {
           <Input
             type="search"
             placeholder="Search..."
-            className="pl-8 pr-4 py-1 bg-gray-100 text-gray-700 placeholder-gray-500 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+            className="pl-8 pr-4 py-1 bg-[#F0F8FF] text-gray-700 placeholder-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
           />
           <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
         </div>

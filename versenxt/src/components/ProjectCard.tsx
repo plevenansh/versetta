@@ -246,7 +246,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
       };
 
       return (
-        <Card className="mb-4">
+        <Card className="w-full bg-gray-100 border-0 shadow-sm rounded-2xl mb-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-2xl font-bold">{project.title}</CardTitle>
             <div className="flex space-x-2">
@@ -278,20 +278,21 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         onCheckedChange={(checked) => {
           toggleProjectCompletion.mutate({ id: project.id, completed: checked });
         }}
+        className=""
       />
       <span>{project.completed ? "Completed" : "In Progress"}</span>
     </div>
 
 
-            <div className="mb-4">
-              <p>Project ID: {project.id}</p>
-              <p>Team ID: {project.teamId}</p>
-              <p>Creator ID: {project.creatorId}</p>
-            </div>
+    <div className="mb-4 p-1 pt-4">
+  <p className="inline-block mr-4">Project ID: {project.id}</p>
+  <p className="inline-block mr-4">Team ID: {project.teamId}</p>
+  <p className="inline-block">Creator ID: {project.creatorId}</p>
+</div>
             <Button 
               onClick={() => setExpanded(!expanded)} 
               variant="outline" 
-              className="w-full justify-between mb-4"
+              className="w-full bg-[#F0F8FF] justify-between rounded-2xl mb-4"
             >
               <span>Details</span>
               {expanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}

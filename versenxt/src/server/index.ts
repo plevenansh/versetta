@@ -5,7 +5,6 @@ import { taskRouter } from './routers/tasks';
 import {userRouter} from './routers/users';
 import {teamRouter} from './routers/teams';
 import { youtubeRouter } from './routers/youtube';
-//import { authRouter } from './routers/auth';
 
 export const appRouter = router({
 
@@ -14,12 +13,7 @@ export const appRouter = router({
     tasks: taskRouter,
     teams: teamRouter,
     youtube: youtubeRouter,
-   // auth: authRouter,
-
-   // calendar: calendarRouter,
-   //  dashboard: dashboardRouter
-
-
+   
 
 });
 

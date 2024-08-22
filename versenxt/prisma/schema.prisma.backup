@@ -13,12 +13,11 @@ model User {
   email           String       @unique
   name            String
   gender          String?
-  workOsUserId    String       @unique
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   teamMemberships TeamMember[]
   createdTeams    Team[]       @relation("TeamCreator")
- 
+
   @@map("users")
 }
 
@@ -45,7 +44,6 @@ model TeamMember {
   teamId          Int
   role            String
   joinedAt        DateTime  @default(now())
-  workOsMembershipId String?   @unique
   createdProjects Project[] @relation("ProjectCreator")
   assignedTasks   Task[]    @relation("TaskAssignee")
   createdTasks    Task[]    @relation("TaskCreator")

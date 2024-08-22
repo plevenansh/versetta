@@ -1,223 +1,173 @@
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 import prisma from '../../lib/prisma';
+import { WorkOS } from '@workos-inc/node';
+
+const workos = new WorkOS(process.env.WORKOS_API_KEY);
 
 export const teamRouter = router({
-  getAll: publicProcedure.query(async () => {
-    try {
-      const teams = await prisma.team.findMany({
-        include: {
-          members: {
-            include: {
-              user: true
-            }
-          },
-          projects: true,
-          tasks: true
-        }
-      });
-      return teams;
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-      throw new Error('Failed to fetch teams');
-    }
-  }),
-
-  getById: publicProcedure
-    .input(z.number())
-    .query(async ({ input }) => {
-      try {
-        const team = await prisma.team.findUnique({
-          where: { id: input },
-          include: {
-            members: {
-              include: {
-                user: true
-              }
-            },
-            projects: true,
-            tasks: true
-          }
-        });
-        if (!team) {
-          throw new Error(`Team with id ${input} not found`);
-        }
-        return team;
-      } catch (error) {
-        console.error(`Error fetching team with id ${input}:`, error);
-        throw new Error('Failed to fetch team');
-      }
-    }),
-
-  create: publicProcedure
-    .input(z.object({
+  createTeam: publicProcedure
+  .input(
+    z.object({
       name: z.string(),
       description: z.string().optional(),
-      creatorId: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      console.log('Creating team with input:', input);
-      try {
-        const newTeam = await prisma.team.create({
-          data: {
-            name: input.name,
-            description: input.description,
-            creator: {
-              connect: { id: input.creatorId }
-            },
-            members: {
-              create: {
-                userId: input.creatorId,
-                role: 'admin'
-              }
-            }
-          },
-          include: {
-            members: {
-              include: {
-                user: true
-              }
-            },
-            creator:true
-          }
-        });
-        return newTeam;
-      } catch (error) {
-        console.error('Error creating team:', error);
-        throw new Error('Failed to create team');
-      }
-    }),
+      creatorId: z.number(),
+    })
+  )
+  .mutation(async ({ input }) => {
+    // Create WorkOS organization
+    const workOsOrg = await workos.organizations.createOrganization({
+      name: input.name,
+    });
 
-  update: publicProcedure
-    .input(z.object({
-      id: z.number(),
-      name: z.string().optional(),
-      description: z.string().optional()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const updatedTeam = await prisma.team.update({
-          where: { id: input.id },
-          data: {
-            name: input.name,
-            description: input.description
-          },
-          include: {
-            members: {
-              include: {
-                user: true
-              }
-            }
-          }
-        });
-        return updatedTeam;
-      } catch (error) {
-        console.error(`Error updating team with id ${input.id}:`, error);
-        throw new Error('Failed to update team');
-      }
-    }),
+    // Create team in database
+    const team = await prisma.team.create({
+      data: {
+        name: input.name,
+        description: input.description,
+        creatorId: input.creatorId,
+        workOsOrgId: workOsOrg.id,
+      },
+    });
 
-  delete: publicProcedure
-    .input(z.number())
-    .mutation(async ({ input }) => {
-      try {
-        await prisma.team.delete({
-          where: { id: input }
-        });
-        return { success: true, message: 'Team deleted successfully' };
-      } catch (error) {
-        console.error(`Error deleting team with id ${input}:`, error);
-        throw new Error('Failed to delete team');
-      }
-    }),
+    // Create TeamMember entry for the creator
+    await prisma.teamMember.create({
+      data: {
+        userId: input.creatorId,
+        teamId: team.id,
+        role: 'admin',
+      },
+    });
 
-  addMember: publicProcedure
-    .input(z.object({
-      teamId: z.number(),
-      userId: z.number(),
-      role: z.string()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const newMember = await prisma.teamMember.create({
-          data: {
-            teamId: input.teamId,
-            userId: input.userId,
-            role: input.role
-          },
-          include: {
-            team: true,
-            user: true
-          }
-        });
-        return newMember;
-      } catch (error) {
-        console.error('Error adding team member:', error);
-        throw new Error('Failed to add team member');
-      }
-    }),
+    return team;
+  }),
 
-  removeMember: publicProcedure
-    .input(z.object({
-      teamId: z.number(),
-      userId: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        await prisma.teamMember.delete({
-          where: {
-            userId_teamId: {
-              userId: input.userId,
-              teamId: input.teamId
-            }
-          }
-        });
-        return { success: true, message: 'Team member removed successfully' };
-      } catch (error) {
-        console.error('Error removing team member:', error);
-        throw new Error('Failed to remove team member');
-      }
-    }),
-
-  updateMemberRole: publicProcedure
-    .input(z.object({
-      teamId: z.number(),
-      userId: z.number(),
-      role: z.string()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const updatedMember = await prisma.teamMember.update({
-          where: {
-            userId_teamId: {
-              userId: input.userId,
-              teamId: input.teamId
-            }
-          },
-          data: {
-            role: input.role
-          }
-        });
-        return updatedMember;
-      } catch (error) {
-        console.error('Error updating team member role:', error);
-        throw new Error('Failed to update team member role');
-      }
-    }),
-
-  getTeamMembers: publicProcedure
+  getTeam: publicProcedure
     .input(z.number())
     .query(async ({ input }) => {
-      try {
-        const members = await prisma.teamMember.findMany({
-          where: { teamId: input },
-          include: { user: true }
-        });
-        return members;
-      } catch (error) {
-        console.error(`Error fetching members for team with id ${input}:`, error);
-        throw new Error('Failed to fetch team members');
+      return prisma.team.findUnique({
+        where: { id: input },
+        include: {
+          members: {
+            include: { user: true },
+          },
+          projects: true,
+          tasks: true,
+        },
+      });
+    }),
+
+    addTeamMember: publicProcedure
+    .input(
+      z.object({
+        teamId: z.number(),
+        userId: z.number(),
+        role: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const team = await prisma.team.findUnique({
+        where: { id: input.teamId },
+      });
+
+      
+      if (!team) {
+        throw new Error('Team not found'
+        );
       }
-    })
+
+      const user = await prisma.user.findUnique({
+        where: { id: input.userId },
+      });
+
+      if (!team) {
+        throw new Error('User not found'
+        );
+      }
+
+      const workOsMembership = await workos.userManagement.createOrganizationMembership({
+        organizationId: team.workOsOrgId,
+      //  userId: user.email, // Assuming user's email is used as WorkOS user ID
+        roleSlug: input.role,
+      });
+
+      const teamMember = await prisma.teamMember.create({
+        data: {
+          userId: input.userId,
+          teamId: input.teamId,
+          role: input.role,
+          workOsMembershipId: workOsMembership.id,
+        },
+      });
+
+      return teamMember;
+    }),
+
+  removeTeamMember: publicProcedure
+    .input(z.number())
+    .mutation(async ({ input }) => {
+      const teamMember = await prisma.teamMember.findUnique({
+        where: { id: input },
+        include: { team: true },
+      });
+
+       if (!teamMember) {
+        throw new Error('Team not found'
+        );
+      }
+
+      await workos.userManagement.deleteOrganizationMembership(
+        teamMember.workOsMembershipId
+      );
+
+      await prisma.teamMember.delete({
+        where: { id: input },
+      });
+
+      return { success: true };
+    }),
+
+  updateTeamMemberRole: publicProcedure
+    .input(
+      z.object({
+        teamMemberId: z.number(),
+        newRole: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const teamMember = await prisma.teamMember.findUnique({
+        where: { id: input.teamMemberId },
+        include: { team: true },
+      });
+
+      if (!teamMember) {
+        throw new Error('Team not found'
+        );
+      }
+      await workos.userManagement.updateOrganizationMembership(
+        teamMember.workOsMembershipId,
+        {
+          roleSlug: input.newRole,
+        }
+      );
+
+      const updatedTeamMember = await prisma.teamMember.update({
+        where: { id: input.teamMemberId },
+        data: { role: input.newRole },
+      });
+
+      return updatedTeamMember;
+    }),
+
+  listTeamMembers: publicProcedure
+    .input(z.number())
+    .query(async ({ input }) => {
+      const teamMembers = await prisma.teamMember.findMany({
+        where: { teamId: input },
+        include: { user: true },
+      });
+
+      return teamMembers;
+    }),
+
 });

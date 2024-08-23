@@ -1,8 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { WorkOS } from '@workos-inc/node';
-import { appRouter } from '@/server/index';
-import { serverTrpc } from '@/trpc/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { serverTrpc } from '@/trpc/client';
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 
@@ -23,20 +21,12 @@ interface WorkOSUserCreatedEvent {
   created_at: string;
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).end();
-  }
-
-  // Parse the raw body
-  const rawBody = await getRawBody(req);
-  const sigHeader = req.headers['workos-signature'] as string;
+export async function POST(req: NextRequest) {
+  const rawBody = await req.text();
+  const sigHeader = req.headers.get('workos-signature');
 
   if (!sigHeader) {
     return NextResponse.json({ error: 'Missing WorkOS signature' }, { status: 400 });
@@ -44,13 +34,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const webhook = await workos.webhooks.constructEvent({
-      payload: rawBody.toString(),
+      payload: rawBody,
       sigHeader,
       secret: process.env.WEBHOOK_SECRET!,
     });
 
     if (webhook.event !== 'user.created') {
-      return res.status(200).end();
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
     // Type guard function
@@ -77,23 +67,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       workOsUserId,
     });
 
-    res.status(200).json({ received: true });
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     console.error('Error processing webhook:', err);
-    res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown Error'}`);
+    return NextResponse.json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown Error'}` }, { status: 400 });
   }
-}
-
-// Helper function to get raw body
-async function getRawBody(req: NextApiRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
-    });
-    req.on('end', () => {
-      resolve(Buffer.from(body));
-    });
-    req.on('error', reject);
-  });
 }

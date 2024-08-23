@@ -42,11 +42,51 @@ export const userRouter = router({
       }
     }),
  
+    createFromWorkOS: publicProcedure
+    .input(z.object({
+      workOsUserId: z.string(),
+      email: z.string().email(),
+      name: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const { workOsUserId, email, name } = input;
+
+        // Check if user already exists
+        let user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (user) {
+          // Update existing user with WorkOS ID
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { workOsUserId },
+          });
+        } else {
+          // Create new user
+          user = await prisma.user.create({
+            data: {
+              workOsUserId,
+              email,
+              name,
+            },
+          });
+        }
+
+        console.log('User created/updated successfully:', user);
+        return user;
+      } catch (error) {
+        console.error('Error creating/updating user:', error);
+        throw new Error(`Failed to create/update user: ${(error as Error).message}`);
+      }
+    }),
     create: publicProcedure
     .input(z.object({
       name: z.string(),
       email: z.string().email(),
-      gender: z.string().optional()
+      gender: z.string().optional(),
+      workOsUserId: z.string()
     }))
     .mutation(async ({ input }) => {
       try {
@@ -54,6 +94,7 @@ export const userRouter = router({
           name: input.name,
           email: input.email,
           gender: input.gender,
+          workOsUserId: input.workOsUserId
         };
         const newUser = await prisma.user.create({ data });
         console.log('User created successfully:', newUser);

@@ -5,7 +5,7 @@ import LandingPage from '@/components/LandingPage';
 export default async function HomePage() {
   const user = await getUser();
 
-  if ('id' in user) {
+  if (user) {
     // User is authenticated
     return <Dashboard />;
   } else {

@@ -97,7 +97,7 @@ export default function TaskList() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
   
   const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
-  const { data: fetchedTeamMembers } = trpc.teams.getTeamMembers.useQuery(HARDCODED_TEAM_ID);
+  const { data: fetchedTeamMembers } = trpc.teams.listTeamMembers.useQuery(HARDCODED_TEAM_ID);
 
   useEffect(() => {
     if (fetchedProjects) setProjects(fetchedProjects as Project[]);

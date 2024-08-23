@@ -156,32 +156,3 @@ export const userRouter = router({
 
  
 
-
-// create: publicProcedure
-//     .input(z.object({
-//       name: z.string(),
-//       email: z.string().email(),
-//       gender: z.string().optional(),
-//       workOsUserId: z.string()
-//     }))
-//     .mutation(async ({ input }) => {
-//       try {
-//         const data: Prisma.UserCreateInput = {
-//           name: input.name,
-//           email: input.email,
-//           gender: input.gender,
-//           workOsUserId: input.workOsUserId
-//         };
-//         const newUser = await prisma.user.create({ data });
-//         console.log('User created successfully:', newUser);
-//         return newUser;
-//       } catch (error) {
-//         console.error('Error creating user:', error);
-//         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-//           if (error.code === 'P2002') {
-//             throw new Error('A user with this email already exists');
-//           }
-//         }
-//         throw new Error(`Failed to create user: ${(error as Error).message}`);
-//       }
-//     }),

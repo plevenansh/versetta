@@ -26,25 +26,25 @@ interface SignUpPageProps {
 }
 
 export default function SignUp() {
-  const createUser = trpc.users.create.useMutation();
+  // const createUser = trpc.users.create.useMutation();
 
-  const handleSignUp = async (formData: SignUpFormData) => {
-    try {
-      const createUserInput: CreateUserInput = {
-        name: formData.name,
-        email: formData.email,
-        gender: formData.gender
-      };
-      await createUser.mutateAsync(createUserInput);
-      // Handle successful sign up (e.g., redirect to login page)
-    } catch (error) {
-      // Handle error (e.g., show error message)
-      console.error('Sign up error:', error);
-    }
-  };
+  // const handleSignUp = async (formData: SignUpFormData) => {
+  //   try {
+  //     const createUserInput: CreateUserInput = {
+  //       name: formData.name,
+  //       email: formData.email,
+  //       gender: formData.gender
+  //     };
+  //     await createUser.mutateAsync(createUserInput);
+  //     // Handle successful sign up (e.g., redirect to login page)
+  //   } catch (error) {
+  //     // Handle error (e.g., show error message)
+  //     console.error('Sign up error:', error);
+  //   }
+  // };
 
-  // Use a type assertion to explicitly define the props of SignUpPage
-  const TypedSignUpPage = SignUpPage as React.ComponentType<SignUpPageProps>;
+  // // Use a type assertion to explicitly define the props of SignUpPage
+  // const TypedSignUpPage = SignUpPage as React.ComponentType<SignUpPageProps>;
 
-  return <TypedSignUpPage onSubmit={handleSignUp} />;
+  // return <TypedSignUpPage onSubmit={handleSignUp} />;
 }

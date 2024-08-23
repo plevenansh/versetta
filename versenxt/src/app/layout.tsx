@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
 import Layout from '@/components/Layout';
 import '../styles/globals.css'
-//import { manrope } from './fonts'
+
 import { manrope } from '@/components/fonts'
 interface RootLayoutProps {
   children: ReactNode;

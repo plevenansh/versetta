@@ -1,7 +1,7 @@
 import { httpBatchLink } from '@trpc/client';
 import { createTRPCNext } from '@trpc/next';
 import type { AppRouter } from '@/server/';
-
+import { createTRPCProxyClient } from '@trpc/client';
 function getBaseUrl() {
   if (typeof window !== 'undefined')
     // browser should use relative path
@@ -44,4 +44,13 @@ export const trpc = createTRPCNext<AppRouter>({
    * @link https://trpc.io/docs/v11/ssr
    **/
   ssr: false,
+});
+
+// Create a server-side tRPC client
+export const serverTrpc = createTRPCProxyClient<AppRouter>({
+  links: [
+    httpBatchLink({
+      url: `${getBaseUrl()}/api/trpc`,
+    }),
+  ],
 });

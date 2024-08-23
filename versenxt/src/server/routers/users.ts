@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import prisma from '../../lib/prisma';
+import prisma from '@/lib/prisma';
 
 export const userRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -42,73 +42,47 @@ export const userRouter = router({
       }
     }),
  
-    createFromWorkOS: publicProcedure
+    create: publicProcedure
     .input(z.object({
-      workOsUserId: z.string(),
       email: z.string().email(),
       name: z.string(),
+      workOsUserId: z.string(),
     }))
     .mutation(async ({ input }) => {
-      try {
-        const { workOsUserId, email, name } = input;
+      const { email, name, workOsUserId } = input;
 
-        // Check if user already exists
-        let user = await prisma.user.findUnique({
+      try {
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
           where: { email },
         });
 
-        if (user) {
-          // Update existing user with WorkOS ID
-          user = await prisma.user.update({
-            where: { id: user.id },
+        if (existingUser) {
+          // User exists, update WorkOS user ID
+          const updatedUser = await prisma.user.update({
+            where: { email },
             data: { workOsUserId },
           });
+          console.log(`User updated: ${updatedUser.id}`);
+          return updatedUser;
         } else {
-          // Create new user
-          user = await prisma.user.create({
+          // User doesn't exist, create new user
+          const newUser = await prisma.user.create({
             data: {
-              workOsUserId,
               email,
               name,
+              workOsUserId,
             },
           });
+          console.log(`New user created: ${newUser.id}`);
+          return newUser;
         }
-
-        console.log('User created/updated successfully:', user);
-        return user;
       } catch (error) {
-        console.error('Error creating/updating user:', error);
-        throw new Error(`Failed to create/update user: ${(error as Error).message}`);
+        console.error('Error in user creation/update:', error);
+        throw new Error('Failed to create or update user');
       }
     }),
-    create: publicProcedure
-    .input(z.object({
-      name: z.string(),
-      email: z.string().email(),
-      gender: z.string().optional(),
-      workOsUserId: z.string()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const data: Prisma.UserCreateInput = {
-          name: input.name,
-          email: input.email,
-          gender: input.gender,
-          workOsUserId: input.workOsUserId
-        };
-        const newUser = await prisma.user.create({ data });
-        console.log('User created successfully:', newUser);
-        return newUser;
-      } catch (error) {
-        console.error('Error creating user:', error);
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          if (error.code === 'P2002') {
-            throw new Error('A user with this email already exists');
-          }
-        }
-        throw new Error(`Failed to create user: ${(error as Error).message}`);
-      }
-    }),
+    
 
   update: publicProcedure
     .input(z.object({
@@ -181,3 +155,33 @@ export const userRouter = router({
 });
 
  
+
+
+// create: publicProcedure
+//     .input(z.object({
+//       name: z.string(),
+//       email: z.string().email(),
+//       gender: z.string().optional(),
+//       workOsUserId: z.string()
+//     }))
+//     .mutation(async ({ input }) => {
+//       try {
+//         const data: Prisma.UserCreateInput = {
+//           name: input.name,
+//           email: input.email,
+//           gender: input.gender,
+//           workOsUserId: input.workOsUserId
+//         };
+//         const newUser = await prisma.user.create({ data });
+//         console.log('User created successfully:', newUser);
+//         return newUser;
+//       } catch (error) {
+//         console.error('Error creating user:', error);
+//         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+//           if (error.code === 'P2002') {
+//             throw new Error('A user with this email already exists');
+//           }
+//         }
+//         throw new Error(`Failed to create user: ${(error as Error).message}`);
+//       }
+//     }),

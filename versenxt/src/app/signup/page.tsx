@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import SignUpPage from '@/lib/signup';
+import SignUpPage from '@/components/signup';
 import { trpc } from '@/trpc/client';
 
 // Define the structure of the sign-up form data
@@ -17,6 +17,7 @@ interface CreateUserInput {
   name: string;
   email: string;
   gender?: string;
+  
 }
 
 // Define props for SignUpPage component

@@ -187,22 +187,25 @@ export async function POST(request: NextRequest) {
     }
 
 
-function isUserCreatedEvent(event: any): event is WorkOSUserCreatedEvent {
-  return event.event === 'user.created' &&
-         typeof event.data === 'object' &&
-         typeof event.data.id === 'string' &&
-         typeof event.data.email === 'string' &&
-         typeof event.data.first_name === 'string' &&
-         typeof event.data.last_name === 'string';
-}
-   if (!isUserCreatedEvent(webhook)) {
-     console.error('Invalid user.created event structure');
-      return NextResponse.json({ error: 'Invalid user.created event structure' }, { status: 400 });
-    }
+  // function isUserCreatedEvent(event: any): event is WorkOSUserCreatedEvent {
+  // return event.event === 'user.created' &&
+  //        typeof event.data === 'object' &&
+  //        typeof event.data.id === 'string' &&
+  //        typeof event.data.email === 'string' &&
+  //        typeof event.data.first_name === 'string' &&
+  //        typeof event.data.last_name === 'string';
+  //   }
+  //  if (!isUserCreatedEvent(webhook)) {
+  //    console.error('Invalid user.created event structure');
+  //     return NextResponse.json({ error: 'Invalid user.created event structure' }, { status: 400 });
+  //   }
 
-    const { id: workOsUserId, email, first_name, last_name } = webhook.data;
-    const name = `${first_name} ${last_name}`.trim();
+  //   const { id: workOsUserId, email, first_name, last_name } = webhook.data;
+  //   const name = `${first_name} ${last_name}`.trim();
 
+  let email= "unicansh@gmail.com";
+let name= "Shubham";
+let workOsUserId= "123456789";
     console.log('Creating user:', { email, name, workOsUserId });
     try {
       await serverTrpc.users.create.mutate({

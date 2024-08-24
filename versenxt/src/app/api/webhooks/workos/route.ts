@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     await workos.webhooks.constructEvent({
-      payload: JSON.stringify(payload),
+      payload: payload,
       sigHeader: sigHeader,
       secret: process.env.WEBHOOK_SECRET || '',
     });

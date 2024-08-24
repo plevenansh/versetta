@@ -164,14 +164,7 @@ interface WorkOSUserCreatedEvent {
   created_at: string;
 }
 
-function isUserCreatedEvent(event: any): event is WorkOSUserCreatedEvent {
-  return event.event === 'user.created' &&
-         typeof event.data === 'object' &&
-         typeof event.data.id === 'string' &&
-         typeof event.data.email === 'string' &&
-         typeof event.data.first_name === 'string' &&
-         typeof event.data.last_name === 'string';
-}
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -193,8 +186,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, message: 'Non-user.created event acknowledged' }, { status: 200 });
     }
 
-    if (!isUserCreatedEvent(webhook)) {
-      console.error('Invalid user.created event structure');
+
+function isUserCreatedEvent(event: any): event is WorkOSUserCreatedEvent {
+  return event.event === 'user.created' &&
+         typeof event.data === 'object' &&
+         typeof event.data.id === 'string' &&
+         typeof event.data.email === 'string' &&
+         typeof event.data.first_name === 'string' &&
+         typeof event.data.last_name === 'string';
+}
+   if (!isUserCreatedEvent(webhook)) {
+     console.error('Invalid user.created event structure');
       return NextResponse.json({ error: 'Invalid user.created event structure' }, { status: 400 });
     }
 

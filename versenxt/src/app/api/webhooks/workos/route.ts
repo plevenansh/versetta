@@ -45,16 +45,26 @@ export async function POST(req: NextRequest) {
 
   try {
     console.log('Attempting to construct event');
-    const webhook = await workos.webhooks.constructEvent({
-      payload: rawBody,
-      sigHeader,
-      secret: process.env.WEBHOOK_SECRET,
-    });
+    console.log('WEBHOOK_SECRET (first 4 chars):', process.env.WEBHOOK_SECRET.substring(0, 4));
+    
+    let webhook;
+    try {
+      webhook = await workos.webhooks.constructEvent({
+        payload: rawBody,
+        sigHeader,
+        secret: process.env.WEBHOOK_SECRET,
+      });
+    } catch (Error) {
+      console.error('Error constructing event:', Error);
+      return NextResponse.json({ error: `Webhook construction error: ${Error}` }, { status: 400 });
+    }
+    
     console.log('Event constructed successfully');
+    console.log('Webhook event:', webhook.event);
 
     if (webhook.event !== 'user.created') {
       console.log('Received non-user.created event');
-      return NextResponse.json({ received: true }, { status: 200 });
+      return NextResponse.json({ received: true, message: 'Non-user.created event acknowledged' }, { status: 200 });
     }
 
     // Type guard function
@@ -69,22 +79,26 @@ export async function POST(req: NextRequest) {
 
     if (!isUserCreatedEvent(webhook)) {
       console.error('Invalid user.created event structure');
-      throw new Error('Invalid user.created event structure');
+      return NextResponse.json({ error: 'Invalid user.created event structure' }, { status: 400 });
     }
 
     const { id: workOsUserId, email, first_name, last_name } = webhook.data;
     const name = `${first_name} ${last_name}`.trim();
 
     console.log('Creating user:', { email, name, workOsUserId });
-    // Directly call the tRPC procedure
-    await serverTrpc.users.create.mutate({
-      email,
-      name,
-      workOsUserId,
-    });
-    console.log('User created successfully');
+    try {
+      await serverTrpc.users.create.mutate({
+        email,
+        name,
+        workOsUserId,
+      });
+      console.log('User created successfully');
+    } catch (Error) {
+      console.error('Error creating user:', Error);
+      return NextResponse.json({ error: `User creation error: ${Error}` }, { status: 500 });
+    }
 
-    return NextResponse.json({ received: true }, { status: 200 });
+    return NextResponse.json({ received: true, message: 'User created successfully' }, { status: 200 });
   } catch (err) {
     console.error('Error processing webhook:', err);
     return NextResponse.json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown Error'}` }, { status: 400 });

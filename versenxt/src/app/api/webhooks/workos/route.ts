@@ -106,35 +106,34 @@
 // }
 
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkOS } from '@workos-inc/node';
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    try {
-      const payload = req.body;
-      const sigHeader = req.headers['workos-signature'] as string;
+export async function POST(request: NextRequest) {
+  try {
+    const payload = await request.json();
+    const sigHeader = request.headers.get('workos-signature');
 
-      if (!sigHeader) {
-        return res.status(400).json({ error: 'Missing WorkOS signature header' });
-      }
-
-      await workos.webhooks.constructEvent({
-        payload: payload,
-        sigHeader: sigHeader,
-        secret: process.env.WEBHOOK_SECRET || '',
-      });
-
-      // If verification succeeds, send a 200 status
-      res.status(200).end();
-    } catch (error) {
-      console.error('Error processing WorkOS webhook:', error);
-      res.status(400).json({ error: 'Webhook verification failed' });
+    if (!sigHeader) {
+      return NextResponse.json({ error: 'Missing WorkOS signature header' }, { status: 400 });
     }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    await workos.webhooks.constructEvent({
+      payload: JSON.stringify(payload),
+      sigHeader: sigHeader,
+      secret: process.env.WEBHOOK_SECRET || '',
+    });
+
+    // If verification succeeds, send a 200 status
+    return new NextResponse(null, { status: 200 });
+  } catch (error) {
+    console.error('Error processing WorkOS webhook:', error);
+    return NextResponse.json({ error: 'Webhook verification failed' }, { status: 400 });
   }
+}
+
+export async function GET(request: NextRequest) {
+  return new NextResponse(null, { status: 405, headers: { 'Allow': 'POST' } });
 }

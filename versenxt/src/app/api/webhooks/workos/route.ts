@@ -70,6 +70,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     console.error('Error processing webhook:', err);
-    return NextResponse.json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown Error'}` }, { status: 400 });
+    return NextResponse.json({ error: `Webhook Error+1: ${err instanceof Error ? err.message : 'Unknown Error'}` }, { status: 400 });
   }
 }

@@ -41,6 +41,32 @@ export const userRouter = router({
         throw new Error('Failed to fetch user');
       }
     }),
+
+    getOrCreateUser: publicProcedure
+    .input(z.object({
+      workOsUserId: z.string(),
+      email: z.string().email(),
+      name: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const { workOsUserId, email, name } = input;
+
+      let user = await prisma.user.findUnique({
+        where: { workOsUserId },
+      });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            workOsUserId,
+            email,
+            name,
+          },
+        });
+      }
+
+      return user;
+    }),
  
     create: publicProcedure
     .input(z.object({

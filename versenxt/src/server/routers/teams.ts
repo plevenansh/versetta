@@ -47,11 +47,12 @@ export const teamRouter = router({
         name: input.name,
       });
 
+      console.log('workOsOrg', workOsOrg);
       // Create WorkOS organization membership for the creator
       const workOsMembership = await workos.userManagement.createOrganizationMembership({
         organizationId: workOsOrg.id,
         userId: creator.workOsUserId,
-        roleSlug: 'admin',
+        roleSlug: 'member',
       });
 
       // Create team in database

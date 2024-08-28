@@ -10,7 +10,7 @@ const CreateTeamForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const creatorId = 1; // Replace this with the actual logged-in user's ID
+      const creatorId = 2; // Replace this with the actual logged-in user's ID
       await createTeamMutation.mutateAsync({
         name,
         description,

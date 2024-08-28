@@ -18,14 +18,14 @@ export default function Dashboard() {
         const response = await fetch('/api/user');
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch user');
-        }
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         const userData = await response.json();
         setUser(userData);
-      } catch (error) {
+      } }
+      catch (error) {
         console.error('Error fetching user:', error);
-        setError(error.message);
-      } finally {
+      //   setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      }finally {
         setLoading(false);
       }
     };

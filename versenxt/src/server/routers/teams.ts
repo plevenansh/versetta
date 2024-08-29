@@ -22,67 +22,80 @@ export const teamRouter = router({
       });
     }),
 
+  
   createTeam: publicProcedure
     .input(
       z.object({
         name: z.string(),
         description: z.string().optional(),
-        creatorId: z.number(),
+        workOsUserId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
-      const creator = await prisma.user.findUnique({
-        where: { id: input.creatorId },
-      });
-
-      if (!creator) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Creator not found',
+      try {
+        // Find the user in the database using the WorkOS user ID
+        const user = await prisma.user.findUnique({
+          where: { workOsUserId: input.workOsUserId },
         });
-      }
+ console.log('user', user);
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'User not found',
+          });
+        }
+        
 
-      // Create WorkOS organization
-      const workOsOrg = await workos.organizations.createOrganization({
-        name: input.name,
-      });
-
-      console.log('workOsOrg', workOsOrg);
-      // Create WorkOS organization membership for the creator
-      const workOsMembership = await workos.userManagement.createOrganizationMembership({
-        organizationId: workOsOrg.id,
-        userId: creator.workOsUserId,
-        roleSlug: 'member',
-      });
-
-      // Create team in database
-      const team = await prisma.team.create({
-        data: {
+        // Create WorkOS organization
+        const workOsOrg = await workos.organizations.createOrganization({
           name: input.name,
-          description: input.description,
-          creatorId: input.creatorId,
-          workOsOrgId: workOsOrg.id,
-          members: {
-            create: {
-              userId: input.creatorId,
-              role: 'admin',
-              workOsMembershipId: workOsMembership.id,
+        });
+ console.log('workOsOrg', workOsOrg);
+        // Create WorkOS organization membership for the creator
+        const workOsMembership = await workos.userManagement.createOrganizationMembership({
+          organizationId: workOsOrg.id,
+          userId: user.workOsUserId,
+          roleSlug: 'member', // Use 'admin' instead of 'roleSlug'
+        });
+ console.log('workOsMembership', workOsMembership);
+       
+
+        // Create team in database
+        const team = await prisma.team.create({
+          data: {
+            name: input.name,
+            description: input.description,
+            creatorId: user.id,
+            workOsOrgId: workOsOrg.id,
+            members: {
+              create: {
+                userId: user.id,
+                role: 'admin',
+                workOsMembershipId: workOsMembership.id,
+              },
             },
           },
-        },
-        include: {
-          members: true,
-        },
-      });
-
-      return team;
+          include: {
+            members: true,
+          },
+        });
+console.log('team', team);
+        return team;
+      } catch (error) {
+        console.error('Error creating team:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create team',
+          cause: error,
+        });
+      }
     }),
-
+  
   addTeamMember: publicProcedure
     .input(
       z.object({
         teamId: z.number(),
-        userId: z.number(),
+        email: z.string().email(),
         role: z.string(),
       })
     )
@@ -99,32 +112,57 @@ export const teamRouter = router({
       }
 
       const user = await prisma.user.findUnique({
-        where: { id: input.userId },
+        where: { email: input.email },
       });
 
       if (!user) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'User not found',
+          message: 'User not found. Make sure the user has signed up on VERSET.',
         });
       }
 
-      const workOsMembership = await workos.userManagement.createOrganizationMembership({
-        organizationId: team.workOsOrgId,
-        userId: user.workOsUserId,
-        roleSlug: input.role,
-      });
-
-      const teamMember = await prisma.teamMember.create({
-        data: {
-          userId: input.userId,
-          teamId: input.teamId,
-          role: input.role,
-          workOsMembershipId: workOsMembership.id,
+      // Check if the user is already a member of the team
+      const existingMember = await prisma.teamMember.findUnique({
+        where: {
+          userId_teamId: {
+            userId: user.id,
+            teamId: input.teamId,
+          },
         },
       });
 
-      return teamMember;
+      if (existingMember) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User is already a member of this team.',
+        });
+      }
+
+      try {
+        const workOsMembership = await workos.userManagement.createOrganizationMembership({
+          organizationId: team.workOsOrgId,
+          userId: user.workOsUserId,
+          roleSlug: input.role,
+        });
+
+        const teamMember = await prisma.teamMember.create({
+          data: {
+            userId: user.id,
+            teamId: input.teamId,
+            role: input.role,
+            workOsMembershipId: workOsMembership.id,
+          },
+        });
+
+        return teamMember;
+      } catch (error) {
+        console.error('Error adding team member:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to add team member. Please try again.',
+        });
+      }
     }),
 
   removeTeamMember: publicProcedure
@@ -242,51 +280,3 @@ export const teamRouter = router({
 
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// createTeam: publicProcedure
-//   .input(
-//     z.object({
-//       name: z.string(),
-//       description: z.string().optional(),
-//       creatorId: z.number(),
-//     })
-//   )
-//   .mutation(async ({ input }) => {
-//     // Create WorkOS organization
-//     const workOsOrg = await workos.organizations.createOrganization({
-//       name: input.name,
-//     });
-
-//     // Create team in database
-//     const team = await prisma.team.create({
-//       data: {
-//         name: input.name,
-//         description: input.description,
-//         creatorId: input.creatorId,
-//         workOsOrgId: workOsOrg.id,
-//       },
-//     });
-
-//     // Create TeamMember entry for the creator
-//     await prisma.teamMember.create({
-//       data: {
-//         userId: input.creatorId,
-//         teamId: team.id,
-//         role: 'admin',
-//       },
-//     });
-
-//     return team;
-//   }),

@@ -42,6 +42,26 @@ export const userRouter = router({
       }
     }),
 
+    getByWorkOsId: publicProcedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { workOsUserId: input },
+          include: {
+            teamMemberships: true,
+          }
+        });
+        if (!user) {
+          throw new Error(`User with workos user id ${input} not found`);
+        }
+        return user;
+      } catch (error) {
+        console.error(`Error fetching user with workOsUserid ${input}:`, error);
+        throw new Error('Failed to fetch user with workos id');
+      }
+    }),
+
     getOrCreateUser: publicProcedure
     .input(z.object({
       workOsUserId: z.string(),

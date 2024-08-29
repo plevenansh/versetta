@@ -18,8 +18,8 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId }) => {
       // For this example, we'll assume the user exists and has ID 1
       await addMemberMutation.mutateAsync({
         teamId: teamId,
-        userId: 3, // Replace this with actual user ID
-        role,
+        email: email, // Replace this with actual user ID
+        role: role,
       });
       setEmail('');
       setRole('member');
@@ -31,7 +31,9 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId }) => {
   };
 
   return (
+    
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p>Make sure  member has already  signed up on VERSETTA before adding them to your team.</p>
       <h2 className="text-2xl font-semibold mb-4">Add Team Member</h2>
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

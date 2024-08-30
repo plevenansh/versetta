@@ -56,7 +56,54 @@ export const projectRouter = router({
       }
     }),
 
-    create: publicProcedure
+  //   create: publicProcedure
+  // .input(z.object({
+  //   title: z.string(),
+  //   description: z.string().optional(),
+  //   status: z.string().optional().default("active"),
+  //   startDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
+  //   endDate: z.string().optional().transform(str => str ? new Date(str) : undefined),
+  //   teamId: z.number(),
+  //   creatorId: z.number(),
+  //   stages: z.array(z.string()),
+  // }))
+  // .mutation(async ({ input }) => {
+  //   console.log("Input received for project creation:", input);
+  //   try {
+  //       const data: Prisma.ProjectCreateInput = {
+  //       title: input.title,
+  //       description: input.description,
+  //       status: input.status,
+  //       startDate: input.startDate,
+  //       endDate: input.endDate,
+  //       creator: { connect: { id: input.creatorId } },
+  //       team: { connect: { id: input.teamId } },
+      
+  //       stages: {
+  //         create: input.stages.map((stage,index) => ({ 
+  //           stage, 
+  //           completed: false,
+  //           order: index
+  //          }))
+  //       }
+  //     };
+  //     console.log("Data to be created:", data);
+  //     const createdProject = await prisma.project.create({ 
+  //       data,
+  //       include: {
+  //         team: true,
+  //         creator: true,
+  //         stages: true // Changed from ProjectStageStatus to stages
+  //       }
+  //     });
+  //     console.log('Project created successfully:', createdProject);
+  //     return createdProject;
+  //   } catch (error) {
+  //     console.error('Error creating project:', error);
+  //     throw new Error('Failed to create project');
+  //   }
+  // }),
+  create: publicProcedure
   .input(z.object({
     title: z.string(),
     description: z.string().optional(),
@@ -70,21 +117,34 @@ export const projectRouter = router({
   .mutation(async ({ input }) => {
     console.log("Input received for project creation:", input);
     try {
-        const data: Prisma.ProjectCreateInput = {
+      // First, check if the TeamMember exists
+      const teamMember = await prisma.teamMember.findUnique({
+        where: {
+          userId_teamId: {
+            userId: input.creatorId,
+            teamId: input.teamId,
+          },
+        },
+      });
+
+      if (!teamMember) {
+        throw new Error(`TeamMember not found for creatorId: ${input.creatorId} and teamId: ${input.teamId}`);
+      }
+
+      const data: Prisma.ProjectCreateInput = {
         title: input.title,
         description: input.description,
         status: input.status,
         startDate: input.startDate,
         endDate: input.endDate,
-        creator: { connect: { id: input.creatorId } },
+        creator: { connect: { id: teamMember.id } }, // Connect using the TeamMember id
         team: { connect: { id: input.teamId } },
-      
         stages: {
-          create: input.stages.map((stage,index) => ({ 
+          create: input.stages.map((stage, index) => ({ 
             stage, 
             completed: false,
             order: index
-           }))
+          }))
         }
       };
       console.log("Data to be created:", data);
@@ -93,16 +153,17 @@ export const projectRouter = router({
         include: {
           team: true,
           creator: true,
-          stages: true // Changed from ProjectStageStatus to stages
+          stages: true
         }
       });
       console.log('Project created successfully:', createdProject);
       return createdProject;
     } catch (error) {
       console.error('Error creating project:', error);
-      throw new Error('Failed to create project');
+      throw new Error('Failed to create project: ' + (error as Error).message);
     }
   }),
+
   update: publicProcedure
   .input(z.object({
     id: z.number(),

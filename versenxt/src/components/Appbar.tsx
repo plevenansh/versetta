@@ -45,14 +45,23 @@ export default function Appbar({ collapsed }: AppbarProps) {
 
   const handleSignOut = async () => {
     try {
+      // Perform the logout action
       await fetch('/api/auth?action=signOut');
+      
+      // Clear the user state
       setUser(null);
-      router.push('/');
+  
+      // Use a small timeout to ensure state updates are processed
+      setTimeout(() => {
+        // Force a hard refresh of the page
+        window.location.href = window.location.origin;
+      }, 100);
+  
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
-
+  
   const handleSignIn = async () => {
     try {
       const response = await fetch('/api/auth?action=getSignInUrl');

@@ -73,6 +73,8 @@ export default function Appbar({ collapsed }: AppbarProps) {
     }
   };
 
+  
+
   return (
     <header className="flex items-center justify-between px-4 py-4 bg-white ">
       {collapsed && (

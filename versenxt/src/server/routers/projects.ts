@@ -2,7 +2,7 @@
 import { Prisma } from '@prisma/client';
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import prisma from '../../lib/prisma';
+import prisma from '../../components/lib/prisma';
 
 
 export const projectRouter = router({

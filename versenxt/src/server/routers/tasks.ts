@@ -2,7 +2,7 @@
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
-import prisma from '../../lib/prisma';
+import prisma from '../../components/lib/prisma';
 
 export const taskRouter = router({
   getAll: publicProcedure

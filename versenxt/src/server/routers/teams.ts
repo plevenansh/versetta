@@ -1,6 +1,6 @@
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import prisma from '../../lib/prisma';
+import prisma from '../../components/lib/prisma';
 import { WorkOS } from '@workos-inc/node';
 import { TRPCError } from '@trpc/server';
 

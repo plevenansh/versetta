@@ -1,3 +1,5 @@
+// app/api/user/route.ts
+
 import { NextResponse } from 'next/server';
 import { getUser } from '@workos-inc/authkit-nextjs';
 import prisma from '@/lib/prisma';
@@ -16,11 +18,18 @@ export async function GET() {
     if (!workOsUser.id) {
       return NextResponse.json({ error: 'Invalid WorkOS user data' }, { status: 400 });
     }
-console.log('workod user id:', workOsUser.id);
+
     let user = await prisma.user.findUnique({
       where: { workOsUserId: workOsUser.id },
+      include: {
+        teamMemberships: {
+          include: {
+            team: true
+          }
+        }
+      }
     });
-  console.log('User in API route:', user);
+
     if (!user) {
       user = await prisma.user.create({
         data: {
@@ -28,10 +37,22 @@ console.log('workod user id:', workOsUser.id);
           email: workOsUser.email || '',
           name: `${workOsUser.firstName || ''} ${workOsUser.lastName || ''}`.trim() || 'Unknown',
         },
+        include: {
+          teamMemberships: {
+            include: {
+              team: true
+            }
+          }
+        }
       });
     }
 
-    return NextResponse.json(user);
+    const userWithTeams = {
+      ...user,
+      teams: user.teamMemberships.map(membership => membership.team)
+    };
+
+    return NextResponse.json(userWithTeams);
   } catch (error) {
     console.error('Error fetching user:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

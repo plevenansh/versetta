@@ -319,8 +319,8 @@ export default function TaskList() {
         className={`
           flex-1 rounded-full px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
           ${filter === btn.value 
-            ? 'bg-[#F0F8FF] text-black-500' 
-            : 'text-gray-600 hover:bg-gray-700 hover:text-white'}
+            ? 'bg-gray-700 text-white' 
+            : 'text-gray-600 hover:bg-[#F0F8FF] hover:text-black'}
         `}
       >
         {btn.label}

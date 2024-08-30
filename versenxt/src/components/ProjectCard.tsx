@@ -1,17 +1,17 @@
 "use client"
-
-import React, { useState, useEffect, useRef,useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle,Plus,X, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 'lucide-react';
+import { CheckCircle, Plus, X, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 'lucide-react';
 import { EditProjectModal } from './EditProjectModal';
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
 import { slugify } from '@/utils/slugify';
-
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Project {
   id: number;
@@ -29,14 +29,19 @@ interface Project {
 
 interface Task {
   id: number;
-  title: string; 
+  title: string;
   description: string | undefined;
   status: 'pending' | 'completed';
   dueDate: string | null;
   projectId: number | null;
+  teamId: number;
   creatorId: number;
-  teamId: number | undefined;
   assigneeId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  creationOrder: number;
+  creator: { id: number; user: { id: number; name: string } };
+  assignee: { id: number; user: { id: number; name: string } } | null;
 }
 interface ProjectStage {
   id: number;
@@ -57,20 +62,20 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
     const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [percentageDone, setPercentageDone] = useState(0);
-    const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
-    const [newTask, setNewTask] = useState({
+    const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+    const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'creationOrder' | 'creator' | 'assignee'>>({
       title: '',
-      description: '',
-      status: 'pending' as 'pending' | 'completed',
+      description: undefined,
+      status: 'pending',
       dueDate: null,
       projectId: project.id,
       teamId: project.teamId,
       creatorId: project.creatorId,
-      assigneeId: null as number | null
-      
+      assigneeId: null
     });
- 
+
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const { data: projectWithTasks, refetch } = trpc.projects.getById.useQuery(project.id);
@@ -139,100 +144,101 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         return `${(completedStages / projectStages.length) * 100}%`;
       };
 
-    const createTaskMutation = trpc.tasks.create.useMutation({
-      onSuccess: () => {
-        refetch();
-        setShowNewTaskForm(false);
-        setNewTask({
-          title: '',
-          description: '',
-          status: 'pending',
-          dueDate: null,
-          projectId: project.id,
-          teamId: project.teamId,
-          creatorId: project.creatorId,
-          assigneeId: null
-        });
-      },
-    });
+      const createTaskMutation = trpc.tasks.create.useMutation({
+        onSuccess: () => {
+          refetch();
+          setShowNewTaskForm(false);
+          setNewTask({
+            title: '',
+            description: '',
+            status: 'pending',
+            dueDate: null,
+            projectId: project.id,
+            teamId: project.teamId,
+            creatorId: project.creatorId,
+            assigneeId: null
+          });
+        },
+      });
+      const updateTaskMutation = trpc.tasks.update.useMutation({
+        onSuccess: () => refetch(),
+      });
+      const deleteTaskMutation = trpc.tasks.delete.useMutation({
+        onSuccess: () => refetch(),
+      });
 
-    const updateTaskMutation = trpc.tasks.update.useMutation<{
-      id: number;
-      status?: 'pending' | 'completed';
-      assigneeId?: number | null;
-      dueDate?: string | null;
-      title?: string;
-      description?: string | undefined;
-      teamId?: number | null;
-      projectId?: number | null;
-    }>
-    ({
-      onSuccess: () => refetch(),
-    });
 
-    const deleteTaskMutation = trpc.tasks.delete.useMutation({
-      onSuccess: () => refetch(),
-    });
-
-    const handleCreateTask = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        if (!newTask.title) {
-          throw new Error("Missing required fields");
+      useEffect(() => {
+        if (projectWithTasks?.tasks) {
+          setTasks(projectWithTasks.tasks.map(task => ({
+            ...task,
+            status: task.status as 'pending' | 'completed',
+            description: task.description || undefined
+          })));
         }
+      }, [projectWithTasks]);
 
-        const taskData = {
-          ...newTask,
-          dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
-          status: newTask.status,
-          assigneeId: newTask.assigneeId ?? undefined,
-        };
-
-        await createTaskMutation.mutateAsync(taskData);
-      } catch (error) {
-        console.error('Error creating task:', error);
-      }
-    };
-
-    const toggleTask = async (taskId: number) => {
-      const taskToUpdate = projectWithTasks?.tasks?.find(task => task.id === taskId);
-      if (taskToUpdate) {
-        const updatedTask = {
-          id: taskToUpdate.id,
-          status: taskToUpdate.status as 'pending' | 'completed',
-          assigneeId: taskToUpdate.assigneeId ?? undefined,
-          dueDate: taskToUpdate.dueDate ? new Date(taskToUpdate.dueDate).toISOString() : undefined,
-          title: taskToUpdate.title,
-          description: taskToUpdate.description ?? undefined,
-          teamId: taskToUpdate.teamId,
-          projectId: taskToUpdate.projectId
-        };
-        await updateTaskMutation.mutateAsync(updatedTask);
-      }
-    };
-
-    const handleDeleteTask = async (taskId: number) => {
-      if (window.confirm('Are you sure you want to delete this task?')) {
+      const handleCreateTask = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
-          await deleteTaskMutation.mutateAsync(taskId);
+          if (!newTask.title || newTask.teamId === undefined) {
+            throw new Error("Missing required fields");
+          }
+      
+          const taskData = {
+            ...newTask,
+            dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
+            status: newTask.status as 'pending' | 'completed',
+            assigneeId: newTask.assigneeId ?? undefined,
+            teamId: newTask.teamId, // This is now guaranteed to be a number
+            projectId: newTask.projectId ?? undefined, // Ensure this is undefined if null
+          };
+      
+          await createTaskMutation.mutateAsync(taskData);
         } catch (error) {
-          console.error('Error deleting task:', error);
+          console.error('Error creating task:', error);
         }
-      }
-    };
-
-    const toggleTaskDescription = (taskId: number) => {
-      setExpandedTasks(prev => 
-        prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
-      );
-    };
-
-
-      const formatDate = (dateString: string | null): string => {
-        if (!dateString) return 'Not set';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       };
+      
+      const toggleTask = async (taskId: number) => {
+        const taskToUpdate = tasks.find(task => task.id === taskId);
+        if (taskToUpdate) {
+          const updatedTask: Partial<Task> & { id: number } = {
+            id: taskToUpdate.id,
+            status: taskToUpdate.status === 'completed' ? 'pending' : 'completed',
+            description: taskToUpdate.description ?? undefined, // Convert null to undefined
+            teamId: taskToUpdate.teamId,
+            title: taskToUpdate.title,
+            projectId: taskToUpdate.projectId,
+            assigneeId: taskToUpdate.assigneeId,
+            dueDate: taskToUpdate.dueDate,
+          };
+          await updateTaskMutation.mutateAsync(updatedTask);
+        }
+      };
+      
+      
+
+      const handleDeleteTask = async (taskId: number) => {
+        if (window.confirm('Are you sure you want to delete this task?')) {
+          try {
+            await deleteTaskMutation.mutateAsync(taskId);
+          } catch (error) {
+            console.error('Error deleting task:', error);
+          }
+        }
+      };
+
+      const toggleTaskDescription = (taskId: number) => {
+        setExpandedTasks(prev => 
+          prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+        );
+      };
+          const formatDate = (dateString: string | null): string => {
+            if (!dateString) return 'Not set';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          };
 
       const handleDelete = async () => {
         if (window.confirm('Are you sure you want to delete this project?')) {
@@ -314,13 +320,13 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         </div>
             <AnimatePresence>
               {expanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-4"
-                >
+                 <motion.div
+                 initial={{ height: 0, opacity: 0 }}
+                 animate={{ height: "auto", opacity: 1 }}
+                 exit={{ height: 0, opacity: 0 }}
+                 transition={{ duration: 0.3 }}
+                 className="mt-4"
+               >
                   <h3 className="font-bold mb-2">Production Stages</h3>
                   <div className="flex items-center space-x-2">
                     {projectStages.map((stage, index) => (
@@ -349,33 +355,77 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
                     ))}
                   </div>
                   <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">Tasks</h3>
-            <Button 
-              onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-              size="sm"
-              className="mb-2"
-            >
-              {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-              {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-            </Button>
-            
-            {showNewTaskForm && (
-              <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
-                {/* ... (form inputs) ... */}
-              </form>
-            )}
-            
-            <div className="space-y-2">
-              {projectWithTasks?.tasks?.map(task => (
-                <Card key={task.id} className="p-2">
-                  {/* ... (task details) ... */}
-                </Card>
-              ))}
-            </div>
-          </div>
-                </motion.div>
+              <h3 className="text-lg font-semibold mb-2">Tasks</h3>
+              <Button 
+                onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+                size="sm"
+                className="mb-2"
+              >
+                {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                {showNewTaskForm ? 'Cancel' : 'Add New Task'}
+              </Button>
+              
+              {showNewTaskForm && (
+                <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
+                  <Input
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                    placeholder="Task Title"
+                    required
+                  />
+                  <Input
+                    value={newTask.description || ''}
+                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                    placeholder="Description"
+                  />
+                  <Input
+                    type="date"
+                    value={newTask.dueDate || ''}
+                    onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
+                    placeholder="Due Date"
+                  />
+                  <Button type="submit">Add Task</Button>
+                </form>
               )}
-            </AnimatePresence>
+              
+              <div className="space-y-2">
+                {tasks.map(task => (
+                  <Card key={task.id} className="p-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={task.status === 'completed'}
+                        onCheckedChange={() => toggleTask(task.id)}
+                      />
+                      <div className="flex-grow">
+                        <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
+                          {task.title}
+                        </p>
+                        {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
+                        {task.description && (
+                          <p className="text-sm text-gray-600">
+                            {expandedTasks.includes(task.id) 
+                              ? task.description 
+                              : `${task.description.slice(0, 40)}${task.description.length > 40 ? '...' : ''}`}
+                          </p>
+                        )}
+                      </div>
+                      {task.description && task.description.length > 40 && (
+                        <Button onClick={() => toggleTaskDescription(task.id)} size="sm" variant="ghost">
+                          {expandedTasks.includes(task.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      )}
+                      <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
           </CardContent>
           {isEditModalOpen && (
       <EditProjectModal

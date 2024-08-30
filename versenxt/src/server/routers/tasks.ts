@@ -223,7 +223,11 @@ export const taskRouter = router({
     .query(async ({ input }) => {
       try {
         let whereClause: Prisma.TaskWhereInput = {};
-
+  
+        if (input.teamId) {
+          whereClause.teamId = input.teamId;
+        }
+  
         switch (input.filter) {
           case 'pending':
             whereClause.status = 'pending';
@@ -233,7 +237,19 @@ export const taskRouter = router({
             break;
           // 'all' doesn't need any additional filters
         }
-
+  
+        if (input.projectId) {
+          whereClause.projectId = input.projectId;
+        }
+  
+        if (input.creatorId) {
+          whereClause.creatorId = input.creatorId;
+        }
+  
+        if (input.assigneeId) {
+          whereClause.assigneeId = input.assigneeId;
+        }
+  
         const tasks = await prisma.task.findMany({
           where: whereClause,
           include: {
@@ -248,7 +264,7 @@ export const taskRouter = router({
             { createdAt: 'desc' }
           ]
         });
-
+  
         console.log(`Retrieved ${tasks.length} tasks for filter: ${input.filter}`);
         return tasks;
       } catch (error) {

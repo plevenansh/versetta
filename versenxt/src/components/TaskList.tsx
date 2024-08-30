@@ -193,12 +193,12 @@ export default function TaskList() {
       if (!newTask.title || !selectedTeamId || !user) {
         throw new Error("Missing required fields");
       }
-
+  
       const taskData = {
         title: newTask.title,
         description: newTask.description,
         status: newTask.status as "pending" | "completed",
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
         teamId: selectedTeamId,
         creatorId: user.id,
         projectId: newTask.projectId ?? undefined,
@@ -206,12 +206,20 @@ export default function TaskList() {
       };
       
       console.log('Sending task data:', taskData);
-      await createTaskMutation.mutateAsync(taskData);
+      const createdTask = await createTaskMutation.mutateAsync(taskData);
+      console.log('Created task:', createdTask);
+  
+      // Check if the assignee was successfully connected
+      if (taskData.assigneeId && !createdTask.assignee) {
+        console.warn('Task created, but assignee was not connected. The TeamMember might not exist.');
+        // You might want to show a warning to the user here
+      }
+  
     } catch (error) {
       console.error('Error creating task:', error);
+      // Show an error message to the user
     }
   };
-
   const toggleTask = async (id: number) => {
     const taskToUpdate = tasks.find(task => task.id === id);
     if (taskToUpdate) {

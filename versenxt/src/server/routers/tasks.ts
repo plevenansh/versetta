@@ -145,8 +145,8 @@ export const taskRouter = router({
   }))
   .mutation(async ({ input }) => {
     try {
-      // First, find the TeamMember record
-      const teamMember = await prisma.teamMember.findUnique({
+      // Find the creator TeamMember record
+      const creatorTeamMember = await prisma.teamMember.findUnique({
         where: {
           userId_teamId: {
             userId: input.creatorId,
@@ -155,8 +155,24 @@ export const taskRouter = router({
         },
       });
 
-      if (!teamMember) {
-        throw new Error(`TeamMember not found for creatorId: ${input.creatorId} and teamId: ${input.teamId}`);
+      if (!creatorTeamMember) {
+        throw new Error(`Creator TeamMember not found for creatorId: ${input.creatorId} and teamId: ${input.teamId}`);
+      }
+
+      // Check if assignee exists (if provided)
+      let assigneeTeamMember = null;
+      if (input.assigneeId) {
+        assigneeTeamMember = await prisma.teamMember.findUnique({
+          where: {
+            userId_teamId: {
+              userId: input.assigneeId,
+              teamId: input.teamId,
+            },
+          },
+        });
+        if (!assigneeTeamMember) {
+          console.warn(`Assignee TeamMember not found for assigneeId: ${input.assigneeId} and teamId: ${input.teamId}`);
+        }
       }
 
       const data: Prisma.TaskCreateInput = {
@@ -165,18 +181,9 @@ export const taskRouter = router({
         status: input.status,
         dueDate: input.dueDate ? new Date(input.dueDate) : null,
         team: { connect: { id: input.teamId } },
-        creator: { connect: { id: teamMember.id } }, // Connect using TeamMember id instead of User id
+        creator: { connect: { id: creatorTeamMember.id } },
         ...(input.projectId && { project: { connect: { id: input.projectId } } }),
-        ...(input.assigneeId && { 
-          assignee: { 
-            connect: { 
-              userId_teamId: {
-                userId: input.assigneeId,
-                teamId: input.teamId
-              }
-            } 
-          } 
-        }),
+        ...(assigneeTeamMember && { assignee: { connect: { id: assigneeTeamMember.id } } }),
       };
 
       console.log('Creating task with data:', data);

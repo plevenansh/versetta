@@ -71,7 +71,11 @@ export default function ProjectSection() {
     creatorId: 0
   });
 
-  const { data: fetchedProjects, refetch } = trpc.projects.getAll.useQuery();
+  const { data: fetchedProjects, refetch } = trpc.projects.getByTeamId.useQuery(
+    selectedTeamId || -1,
+    { enabled: !!selectedTeamId }
+  );
+
   const createProjectMutation = trpc.projects.create.useMutation({
     onSuccess: () => {
       refetch();
@@ -169,6 +173,16 @@ export default function ProjectSection() {
     <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-2xl pl-1 font-bold">Projects</CardTitle>
+        <select
+          value={selectedTeamId || ''}
+          onChange={(e) => setSelectedTeamId(Number(e.target.value))}
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select a Team</option>
+          {userTeams.map(team => (
+            <option key={team.id} value={team.id}>{team.name}</option>
+          ))}
+        </select>
         <Button onClick={handleAddProject} size="sm" className="bg-pink-100 text-pink-600 hover:bg-pink-200">
           <Plus className="h-4 w-4 mr-2" />
           Add New Project
@@ -176,8 +190,8 @@ export default function ProjectSection() {
       </CardHeader>
       <CardContent>
         {projects.length === 0 ? (
-          <p className="text-gray-600 text-center py-4">No projects exist. Create a new project to get started!</p>
-        ) : (
+          <p className="text-gray-600 text-center py-4">No projects exist for this team. Create a new project to get started!</p>
+             ) : (
           <div className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default">
             <div className="space-y-4">
               {projects.map(project => (

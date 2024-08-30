@@ -414,6 +414,7 @@ export default function TaskList() {
             ))}
           </SelectContent>
         </Select>
+        
         <Select
           onValueChange={(value) => setNewTask({...newTask, assigneeId: parseInt(value)})}
         >

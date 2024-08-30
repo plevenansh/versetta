@@ -88,50 +88,6 @@ export const taskRouter = router({
     }),
 
 
-  //   create: publicProcedure
-  // .input(z.object({
-  //   title: z.string(),
-  //   description: z.string().optional(),
-  //   status: z.enum(['pending', 'completed']).default('pending'),
-  //   dueDate: z.string().optional().nullable(),
-  //   projectId: z.number().optional(),
-  //   teamId: z.number(),
-  //   creatorId: z.number(),
-  //   assigneeId: z.number().optional()
-  // }))
-  // .mutation(async ({ input }) => {
-  //   try {
-  //     const data: Prisma.TaskCreateInput = {
-  //       title: input.title,
-  //       description: input.description,
-  //       status: input.status,
-  //       dueDate: input.dueDate ? new Date(input.dueDate) : null,
-  //       team: { connect: { id: input.teamId } },
-  //       creator: { connect: { id: input.creatorId } },
-  //       ...(input.projectId && { project: { connect: { id: input.projectId } } }),
-  //       ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
-  //     };
-
-  //     console.log('Creating task with data:', data);
-  //     const newTask = await prisma.task.create({
-  //       data,
-  //       include: {
-  //         project: true,
-  //         team: true,
-  //         creator: { include: { user: true } },
-  //         assignee: { include: { user: true } }
-  //       }
-  //     });
-
-  //     console.log('Created task:', newTask);
-  //     return newTask;
-  //   } catch (error) {
-  //     console.error('Error creating task:', error);
-  //     throw new Error('Failed to create task');
-  //   }
-  // }),
-
-
   create: publicProcedure
   .input(z.object({
     title: z.string(),

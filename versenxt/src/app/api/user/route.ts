@@ -16,11 +16,11 @@ export async function GET() {
     if (!workOsUser.id) {
       return NextResponse.json({ error: 'Invalid WorkOS user data' }, { status: 400 });
     }
-
+console.log('workod user id:', workOsUser.id);
     let user = await prisma.user.findUnique({
       where: { workOsUserId: workOsUser.id },
     });
-
+  console.log('User in API route:', user);
     if (!user) {
       user = await prisma.user.create({
         data: {

@@ -19,20 +19,21 @@ export default function Dashboard() {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
         const userData = await response.json();
         setUser(userData);
-      } }
-      catch (error) {
+      } catch (error) {
         console.error('Error fetching user:', error);
-      //   setError(error instanceof Error ? error.message : 'An unknown error occurred');
-      }finally {
+       // setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      } finally {
         setLoading(false);
       }
     };
 
     fetchUser();
   }, []);
-
+ console.log('user:', user);
+ 
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -42,6 +43,7 @@ export default function Dashboard() {
   }
 
   if (!user) {
+    console.log('user in dashboard:', user);
     return <div>No user data available</div>;
   }
 

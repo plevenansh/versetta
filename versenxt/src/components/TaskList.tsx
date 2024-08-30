@@ -65,11 +65,9 @@ interface TeamMember {
 
 
 export default function TaskList() {
-   const HARDCODED_TEAM_MEMBER_ID = 1;
-   const HARDCODED_TEAM_ID = 1;
-   const HARDCODED_CREATOR_ID = 1;
-   
- 
+  const [user, setUser] = useState<any>(null);
+  const [userTeams, setUserTeams] = useState<any[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -82,65 +80,58 @@ export default function TaskList() {
     status: 'pending',
     dueDate: null,
     projectId: null,
-    teamId: HARDCODED_TEAM_ID,
-    creatorId: HARDCODED_CREATOR_ID,
+    teamId: undefined,
+    creatorId: 0,
     assigneeId: undefined,
-    // project: null,
-    // team: null,
-    // creator: null,
-    // assignee: null
   });
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const [sliderStyle, setSliderStyle] = useState({});
   const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
-  
-  const { data: fetchedProjects } = trpc.projects.getByTeamId.useQuery(HARDCODED_TEAM_ID);
-  const { data: fetchedTeamMembers } = trpc.teams.listTeamMembers.useQuery(HARDCODED_TEAM_ID);
 
   useEffect(() => {
-    if (fetchedProjects) setProjects(fetchedProjects as Project[]);
-    if (fetchedTeamMembers) setTeamMembers(fetchedTeamMembers);
-  }, [fetchedProjects, fetchedTeamMembers]);
-
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (!newTask.title) {
-        throw new Error("Missing required fields");
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          throw new Error('Failed to fetch user');
+        }
+        const userData = await response.json();
+        setUser(userData);
+        setUserTeams(userData.teams || []);
+        if (userData.teams && userData.teams.length > 0) {
+          setSelectedTeamId(userData.teams[0].id);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
       }
+    };
 
-      const taskData = {
-        title: newTask.title,
-        description: newTask.description,
-        status: newTask.status as "pending" | "completed",
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
-        teamId: HARDCODED_TEAM_ID,
-        creatorId: HARDCODED_CREATOR_ID,
-        projectId: newTask.projectId ?? undefined,
-        assigneeId: newTask.assigneeId ?? undefined
-      };
-      
-      console.log('Sending task data:', taskData);
-      await createTaskMutation.mutateAsync(taskData);
-    } catch (error) {
-      console.error('Error creating task:', error);
-    }
-  };
+    fetchUser();
+  }, []);
 
+  const { data: fetchedProjects, refetch: refetchProjects } = trpc.projects.getByTeamId.useQuery(
+    selectedTeamId || -1,
+    { enabled: !!selectedTeamId }
+  );
 
-  const { data: fetchedTasks, isLoading, error, refetch } = trpc.tasks.getFiltered.useQuery({
+  const { data: fetchedTeamMembers, refetch: refetchTeamMembers } = trpc.teams.listTeamMembers.useQuery(
+    selectedTeamId || -1,
+    { enabled: !!selectedTeamId }
+  );
+
+  const { data: fetchedTasks, isLoading, error, refetch: refetchTasks } = trpc.tasks.getFiltered.useQuery({
     filter,
-    teamMemberId: HARDCODED_TEAM_MEMBER_ID,
+    teamMemberId: user?.id || -1,
     projectId: undefined,
-    teamId: undefined,
+    teamId: selectedTeamId || undefined,
     creatorId: undefined,
     assigneeId: undefined
-  });
+  }, { enabled: !!user && !!selectedTeamId });
+
   const updateTaskMutation = trpc.tasks.update.useMutation({
-    onSuccess: () => refetch(),
+    onSuccess: () => refetchTasks(),
   });
+
   const createTaskMutation = trpc.tasks.create.useMutation<{
     id: number;
     status?: 'pending' | 'completed';
@@ -152,7 +143,7 @@ export default function TaskList() {
     projectId?: number | null;
   }>({
     onSuccess: () => {
-      refetch();
+      refetchTasks();
       setShowNewTaskForm(false);
       setNewTask({
         title: '',
@@ -160,24 +151,28 @@ export default function TaskList() {
         status: 'pending',
         dueDate: null,
         projectId: null,
-        teamId: HARDCODED_TEAM_ID,
-        creatorId: HARDCODED_CREATOR_ID,
+        teamId: selectedTeamId || undefined,
+        creatorId: user?.id || 0,
         assigneeId: undefined,
       });
     },
   });
+
   const deleteTaskMutation = trpc.tasks.delete.useMutation({
-    onSuccess: () => refetch(),
+    onSuccess: () => refetchTasks(),
   });
+
+  useEffect(() => {
+    if (fetchedProjects) setProjects(fetchedProjects as Project[]);
+    if (fetchedTeamMembers) setTeamMembers(fetchedTeamMembers);
+  }, [fetchedProjects, fetchedTeamMembers]);
 
   useEffect(() => {
     if (fetchedTasks) {
       const sortedTasks = [...fetchedTasks].sort((a, b) => {
-        // First, sort by completion status (pending first)
         if (a.status === 'completed' && b.status !== 'completed') return 1;
         if (a.status !== 'completed' && b.status === 'completed') return -1;
         
-        // Then, sort by due date
         if (a.dueDate && b.dueDate) {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         } else if (a.dueDate) {
@@ -186,12 +181,36 @@ export default function TaskList() {
           return 1;
         }
         
-        // For tasks without due date, sort by creation time (latest first)
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
       setTasks(sortedTasks as Task[]);
     }
   }, [fetchedTasks]);
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!newTask.title || !selectedTeamId || !user) {
+        throw new Error("Missing required fields");
+      }
+
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status as "pending" | "completed",
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
+        teamId: selectedTeamId,
+        creatorId: user.id,
+        projectId: newTask.projectId ?? undefined,
+        assigneeId: newTask.assigneeId ?? undefined
+      };
+      
+      console.log('Sending task data:', taskData);
+      await createTaskMutation.mutateAsync(taskData);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
+  };
 
   const toggleTask = async (id: number) => {
     const taskToUpdate = tasks.find(task => task.id === id);
@@ -297,19 +316,34 @@ export default function TaskList() {
 
   return (
     <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-lg">
-       <CardHeader className="flex flex-col space-y-4 pb-2">
-       <div className="flex justify-between items-center">
+    <CardHeader className="flex flex-col space-y-4 pb-2">
+      <div className="flex justify-between items-center">
         <CardTitle>Tasks</CardTitle>
+        <Select
+          value={selectedTeamId?.toString() || ''}
+          onValueChange={(value) => setSelectedTeamId(Number(value))}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select Team" />
+          </SelectTrigger>
+          <SelectContent>
+            {userTeams.map((team) => (
+              <SelectItem key={team.id} value={team.id.toString()}>
+                {team.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button 
-  onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-  size="sm"
-  className="bg-pink-100 text-pink-600 hover:bg-pink-200"
->
-  {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-  {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-</Button>
-        </div>
-        </CardHeader>
+          onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+          size="sm"
+          className="bg-pink-100 text-pink-600 hover:bg-pink-200"
+        >
+          {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+          {showNewTaskForm ? 'Cancel' : 'Add New Task'}
+        </Button>
+      </div>
+    </CardHeader>
         <div className="px-6 pb-4 w-full">
   <div className="flex w-full rounded-full bg-[#D6EBFF] p-1 h-12">
     {filterButtons.map((btn) => (

@@ -88,7 +88,51 @@ export const taskRouter = router({
     }),
 
 
-    create: publicProcedure
+  //   create: publicProcedure
+  // .input(z.object({
+  //   title: z.string(),
+  //   description: z.string().optional(),
+  //   status: z.enum(['pending', 'completed']).default('pending'),
+  //   dueDate: z.string().optional().nullable(),
+  //   projectId: z.number().optional(),
+  //   teamId: z.number(),
+  //   creatorId: z.number(),
+  //   assigneeId: z.number().optional()
+  // }))
+  // .mutation(async ({ input }) => {
+  //   try {
+  //     const data: Prisma.TaskCreateInput = {
+  //       title: input.title,
+  //       description: input.description,
+  //       status: input.status,
+  //       dueDate: input.dueDate ? new Date(input.dueDate) : null,
+  //       team: { connect: { id: input.teamId } },
+  //       creator: { connect: { id: input.creatorId } },
+  //       ...(input.projectId && { project: { connect: { id: input.projectId } } }),
+  //       ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
+  //     };
+
+  //     console.log('Creating task with data:', data);
+  //     const newTask = await prisma.task.create({
+  //       data,
+  //       include: {
+  //         project: true,
+  //         team: true,
+  //         creator: { include: { user: true } },
+  //         assignee: { include: { user: true } }
+  //       }
+  //     });
+
+  //     console.log('Created task:', newTask);
+  //     return newTask;
+  //   } catch (error) {
+  //     console.error('Error creating task:', error);
+  //     throw new Error('Failed to create task');
+  //   }
+  // }),
+
+
+  create: publicProcedure
   .input(z.object({
     title: z.string(),
     description: z.string().optional(),
@@ -101,15 +145,38 @@ export const taskRouter = router({
   }))
   .mutation(async ({ input }) => {
     try {
+      // First, find the TeamMember record
+      const teamMember = await prisma.teamMember.findUnique({
+        where: {
+          userId_teamId: {
+            userId: input.creatorId,
+            teamId: input.teamId,
+          },
+        },
+      });
+
+      if (!teamMember) {
+        throw new Error(`TeamMember not found for creatorId: ${input.creatorId} and teamId: ${input.teamId}`);
+      }
+
       const data: Prisma.TaskCreateInput = {
         title: input.title,
         description: input.description,
         status: input.status,
         dueDate: input.dueDate ? new Date(input.dueDate) : null,
         team: { connect: { id: input.teamId } },
-        creator: { connect: { id: input.creatorId } },
+        creator: { connect: { id: teamMember.id } }, // Connect using TeamMember id instead of User id
         ...(input.projectId && { project: { connect: { id: input.projectId } } }),
-        ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
+        ...(input.assigneeId && { 
+          assignee: { 
+            connect: { 
+              userId_teamId: {
+                userId: input.assigneeId,
+                teamId: input.teamId
+              }
+            } 
+          } 
+        }),
       };
 
       console.log('Creating task with data:', data);
@@ -127,11 +194,11 @@ export const taskRouter = router({
       return newTask;
     } catch (error) {
       console.error('Error creating task:', error);
-      throw new Error('Failed to create task');
+      throw new Error('Failed to create task: ' + (error as Error).message);
     }
   }),
 
-    update: publicProcedure
+  update: publicProcedure
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),

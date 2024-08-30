@@ -394,30 +394,30 @@ export const projectRouter = router({
     }
   }),
   
-  getByTeamId: publicProcedure
-    .input(z.number())
-    .query(async ({ input }) => {
-      try {
-        const projects = await prisma.project.findMany({
-          where: { teamId: input },
-          include: { 
-            tasks: {
-              include: {
-                creator: { include: { user: true } },
-                assignee: { include: { user: true } }
-              }
-            },
-            team: true,
-            stages: true
-          }
-        });
-        console.log(`Retrieved ${projects.length} projects for user ${input}`);
-        return projects;
-      } catch (error) {
-        console.error(`Error fetching projects for user ${input}:`, error);
-        throw new Error('Failed to fetch projects for user');
-      }
-    }),
+  // getByTeamId: publicProcedure
+  //   .input(z.number())
+  //   .query(async ({ input }) => {
+  //     try {
+  //       const projects = await prisma.project.findMany({
+  //         where: { teamId: input },
+  //         include: { 
+  //           tasks: {
+  //             include: {
+  //               creator: { include: { user: true } },
+  //               assignee: { include: { user: true } }
+  //             }
+  //           },
+  //           team: true,
+  //           stages: true
+  //         }
+  //       });
+  //       console.log(`Retrieved ${projects.length} projects for user ${input}`);
+  //       return projects;
+  //     } catch (error) {
+  //       console.error(`Error fetching projects for user ${input}:`, error);
+  //       throw new Error('Failed to fetch projects for user');
+  //     }
+  //   }),
    
     getByTeamMemberId: publicProcedure
   .input(z.number())

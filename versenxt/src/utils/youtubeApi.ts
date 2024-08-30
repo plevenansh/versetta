@@ -1,3 +1,4 @@
+// utils/youtubeApi.ts
 import { google } from 'googleapis';
 
 const youtube = google.youtube({
@@ -16,19 +17,19 @@ export async function fetchYouTubeComments(url: string): Promise<string[]> {
     const response = await youtube.commentThreads.list({
       part: ['snippet'],
       videoId: videoId,
-      maxResults: 200 // Adjust as needed
+      maxResults: 100 // Reduced to 100 to avoid potential quota issues
     });
 
     if (!response.data.items) {
       return [];
     }
 
-    return response.data.items.map(item => 
-      item.snippet?.topLevelComment?.snippet?.textDisplay || ''
-    );
+    return response.data.items
+      .map(item => item.snippet?.topLevelComment?.snippet?.textDisplay || '')
+      .filter(comment => comment !== '');
   } catch (error) {
     console.error('Error fetching YouTube comments:', error);
-    throw error;
+    throw new Error('Failed to fetch YouTube comments');
   }
 }
 

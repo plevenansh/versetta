@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, SquareCheck, Folder, Database, MessageSquare, Clapperboard, BarChart2, Menu } from 'lucide-react';
+import { Home, SquareCheck, Folder, Database, MessageSquare, Clapperboard, BarChart2, Menu, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
@@ -35,7 +35,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </Link>
         )}
       </div>
-      <div className="flex-grow space-y-1 p-2  overflow-y-auto">
+      <div className="flex-grow space-y-1 p-2 overflow-y-auto">
         {menuItems.map((item) => (
           <Link key={item.href} href={item.href} passHref>
             <Button
@@ -49,6 +49,19 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </Button>
           </Link>
         ))}
+      </div>
+      <div className="p-2 border-t border-gray-200">
+        <Link href="/teams" passHref>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start text-gray-600 hover:bg-gray-200 ${
+              collapsed ? 'px-2 py-2' : 'px-4 py-2'
+            } ${isActive('/teams') ? 'bg-gray-200 text-gray-900' : ''} text-base`}
+          >
+            <Users className={`${collapsed ? 'mr-0' : 'mr-3'} h-6 w-6`} />
+            {!collapsed && <span>Teams</span>}
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { getUser } from '@workos-inc/authkit-nextjs';
-import prisma from '@/components/lib/prisma';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {

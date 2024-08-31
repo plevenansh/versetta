@@ -45,23 +45,24 @@ export default function Appbar({ collapsed }: AppbarProps) {
 
   const handleSignOut = async () => {
     try {
-      // Perform the logout action
-      await fetch('/api/auth?action=signOut');
+      const response = await fetch('/api/auth?action=signOut', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await response.json();
       
-      // Clear the user state
-      setUser(null);
-  
-      // Use a small timeout to ensure state updates are processed
-      setTimeout(() => {
-        // Force a hard refresh of the page
-        window.location.href = window.location.origin;
-      }, 100);
-  
+      if (response.ok) {
+        setUser(null);
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed:', data.error);
+        throw new Error(data.error || 'Logout failed');
+      }
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
-  
+
   const handleSignIn = async () => {
     try {
       const response = await fetch('/api/auth?action=getSignInUrl');

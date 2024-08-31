@@ -22,3 +22,20 @@ console.log('action', action)
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 }
+
+export async function POST(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
+
+  if (action === 'signOut') {
+    try {
+      await signOut();
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Error during signOut:', error);
+      return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+}

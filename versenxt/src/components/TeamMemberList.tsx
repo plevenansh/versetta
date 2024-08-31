@@ -6,20 +6,34 @@ interface TeamMemberListProps {
 }
 
 const TeamMemberList: React.FC<TeamMemberListProps> = ({ teamId }) => {
-  const { data: teamMembers, isLoading } = trpc.teams.listTeamMembers.useQuery(teamId);
-  const removeMemberMutation = trpc.teams.removeTeamMember.useMutation();
-  const updateRoleMutation = trpc.teams.updateTeamMemberRole.useMutation();
+  const { data: teamMembers, isLoading, refetch } = trpc.teams.listTeamMembers.useQuery(teamId);
+  const removeMemberMutation = trpc.teams.removeTeamMember.useMutation({
+    onSuccess: () => refetch()
+  });
+  const updateRoleMutation = trpc.teams.updateTeamMemberRole.useMutation({
+    onSuccess: () => refetch()
+  });
 
   if (isLoading) return <div className="text-center">Loading team members...</div>;
 
   const handleRemoveMember = async (memberId: number) => {
-    await removeMemberMutation.mutateAsync(memberId);
-    // Refetch team members after removal
+    if (window.confirm('Are you sure you want to remove this member?')) {
+      try {
+        await removeMemberMutation.mutateAsync(memberId);
+      } catch (error) {
+        console.error('Error removing team member:', error);
+        alert('Failed to remove team member. Please try again.');
+      }
+    }
   };
 
   const handleUpdateRole = async (memberId: number, newRole: string) => {
-    await updateRoleMutation.mutateAsync({ teamMemberId: memberId, newRole });
-    // Refetch team members after update
+    try {
+      await updateRoleMutation.mutateAsync({ teamMemberId: memberId, newRole });
+    } catch (error) {
+      console.error('Error updating team member role:', error);
+      alert('Failed to update team member role. Please try again.');
+    }
   };
 
   return (

@@ -3,9 +3,10 @@ import { trpc } from '@/trpc/client';
 
 interface AddTeamMemberFormProps {
   teamId: number;
+  onMemberAdded: () => void;
 }
 
-const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId }) => {
+const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId, onMemberAdded }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
 
@@ -14,16 +15,15 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // In a real application, you'd need to first find or create the user based on the email
-      // For this example, we'll assume the user exists and has ID 1
       await addMemberMutation.mutateAsync({
         teamId: teamId,
-        email: email, // Replace this with actual user ID
+        email: email,
         role: role,
       });
       setEmail('');
       setRole('member');
       alert('Team member added successfully!');
+      onMemberAdded();
     } catch (error) {
       console.error('Error adding team member:', error);
       alert('Failed to add team member. Please try again.');
@@ -31,9 +31,8 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId }) => {
   };
 
   return (
-    
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p>Make sure  member has already  signed up on VERSETTA before adding them to your team.</p>
+      <p>Make sure the member has already signed up on VERSETTA before adding them to your team.</p>
       <h2 className="text-2xl font-semibold mb-4">Add Team Member</h2>
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

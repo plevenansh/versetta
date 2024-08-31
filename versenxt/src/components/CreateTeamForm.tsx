@@ -2,7 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 
-const CreateTeamForm: React.FC = () => {
+interface CreateTeamFormProps {
+  onTeamCreated: () => void;
+}
+
+const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onTeamCreated }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [user, setUser] = useState<any>(null);
@@ -47,6 +51,7 @@ const CreateTeamForm: React.FC = () => {
       setName('');
       setDescription('');
       alert('Team created successfully!');
+      onTeamCreated();
     } catch (error) {
       console.error('Error creating team:', error);
       alert('Failed to create team. Please try again.');

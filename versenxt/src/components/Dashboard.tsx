@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Cross } from 'lucide-react'; // Replace X with Cross
 import ProjectSection from './ProjectSection';
 import TaskList from './TaskList';
 import { trpc } from '@/trpc/client';
@@ -50,6 +51,10 @@ export default function Dashboard() {
     router.push('/teams');
   };
 
+  const handleClosePopup = () => {
+    setShowTeamPopup(false);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -64,12 +69,16 @@ export default function Dashboard() {
 
   return (
     <div className="p-0 space-y-6">
-      {showTeamPopup && (
+     {showTeamPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Create Your First Team</h2>
+        <div className="bg-white p-6 rounded-lg shadow-lg relative">
+         
+          <h2 className="text-xl font-bold mb-4">Create Your First Team</h2>
             <p className="mb-4">You don&#39;t have any teams yet. Create one to get started!</p>
-            <Button onClick={handleCreateTeam}>Create a Team</Button>
+            <div className="flex justify-between">
+              <Button onClick={handleCreateTeam}>Create a Team</Button>
+              <Button variant="outline" onClick={handleClosePopup}>Maybe Later</Button>
+            </div>
           </div>
         </div>
       )}

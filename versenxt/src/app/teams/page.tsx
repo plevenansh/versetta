@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 import CreateTeamForm from '@/components/CreateTeamForm';
 import TeamCard from '@/components/TeamCard';
@@ -9,6 +10,7 @@ import { Plus } from 'lucide-react';
 const TeamsPage = () => {
   const [user, setUser] = useState<any>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const router = useRouter();
 
   const { data: userTeams, isLoading, refetch } = trpc.teams.getUserTeams.useQuery(
     { workOsUserId: user?.workOsUserId || '' },
@@ -32,6 +34,12 @@ const TeamsPage = () => {
     fetchUser();
   }, []);
 
+  const handleTeamCreated = () => {
+    setShowCreateForm(false);
+    refetch();
+    router.push('/dashboard');
+  };
+
   if (isLoading) return <div>Loading teams...</div>;
 
   return (
@@ -46,10 +54,7 @@ const TeamsPage = () => {
       
       {showCreateForm && (
         <div className="mb-8">
-          <CreateTeamForm onTeamCreated={() => {
-            setShowCreateForm(false);
-            refetch();
-          }} />
+          <CreateTeamForm onTeamCreated={handleTeamCreated} />
         </div>
       )}
 

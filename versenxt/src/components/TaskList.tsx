@@ -324,34 +324,36 @@ export default function TaskList() {
 
   return (
     <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-lg">
-    <CardHeader className="flex flex-col space-y-4 pb-2">
-      <div className="flex justify-between items-center">
-        <CardTitle>Tasks</CardTitle>
-        <Select
-          value={selectedTeamId?.toString() || ''}
-          onValueChange={(value) => setSelectedTeamId(Number(value))}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select Team" />
-          </SelectTrigger>
-          <SelectContent>
-            {userTeams.map((team) => (
-              <SelectItem key={team.id} value={team.id.toString()}>
-                {team.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button 
-          onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-          size="sm"
-          className="bg-pink-100 text-pink-600 hover:bg-pink-200"
-        >
-          {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-          {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-        </Button>
-      </div>
-    </CardHeader>
+   <CardHeader className="pb-2">
+  <div className="flex justify-between items-center">
+    <div className="flex items-center space-x-4">
+      <CardTitle>Tasks</CardTitle>
+      <Select
+        value={selectedTeamId?.toString() || ''}
+        onValueChange={(value) => setSelectedTeamId(Number(value))}
+      >
+        <SelectTrigger className="w-[100px] h-[30px] rounded-3xl">
+          <SelectValue placeholder="Select Team" />
+        </SelectTrigger>
+        <SelectContent>
+          {userTeams.map((team) => (
+            <SelectItem key={team.id} value={team.id.toString()}>
+              {team.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+    <Button 
+      onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+      size="sm"
+      className="bg-pink-100 text-pink-600 hover:bg-pink-200 rounded-3xl"
+    >
+      {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+      {showNewTaskForm ? 'Cancel' : 'Add New Task'}
+    </Button>
+  </div>
+</CardHeader>
         <div className="px-6 pb-4 w-full">
   <div className="flex w-full rounded-full bg-[#D6EBFF] p-1 h-12">
     {filterButtons.map((btn) => (

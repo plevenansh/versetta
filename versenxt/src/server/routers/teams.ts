@@ -303,6 +303,47 @@ console.log('team', team);
       }
     }),
     
+    deleteTeam: publicProcedure
+    .input(z.number())
+    .mutation(async ({ input }) => {
+      try {
+        const team = await prisma.team.findUnique({
+          where: { id: input },
+          include: { members: true }
+        });
+
+        if (!team) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Team not found',
+          });
+        }
+
+        // Delete WorkOS organization
+        await workos.organizations.deleteOrganization(team.workOsOrgId);
+
+        // Delete team members
+        await prisma.teamMember.deleteMany({
+          where: { teamId: input }
+        });
+
+        // Delete team
+        await prisma.team.delete({
+          where: { id: input }
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete team',
+          cause: error,
+        });
+      }
+    }),
+
+    
 
 });
 

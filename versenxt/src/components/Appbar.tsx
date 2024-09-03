@@ -91,7 +91,7 @@ export default function Appbar({ collapsed }: AppbarProps) {
    {collapsed && (
   <div className="flex items-center space-x-2"> {/* Added space-x-2 for horizontal spacing */}
    
-    <Link className='flex items-center space-x-1' href="/" passHref>
+    <Link className='flex items-center space-x-1' href="/dashboard" passHref>
     <Image
       src="/ver.png"
       alt="Versetta Logo"

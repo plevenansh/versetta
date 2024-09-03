@@ -15,7 +15,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const isActive = (path: string) => pathname === path;
 
   const menuItems = [
-    { href: '/', icon: Home, label: 'Home' },
+    { href: '/dashboard', icon: Home, label: 'Home' },
     { href: '/projects', icon: Folder, label: 'Projects' },
     { href: '/tasks', icon: SquareCheck, label: 'Tasks' },
     { href: '/comments', icon: MessageSquare, label: 'Comments' },
@@ -27,13 +27,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <div className={`${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out bg-[#f8f8f8] flex flex-col h-screen border-r border-gray-200`}>
       <div className="flex items-center p-4 pl-2 mt-[7px] h-14 ">
-        <Button variant="ghost" size="icon" onClick={onToggle} className="text-gray-600 hover:text-gray-900">
-          <Menu className="h-6 w-6" />
+        <Button variant="ghost" size="icon" onClick={onToggle} className="text-gray-600 hover:text-gray-900 mr-2 ml-3">
+          <Menu className="h-7 w-7" />
         </Button>
         {!collapsed && (
           <div className="flex items-center space-x-2"> {/* Added space-x-2 for horizontal spacing */}
    
-          <Link className='flex items-center space-x-1' href="/" passHref>
+          <Link className='flex items-center space-x-1' href="/dashboard" passHref>
           <Image
             src="/ver.png"
             alt="Versetta Logo"

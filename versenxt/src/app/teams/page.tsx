@@ -43,11 +43,12 @@ const TeamsPage = () => {
   if (isLoading) return <div>Loading teams...</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div>
+    <div className="container  mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">Your Teams</h1>
       <Button 
         onClick={() => setShowCreateForm(!showCreateForm)} 
-        className="mb-6 bg-blue-500 hover:bg-blue-600"
+        className="mb-6 rounded-3xl bg-blue-500 hover:bg-blue-600"
       >
         <Plus className="mr-2 h-4 w-4" /> {showCreateForm ? 'Cancel' : 'Create New Team'}
       </Button>
@@ -63,6 +64,7 @@ const TeamsPage = () => {
           <TeamCard key={team.id} team={team} onTeamUpdated={refetch} />
         ))}
       </div>
+    </div>
     </div>
   );
 };

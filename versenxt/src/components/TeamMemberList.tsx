@@ -41,7 +41,7 @@ const TeamMemberList: React.FC<TeamMemberListProps> = ({ teamId }) => {
       <h2 className="text-2xl font-semibold mb-4">Team Members</h2>
       <ul className="space-y-4">
         {teamMembers?.map((member) => (
-          <li key={member.id} className="bg-gray-100 p-4 rounded-lg flex items-center justify-between">
+          <li key={member.id} className="bg-blue-100 p-4 rounded-xl flex items-center justify-between">
             <div>
               <span className="font-medium">{member.user.name}</span>
               <span className="ml-2 text-sm text-gray-600">({member.role})</span>

@@ -6,7 +6,6 @@ export default async function DashboardPage() {
   const user = await getUser();
 
   if (!user) {
-    // If user is not authenticated, redirect to home page
     redirect('/');
   }
 

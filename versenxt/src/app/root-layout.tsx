@@ -2,8 +2,8 @@ import { ReactNode } from 'react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Your App Name',
-  description: 'Your app description',
+  title: 'Versetta',
+  description: 'Runway to imagination',
   icons: {
     icon: '/favicon.ico',
   },
@@ -12,7 +12,14 @@ export const metadata: Metadata = {
 export default function RootLayoutServer({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+
+        <head>
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+        </head>
+
       <body>{children}</body>
     </html>
   );
 }
+
+

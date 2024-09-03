@@ -15,6 +15,11 @@ function RootLayout({ children }: RootLayoutProps) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
 
+
+
+
+
+  
   return (
     <RootLayoutServer>
       <div className={`${manrope.variable} font-sans`}>

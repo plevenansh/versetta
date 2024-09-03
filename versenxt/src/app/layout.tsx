@@ -1,10 +1,9 @@
 "use client"
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
-import Layout from '@/components/Layout';
-import '../styles/globals.css'
+import '../styles/globals.css';
+import { manrope } from '@/utils/fonts';
 
-import { manrope } from '@/utils/fonts'
 interface RootLayoutProps {
   children: ReactNode;
 }
@@ -12,11 +11,10 @@ interface RootLayoutProps {
 function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${manrope.variable} font-sans`}>
-      <body>
-        <Layout>{children}</Layout>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
+
 
 export default trpc.withTRPC(RootLayout);

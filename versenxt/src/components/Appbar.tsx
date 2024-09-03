@@ -1,3 +1,4 @@
+"use client"
 import { Search, Bell } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -87,11 +88,21 @@ export default function Appbar({ collapsed }: AppbarProps) {
 
   return (
     <header className="flex items-center justify-between px-4 py-4 bg-white ">
-      {collapsed && (
-        <Link href="/" passHref>
-          <h1 className="text-2xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
-        </Link>
-      )}
+   {collapsed && (
+  <div className="flex items-center space-x-2"> {/* Added space-x-2 for horizontal spacing */}
+   
+    <Link className='flex items-center space-x-1' href="/" passHref>
+    <Image
+      src="/ver.png"
+      alt="Versetta Logo"
+      width={31} // Reduced width
+      height={32} // Reduced height
+      className="mr-1" // Added right margin
+    />
+      <h1 className="text-3xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
+    </Link>
+  </div>
+)}
       <p className="text-sm italic text-gray-600 mx-auto hidden md:block"></p>
       <div className="flex items-center space-x-3">
         <div className="relative hidden md:block">

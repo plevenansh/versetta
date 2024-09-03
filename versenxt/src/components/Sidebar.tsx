@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, SquareCheck, Folder, Database, MessageSquare, Clapperboard, BarChart2, Menu, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button"
+import Image from 'next/image'
 
 interface SidebarProps {
   collapsed: boolean;
@@ -25,14 +26,24 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <div className={`${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out bg-[#f8f8f8] flex flex-col h-screen border-r border-gray-200`}>
-      <div className="flex items-center p-4 pl-2 mt-[1px] h-14 ">
+      <div className="flex items-center p-4 pl-2 mt-[7px] h-14 ">
         <Button variant="ghost" size="icon" onClick={onToggle} className="text-gray-600 hover:text-gray-900">
           <Menu className="h-6 w-6" />
         </Button>
         {!collapsed && (
-          <Link href="/" passHref>
-            <h1 className="ml-2 text-2xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
+          <div className="flex items-center space-x-2"> {/* Added space-x-2 for horizontal spacing */}
+   
+          <Link className='flex items-center space-x-1' href="/" passHref>
+          <Image
+            src="/ver.png"
+            alt="Versetta Logo"
+            width={31} // Reduced width
+            height={32} // Reduced height
+            className="mr-1" // Added right margin
+          />
+            <h1 className="text-3xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
           </Link>
+        </div>
         )}
       </div>
       <div className="flex-grow space-y-1 p-2 overflow-y-auto">

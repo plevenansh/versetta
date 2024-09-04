@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
-
+import { fontHeading, fontBody } from '@/utils/fonts';
+import {cn} from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'Versetta',
   description: 'Runway to imagination',

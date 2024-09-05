@@ -63,6 +63,14 @@ const config = {
 			heading: ['var(--font-heading)', ...fontFamily.sans],
 			body: ['var(--font-body)', ...fontFamily.sans]
 		  },
+		  fontSize: {
+				  '6xl': '6rem',
+				  '8xl': '6rem',
+				  '9xl': '7rem',
+				  
+				  
+				  // Add more custom sizes as needed
+				},
   		keyframes: {
 			'accordion-down': {
 			  from: {

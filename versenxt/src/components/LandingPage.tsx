@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { CheckIcon } from "lucide-react"
+import AnimationComponent from './AnimationComponent';
 
 interface User {
   firstName?: string;
@@ -65,100 +66,96 @@ export default function LandingPage() {
   
  
   return (
-    // <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    //   <h1 className="text-4xl font-bold mb-6">Welcome to Our App</h1>
-    //   <p className="text-xl mb-8">Manage your projects and tasks efficiently.</p>
-      
-    //   {isLoading ? (
-    //     <span className="text-gray-600">Loading...</span>
-    //   ) : user ? (
-    //     <Button onClick={handleDashboardClick} className="bg-blue-600 text-white hover:bg-blue-700">
-    //       Go to Dashboard
-    //     </Button>
-    //   ) : (
-    //     <div className="space-x-4">
-    //       <Button onClick={handleSignIn} variant="ghost" className="text-gray-600 hover:text-gray-900">
-    //         Sign In
-    //       </Button>
-    //       <Button onClick={handleSignUp} variant="outline" className="text-gray-800 bg-gray-100 hover:bg-gray-200">
-    //         Sign Up
-    //       </Button>
-    //     </div>
-    //   )}
-    // </div>
-
-
-
-
 
     <div className="flex flex-col min-h-[100dvh]">
-    <header className="px-4 lg:px-6 h-14 flex items-center">
-      <Link href="#" className="flex items-center justify-center" prefetch={false}>
-      <Image
+  <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
+  <Link href="#" className="flex items-center justify-center" prefetch={false}>
+    <Image
       src="/ver.png"
       alt="Versetta Logo"
-      width={31} // Reduced width
-      height={32} // Reduced height
-      className="mr-1" // Added right margin
+      width={31}
+      height={32}
+      className="mr-1"
     />
-         <h1 className="text-3xl font-bold ml-2 text-gray-800 cursor-pointer">Versetta</h1>
+    <h1 className="text-3xl font-bold ml-2 text-gray-800 cursor-pointer">Versetta</h1>
+  </Link>
+  <div className="flex items-center space-x-4">
+    <nav className="flex gap-4 sm:gap-6">
+      <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+        Features
       </Link>
-      <nav className="ml-auto flex gap-4 sm:gap-6">
-        <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-          Features
-        </Link>
-        <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-          Pricing
-        </Link>
-        <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-          About
-        </Link>
-        <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-          Contact
-        </Link>
-      </nav>
-    </header>
+      <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+        Pricing
+      </Link>
+      <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+        About
+      </Link>
+      <Link href="#" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+        Contact
+      </Link>
+    </nav>
+    <Button
+      onClick={handleSignIn}
+      className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+    >
+      Sign In
+    </Button>
+    <Button
+      onClick={handleSignUp}
+      className="bg-primary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+    >
+      Sign Up
+    </Button>
+  </div>
+</header>
     <main className="flex-1">
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                  Your Content&apos;s Headquarters
-                </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                  Versetta is a comprehensive video production platform designed to empower content creators.
-                  Streamline your workflow, collaborate seamlessly, and elevate your content to new heights.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Link
-                  href="#"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                  prefetch={false}
-                >
-                  Get Started
-                </Link>
-                <Link
-                  href="#"
-                  className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                  prefetch={false}
-                >
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* <img
-              src="/placeholder.svg"
-              width="650"
-              height="650"
-              alt="Hero"
-              className="mx-auto aspect-square overflow-hidden rounded-xl object-cover sm:w-full"
-            /> */}
-          </div>
+    <section className="w-full py-12 md:py-24 lg:py-32 xl:pb-55">
+  <div className="container px-4 md:px-6 xl:pl-4 xl:pr-4">
+    <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1.8fr_750px] xl:gap-64">
+      <div className="flex flex-col justify-center space-y-4">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl xl:text-6xl/none">
+            Your Content&apos;s Headquarter
+          </h1>
+          <p className="max-w-[550px] text-muted-foreground md:text-xl">
+            Versetta is a comprehensive video production platform designed to empower content creators.
+            Streamline your workflow, collaborate seamlessly, and elevate your content to new heights.
+          </p>
         </div>
-      </section>
+      
+        <div className="flex flex-col gap-2 min-[400px]:flex-row">
+          {isLoading ? (
+            <span className="text-gray-600">Loading...</span>
+          ) : user ? (
+            <Button 
+              onClick={handleDashboardClick} 
+              className="inline-flex h-15 w-52  items-center justify-center rounded-md bg-primary px-8 text-lg font-bold text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              Go to Dashboard
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSignUp}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-lg font-bold text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              Create your Team
+            </Button>
+          )}
+          {/* <Link
+            href="#"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            prefetch={false}
+          >
+            Learn More
+          </Link> */}
+        </div>
+      </div>
+      <div>
+        <AnimationComponent />
+      </div>
+    </div>
+  </div>
+</section>
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -169,6 +166,9 @@ export default function LandingPage() {
                 Versetta offers a comprehensive suite of tools and features to streamline your video production
                 workflow, from pre-production to post-production and beyond.
               </p>
+              <h1>
+                A commitment and promise to not charge you on the basis of number of team member. Add as many team member as you want without any extra cost.
+              </h1>
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-3 lg:gap-12">
@@ -257,7 +257,14 @@ export default function LandingPage() {
                   </li>
                 </ul>
               </div>
-              <Button className="w-full">Get Started</Button>
+            
+            <Button
+              onClick={handleSignUp}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-lg font-bold text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              Create your Team
+            </Button>
+        
             </Card>
             <Card className="p-6 space-y-4 opacity-50 pointer-events-none">
               <div className="space-y-2">
@@ -376,17 +383,21 @@ export default function LandingPage() {
         </div>
       </section>
     </main>
-    <footer className="flex flex-col sm:flex-row py-6 w-full shrink-0  items-center justify-between px-4 md:px-6 border-t">
-      <div className="flex items-center">
-        <span className="text-sm">© 2024 Versetta. All rights reserved.</span>
-      </div>
-      <div className="flex gap-4 mt-4 sm:mt-0">
-        <Link href="/terms" className="text-sm text-gray-600 hover:text-gray-900">
-          Terms of Service
-        </Link>
-        <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">
-          Privacy Policy
-        </Link>
+    <footer className="bg-gray-100 border-t">
+      <div className="container mx-auto px-6 py-28">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-6 md:mb-0">
+            <span className="text-lg font-semibold text-gray-800">© 2024 Versetta. All rights reserved.</span>
+          </div>
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <Link href="/terms" className="text-base text-gray-600 hover:text-gray-900 transition-colors duration-300">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="text-base text-gray-600 hover:text-gray-900 transition-colors duration-300">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   </div>

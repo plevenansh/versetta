@@ -67,7 +67,7 @@ const config = {
 				  '6xl': '6rem',
 				  '8xl': '6rem',
 				  '9xl': '7rem',
-				  
+				  'xl': '1.25rem',
 				  
 				  // Add more custom sizes as needed
 				},

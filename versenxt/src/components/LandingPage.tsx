@@ -118,8 +118,8 @@ export default function LandingPage() {
             Your Content&apos;s Headquarter
           </h1>
           <p className="max-w-[550px] text-muted-foreground md:text-xl">
-            Versetta is a comprehensive video production platform designed to empower content creators.
-            Streamline your workflow, collaborate seamlessly, and elevate your content to new heights.
+            Versetta is a comprehensive team management and video production platform designed solely for content creators.
+            Manage videos, assign tasks, analyse comments fast and effectively and much more.
           </p>
         </div>
       
@@ -219,19 +219,25 @@ export default function LandingPage() {
       </section>
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Pricing</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                Choose the Plan That Fits Your Needs
-              </h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Versetta offers flexible pricing options to cater to content creators of all sizes and budgets.
-              </p>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+    <div className="space-y-4 max-w-3xl">
+      <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Pricing</div>
+      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+        Choose the Plan That Fits Your Needs
+      </h2>
+      <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+        Versetta offers flexible pricing options to cater to content creators of all sizes and budgets.
+      </p>
+    </div>
+  </div>
+  
+  <div className="mt-8 border-t border-b border-gray-200 py-4">
+    <h3 className="text-xl text-blue-950 font-bold tracking-tighter sm:text-2xl text-center">
+      No user-based pricing: Add as many team members as you want without any extra cost.
+    </h3>
+  </div>
           <div className="mx-auto grid max-w-5xl  items-start gap-6 py-12 lg:grid-cols-3 lg:gap-12">
-            <Card className="p-6 space-y-4">
+            <Card className="p-6 space-y-4 justify-between h-[400px]">
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">Prime</h3>
                 <p className="text-4xl font-bold">$99</p>
@@ -241,11 +247,16 @@ export default function LandingPage() {
                 <ul className="space-y-1 text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
-                    Task and project management
+                    Upcoming videos management
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
-                    Comment analysis
+                    Task management
+                  </li>
+
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="h-4 w-4 text-green-500" />
+                    Comment analysis(With AI)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
@@ -255,6 +266,12 @@ export default function LandingPage() {
                     <CheckIcon className="h-4 w-4 text-green-500" />
                     Stats visualization
                   </li>
+                  <br />
+                  
+                  {/* <li className="flex items-center gap-2">
+                    <CheckIcon className="h-4 w-4 text-green-500" />
+                    Youtube Integration (Coming Soon)
+                  </li> */}
                 </ul>
               </div>
             
@@ -266,16 +283,17 @@ export default function LandingPage() {
             </Button>
         
             </Card>
-            <Card className="p-6 space-y-4 opacity-50 pointer-events-none">
+            <Card className="p-6 space-y-4 justify-between h-[400px] opacity-50 pointer-events-none">
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">Pro</h3>
                 <p className="text-4xl font-bold">Coming Soon</p>
               </div>
+              <br />
               <div className="space-y-2">
                 <ul className="space-y-1 text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
-                    Prime features
+                     All Prime features
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
@@ -283,23 +301,35 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
-                    Deep AI analysis for performance stats
+                    AI analysis
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="h-4 w-4 text-green-500" />
+                    Youtube Integration
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="h-4 w-4 text-green-500" />
+                    Team space/Jamboard
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
                     Early access to new features
                   </li>
+
+
                 </ul>
               </div>
               <Button className="w-full" disabled>
                 Coming Soon
               </Button>
             </Card>
-            <Card className="p-6 space-y-4 opacity-50 pointer-events-none">
+            <Card className="p-6 space-y-4 justify-between h-[400px] opacity-50 pointer-events-none">
+            
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">Studio</h3>
                 <p className="text-4xl font-bold">Coming Soon</p>
               </div>
+              <br />
               <div className="space-y-2">
                 <ul className="space-y-1 text-muted-foreground">
                   <li className="flex items-center gap-2">
@@ -312,16 +342,13 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
-                    Sponsorship marketplace (Sponsorship, Payments, Embargo)
+                    Sponsorship marketplace (Sponsors management)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green-500" />
                     Feature request
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="h-4 w-4 text-green-500" />
-                    Priority support
-                  </li>
+                 
                 </ul>
               </div>
               <Button className="w-full" disabled>
@@ -335,10 +362,10 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Testimonials</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">What Our Users Say</h2>
+              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Our wonderful future</div>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">What more to come</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Hear from our satisfied customers about their experience with Versetta.
+                We havent showed even 10% of what we have in our roadmap. We are working hard to bring more features to you ASAP.
               </p>
             </div>
           </div>

@@ -51,7 +51,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <Link key={item.href} href={item.href} passHref>
             <Button
               variant="ghost"
-              className={`w-full mb-[6px] justify-start text-gray-600 hover:bg-gray-200 ${
+              className={`w-full mb-[6px] justify-start font-bold  text-gray-700 hover:bg-gray-200 ${
                 collapsed ? 'px-2 py-2' : 'px-4 py-2'
               } ${isActive(item.href) ? 'bg-gray-200 text-gray-900' : ''} text-base`}
             >

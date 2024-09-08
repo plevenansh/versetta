@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 
 interface TeamMemberListProps {
@@ -6,13 +6,25 @@ interface TeamMemberListProps {
 }
 
 const TeamMemberList: React.FC<TeamMemberListProps> = ({ teamId }) => {
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const { data: teamMembers, isLoading, refetch } = trpc.teams.listTeamMembers.useQuery(teamId);
   const removeMemberMutation = trpc.teams.removeTeamMember.useMutation({
     onSuccess: () => refetch()
   });
   const updateRoleMutation = trpc.teams.updateTeamMemberRole.useMutation({
-    onSuccess: () => refetch()
+    onSuccess: () => {
+      refetch();
+      setShowSuccessPopup(true);
+      setTimeout(() => setShowSuccessPopup(false), 3000); // Hide popup after 3 seconds
+    }
   });
+
+  useEffect(() => {
+    if (showSuccessPopup) {
+      const timer = setTimeout(() => setShowSuccessPopup(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessPopup]);
 
   if (isLoading) return <div className="text-center">Loading team members...</div>;
 
@@ -37,7 +49,12 @@ const TeamMemberList: React.FC<TeamMemberListProps> = ({ teamId }) => {
   };
 
   return (
-    <div>
+    <div className="relative">
+      {showSuccessPopup && (
+        <div className="absolute top-0 left-0 right-0 bg-pink-300 text-black p-2 rounded-md text-center">
+          Role updated successfully!
+        </div>
+      )}
       <h2 className="text-2xl font-semibold mb-4">Team Members</h2>
       <ul className="space-y-4">
         {teamMembers?.map((member) => (

@@ -11,17 +11,6 @@ interface RootLayoutProps {
   children: ReactNode;
 }
 
-// const fontHeading = Manrope({
-//   subsets: ['latin'],
-//   display: 'swap',
-//   variable: '--font-heading',
-// })
-
-// const fontBody = Manrope({
-//   subsets: ['latin'],
-//   display: 'swap',
-//   variable: '--font-body',
-// })
 const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',

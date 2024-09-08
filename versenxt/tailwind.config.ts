@@ -59,9 +59,14 @@ const config = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
-  		fontFamily: {
-			heading: ['var(--font-heading)', ...fontFamily.sans],
-			body: ['var(--font-body)', ...fontFamily.sans]
+  		// fontFamily: {
+		// 	heading: ['var(--font-heading)', ...fontFamily.sans],
+		// 	body: ['var(--font-body)', ...fontFamily.sans]
+		//   },
+		fontFamily: {
+			sans: ['var(--font-manrope)', ...fontFamily.sans],
+			heading: ['var(--font-manrope)', ...fontFamily.sans],
+			body: ['var(--font-manrope)', ...fontFamily.sans],
 		  },
 		  fontSize: {
 				  '6xl': '6rem',

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Lottie from 'lottie-react';
-import animationData from './animation.json'; // You'll need to add your Lottie JSON file
+import animationData from '@/utils/animation.json'; // You'll need to add your Lottie JSON file
 
 const AnimationComponent: React.FC = () => {
   return (

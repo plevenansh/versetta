@@ -37,9 +37,15 @@ export default function LandingPage() {
     fetchUser();
   }, []);
 
-  const handleDashboardClick = () => {
-    router.push('/dashboard');
-  };
+  // useEffect(() => { 
+  //   if (user) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [user, isLoading]);
+
+    const handleDashboardClick = () => {
+      router.push('/dashboard');
+    };
 
   const handleSignIn = async () => {
     try {

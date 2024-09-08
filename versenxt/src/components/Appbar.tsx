@@ -44,6 +44,7 @@ export default function Appbar({ collapsed }: AppbarProps) {
     fetchUser();
   }, []);
 
+
   const handleSignOut = async () => {
     try {
       const response = await fetch('/api/auth?action=signOut', {
@@ -53,8 +54,34 @@ export default function Appbar({ collapsed }: AppbarProps) {
       const data = await response.json();
       
       if (response.ok) {
+        // Clear user state
         setUser(null);
-        window.location.href = '/';
+  
+        // Clear localStorage
+        localStorage.clear();
+  
+        // Clear sessionStorage
+        sessionStorage.clear();
+  
+        // Clear cookies
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+  
+        // Clear cache and hard reload
+        if (window.caches) {
+          // Clear all caches
+          caches.keys().then((names) => {
+            names.forEach((name) => {
+              caches.delete(name);
+            });
+          });
+        }
+  
+        // Hard reload the page
+        window.location.reload();
       } else {
         console.error('Logout failed:', data.error);
         throw new Error(data.error || 'Logout failed');
@@ -63,6 +90,27 @@ export default function Appbar({ collapsed }: AppbarProps) {
       console.error('Error signing out:', error);
     }
   };
+
+
+  // const handleSignOut = async () => {
+  //   try {
+  //     const response = await fetch('/api/auth?action=signOut', {
+  //       method: 'POST',
+  //       credentials: 'include'
+  //     });
+  //     const data = await response.json();
+      
+  //     if (response.ok) {
+  //       setUser(null);
+  //       window.location.href = '/';
+  //     } else {
+  //       console.error('Logout failed:', data.error);
+  //       throw new Error(data.error || 'Logout failed');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error signing out:', error);
+  //   }
+  // };
 
   const handleSignIn = async () => {
     try {

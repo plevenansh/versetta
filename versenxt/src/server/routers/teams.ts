@@ -93,34 +93,6 @@ getUserTeams: publicProcedure
     });
     console.log('workOsOrg', workOsOrg);
 
-    // // Create WorkOS organization membership for the creator
-    // const workOsMembership = await workos.userManagement.createOrganizationMembership({
-    //   organizationId: workOsOrg.id,
-    //   userId: user.workOsUserId,
-    //   roleSlug: 'admin',
-    // });
-    // console.log('workOsMembership', workOsMembership);
-
-    // // Create team in database
-    // const team = await prisma.team.create({
-    //   data: {
-    //     name: input.name,
-    //     description: input.description,
-    //     creatorId: user.id,
-    //     workOsOrgId: workOsOrg.id,
-    //     members: {
-    //       create: {
-    //         userId: user.id,
-    //         role: 'admin',
-    //         workOsMembershipId: workOsMembership.id,
-    //       },
-    //     },
-    //   },
-    //   include: {
-    //     members: true,
-    //   },
-    // });
-
 
      const team = await prisma.team.create({
         data: {
@@ -254,73 +226,7 @@ getUserTeams: publicProcedure
     return { success: true };
   }),
   
-//   createTeam: publicProcedure
-//     .input(
-//       z.object({
-//         name: z.string(),
-//         description: z.string().optional(),
-//         workOsUserId: z.string(),
-//       })
-//     )
-//     .mutation(async ({ input }) => {
-//       try {
-//         // Find the user in the database using the WorkOS user ID
-//         const user = await prisma.user.findUnique({
-//           where: { workOsUserId: input.workOsUserId },
-//         });
-//  console.log('user', user);
-//         if (!user) {
-//           throw new TRPCError({
-//             code: 'NOT_FOUND',
-//             message: 'User not found',
-//           });
-//         }
-        
 
-//         // Create WorkOS organization
-//         const workOsOrg = await workos.organizations.createOrganization({
-//           name: input.name,
-//         });
-//  console.log('workOsOrg', workOsOrg);
-//         // Create WorkOS organization membership for the creator
-//         const workOsMembership = await workos.userManagement.createOrganizationMembership({
-//           organizationId: workOsOrg.id,
-//           userId: user.workOsUserId,
-//           roleSlug: 'admin', // Use 'admin' instead of 'roleSlug'
-//         });
-//  console.log('workOsMembership', workOsMembership);
-       
-
-//         // Create team in database
-//         const team = await prisma.team.create({
-//           data: {
-//             name: input.name,
-//             description: input.description,
-//             creatorId: user.id,
-//             workOsOrgId: workOsOrg.id,
-//             members: {
-//               create: {
-//                 userId: user.id,
-//                 role: 'admin',
-//                 workOsMembershipId: workOsMembership.id,
-//               },
-//             },
-//           },
-//           include: {
-//             members: true,
-//           },
-//         });
-// console.log('team', team);
-//         return team;
-//       } catch (error) {
-//         console.error('Error creating team:', error);
-//         throw new TRPCError({
-//           code: 'INTERNAL_SERVER_ERROR',
-//           message: 'Failed to create team',
-//           cause: error,
-//         });
-//       }
-//     }),
   
   addTeamMember: publicProcedure
     .input(
@@ -572,3 +478,70 @@ getUserTeams: publicProcedure
 
 });
 
+//   createTeam: publicProcedure
+//     .input(
+//       z.object({
+//         name: z.string(),
+//         description: z.string().optional(),
+//         workOsUserId: z.string(),
+//       })
+//     )
+//     .mutation(async ({ input }) => {
+//       try {
+//         // Find the user in the database using the WorkOS user ID
+//         const user = await prisma.user.findUnique({
+//           where: { workOsUserId: input.workOsUserId },
+//         });
+//  console.log('user', user);
+//         if (!user) {
+//           throw new TRPCError({
+//             code: 'NOT_FOUND',
+//             message: 'User not found',
+//           });
+//         }
+        
+
+//         // Create WorkOS organization
+//         const workOsOrg = await workos.organizations.createOrganization({
+//           name: input.name,
+//         });
+//  console.log('workOsOrg', workOsOrg);
+//         // Create WorkOS organization membership for the creator
+//         const workOsMembership = await workos.userManagement.createOrganizationMembership({
+//           organizationId: workOsOrg.id,
+//           userId: user.workOsUserId,
+//           roleSlug: 'admin', // Use 'admin' instead of 'roleSlug'
+//         });
+//  console.log('workOsMembership', workOsMembership);
+       
+
+//         // Create team in database
+//         const team = await prisma.team.create({
+//           data: {
+//             name: input.name,
+//             description: input.description,
+//             creatorId: user.id,
+//             workOsOrgId: workOsOrg.id,
+//             members: {
+//               create: {
+//                 userId: user.id,
+//                 role: 'admin',
+//                 workOsMembershipId: workOsMembership.id,
+//               },
+//             },
+//           },
+//           include: {
+//             members: true,
+//           },
+//         });
+// console.log('team', team);
+//         return team;
+//       } catch (error) {
+//         console.error('Error creating team:', error);
+//         throw new TRPCError({
+//           code: 'INTERNAL_SERVER_ERROR',
+//           message: 'Failed to create team',
+//           cause: error,
+//         });
+//       }
+//     }),

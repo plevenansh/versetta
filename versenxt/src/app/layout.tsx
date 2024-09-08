@@ -2,13 +2,11 @@
 import { ReactNode } from 'react';
 import { trpc } from '@/trpc/client';
 import '../styles/globals.css';
-//import { manrope } from '@/utils/fonts';
 import RootLayoutServer from './root-layout';
 import Layout from '@/components/Layout';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Manrope } from 'next/font/google'
-//import { fontHeading, fontBody } from '@/utils/fonts';
 interface RootLayoutProps {
   children: ReactNode;
 }

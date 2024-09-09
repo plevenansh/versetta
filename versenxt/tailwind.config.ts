@@ -105,13 +105,18 @@ const config = {
 			  to: {
 				height: '0'
 			  }
-			}
+			},
+			'border-spin': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
   		},
 		animation: {
 		  'accordion-down': 'accordion-down 0.2s ease-out',
 		  'accordion-up': 'accordion-up 0.2s ease-out',
 		  'accordion-down2': 'accordion-down2 0.2s ease-out',
-		  'accordion-up2': 'accordion-up2 0.2s ease-out'
+		  'accordion-up2': 'accordion-up2 0.2s ease-out',
+		  'border-spin': 'border-spin 8s linear infinite',
 		}
   	}
   },

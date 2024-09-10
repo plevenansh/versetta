@@ -47,11 +47,11 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    if(!user) {
-      router.push('/');
-    }
-   }, [user]);
+  // useEffect(() => {
+  //   if(!user) {
+  //     router.push('/');
+  //   }
+  //  }, [user]);
 
 
   const handleCreateTeam = () => {

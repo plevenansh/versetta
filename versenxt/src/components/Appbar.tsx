@@ -147,7 +147,7 @@ export default function Appbar({ collapsed }: AppbarProps) {
       height={32} // Reduced height
       className="mr-1" // Added right margin
     />
-      <h1 className="text-3xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
+      <h1 className="text-5xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
     </Link>
   </div>
 )}

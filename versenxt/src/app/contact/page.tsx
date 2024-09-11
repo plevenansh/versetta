@@ -14,7 +14,7 @@ const ContactPage = () => {
           <h2 className="text-2xl font-semibold mb-4">Email</h2>
           <a href="mailto:versatter@gmail.com" className="text-blue-600 hover:underline text-xl">
             versatter@gmail.com
-            Kanpur,India
+          Add:  GX,IIT,Kanpur,India
           </a>
         </div>
       </div>

@@ -12,9 +12,9 @@ const ContactPage = () => {
 
         <div className="bg-purple-100 rounded-lg p-6 inline-block">
           <h2 className="text-2xl font-semibold mb-4">Email</h2>
-          <a href="mailto:versatter@gmail.com" className="text-blue-600 hover:underline text-xl">
-            versatter@gmail.com
-          Add: 34, Nankari,IIT,Kanpur,India
+          <a href="mailto:versettahq@gmail.com" className="text-blue-600 hover:underline text-xl">
+            versettahq@gmail.com
+          
           </a>
         </div>
       </div>

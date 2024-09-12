@@ -7,8 +7,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { CheckIcon } from "lucide-react"
+import { CheckIcon,Menu } from "lucide-react"
 import AnimationComponent from './AnimationComponent';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from "@/components/ui/dropdown-menu";
 
 interface User {
   firstName?: string;
@@ -74,46 +80,70 @@ export default function LandingPage() {
   return (
 
     <div className="flex flex-col min-h-[100dvh]">
-  <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
-  <Link href="#" className="flex items-center justify-center" prefetch={false}>
-    <Image
-      src="/ver.png"
-      alt="Versetta Logo"
-      width={31}
-      height={32}
-      className="mr-1"
-    />
-    <h1 className="text-3xl font-bold ml-2 text-gray-800 cursor-pointer">Versetta</h1>
-  </Link>
-  <div className="flex items-center space-x-4">
-    <nav className="flex gap-4 sm:gap-6">
-      <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-        Features
-      </Link>
-      <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-        Pricing
-      </Link>
-      <Link href="#about" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-        About
-      </Link>
-      <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-        Contact
-      </Link>
-    </nav>
-    <Button
-      onClick={handleSignIn}
-      className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-    >
-      Sign In
-    </Button>
-    <Button
-      onClick={handleSignUp}
-      className="bg-primary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-    >
-      Sign Up
-    </Button>
-  </div>
-</header>
+ <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
+    <Link href="#" className="flex items-center justify-center" prefetch={false}>
+      <Image
+        src="/ver.png"
+        alt="Versetta Logo"
+        width={31}
+        height={32}
+        className="mr-1"
+      />
+      <h1 className="text-3xl font-bold ml-2 text-gray-800 cursor-pointer">Versetta</h1>
+    </Link>
+    <div className="flex items-center space-x-4">
+      <nav className="hidden md:flex gap-4 sm:gap-6">
+        <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+          Features
+        </Link>
+        <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+          Pricing
+        </Link>
+        <Link href="#about" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+          About
+        </Link>
+        <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+          Contact
+        </Link>
+      </nav>
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <Menu className="h-6 w-6" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Link href="#features">Features</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="#pricing">Pricing</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="#about">About</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/contact">Contact</Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <Button
+        onClick={handleSignIn}
+        className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+      >
+        Sign In
+      </Button>
+      <Button
+        onClick={handleSignUp}
+        className="bg-primary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+      >
+        Sign Up
+      </Button>
+    </div>
+  </header>
     <main className="flex-1">
     <section className="w-full py-12 md:py-24 lg:py-32 xl:pb-55 ">
   <div className="container px-4 md:px-6 xl:pl-4 xl:pr-4">
@@ -272,7 +302,7 @@ export default function LandingPage() {
     </div>
   </section>
 
-  <section id="pricing" className="w-full py-12 md:py-14 lg:py-28 bg-gradient-to-r from-purple-100 to-muted">
+  {/* <section id="pricing" className="w-full py-12 md:py-14 lg:py-28 bg-gradient-to-r from-purple-100 to-muted">
   <div className="container px-4 md:px-6">
     <div className="flex flex-col items-center justify-center space-y-4 text-center">
       <div className="space-y-4 max-w-4xl">
@@ -297,8 +327,7 @@ export default function LandingPage() {
         <div className="space-y-2">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Prime</h3>
             <div className="flex items-center gap-3">
-        {/* <p className="text-4xl font-bold">$99/₹7999  </p> */}
-        <p className="text-4xl font-bold">₹7999  </p>
+         <p className="text-4xl font-bold">$99/₹7999  </p>
               <div className="inline-block bg-yellow-300 text-blue-900 px-3 py-1 rounded-full font-bold text-sm">
                 <span className="mr-1">🚀</span> Launch Price
               </div>
@@ -460,7 +489,7 @@ export default function LandingPage() {
       </div>
     </div>
   </div>
-</section>
+</section> */}
 
 <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-r from-blue-200 to-purple-100">
   <div className="container px-4 md:px-6">

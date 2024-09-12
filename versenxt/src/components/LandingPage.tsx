@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { CheckIcon,Menu } from "lucide-react"
+import { CheckIcon, ClockIcon,Menu } from "lucide-react"
 import AnimationComponent from './AnimationComponent';
 import {
   DropdownMenu,
@@ -327,7 +327,8 @@ export default function LandingPage() {
         <div className="space-y-2">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Prime</h3>
             <div className="flex items-center gap-3">
-         <p className="text-4xl font-bold">$99/₹7999  </p>
+         <p className="text-4xl font-bold">₹7999  </p>
+        
               <div className="inline-block bg-yellow-300 text-blue-900 px-3 py-1 rounded-full font-bold text-sm">
                 <span className="mr-1">🚀</span> Launch Price
               </div>
@@ -446,6 +447,106 @@ export default function LandingPage() {
       </Card>
     </div>
   </div>
+</section> */}
+<section id="pricing" className="w-full py-12 md:py-14 lg:py-28 bg-gradient-to-r from-purple-100 to-muted">
+  <div className="container px-4 md:px-6">
+    <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      <div className="space-y-4 max-w-4xl">
+        <div className="inline-block px-3 py-1 text-sm font-semibold text-purple-600 bg-purple-100 rounded-full mb-4">Founding Members</div>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+          Support Our Vision, Shape Our Future
+        </h2>
+        <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+          Join us as a Founding Member and help build the ultimate platform for content creators.
+        </p>
+      </div>
+    </div>
+    
+    <div className="mt-8 border-t border-b border-gray-200 py-4">
+      <h3 className="text-xl text-blue-950 font-bold tracking-tighter sm:text-2xl text-center">
+        Lifetime 50% discount on all future offerings for our Founding Members
+      </h3>
+    </div>
+    <div className="mx-auto grid max-w-7xl items-start gap-6 py-12 lg:grid-cols-2 lg:gap-12">
+      <Card className="p-6 flex flex-col justify-between h-[500px] shadow-lg">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Founding Member</h3>
+            <div className="flex items-center gap-3">
+              <p className="text-4xl font-bold">₹7999/$99</p>
+              <div className="inline-block bg-yellow-300 text-blue-900 px-3 py-1 rounded-full font-bold text-sm">
+                <span className="mr-1">🚀</span> Early Adopters 
+              </div>
+            </div>
+            <p className="text-muted-foreground">per month</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-purple-600 font-semibold">Currently Available:</p>
+            <ul className="space-y-1 text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+                Video project management
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+                Task assignment and tracking
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+                AI-powered comment analysis
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+                Content calendar and production pipeline
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+               Lifetime 50% Discount
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon className="h-4 w-4 text-green-500" />
+              Direct input in the product and feature roadmap
+              </li>
+            </ul>
+          </div>
+        </div>
+        <Button
+          onClick={handleSignUp}
+          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-lg font-bold text-primary-foreground shadow"
+        >
+          Become a Founding Member
+        </Button>
+      </Card>
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold text-gray-900">What&#39;s Coming Soon</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-lg font-semibold text-purple-600">Advanced Storage Solutions</h4>
+            <p className="text-muted-foreground">Team-wide asset sharing and comprehensive archiving</p>
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-purple-600">AI-Powered Analytics</h4>
+            <p className="text-muted-foreground">Detailed insights and automated report generation</p>
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-purple-600">Seamless YouTube Integration</h4>
+            <p className="text-muted-foreground">Publish and manage content directly from Versetta</p>
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-purple-600">AI Production Tools</h4>
+            <p className="text-muted-foreground">Video editing, audio enhancement, and more</p>
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-purple-600">Sponsorship Marketplace</h4>
+            <p className="text-muted-foreground">Easily manage sponsors, agreements, and payments</p>
+          </div>
+        </div>
+        <p className="text-lg text-red-600 font-semibold">
+          As a Founding Member, you&#39;ll get early access and a lifetime 50% discount on all these upcoming features!
+        </p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id ="about" className="w-full py-12 md:py-20 lg:py-28 bg-gradient-to-r from-blue-200 to-muted">
@@ -489,7 +590,7 @@ export default function LandingPage() {
       </div>
     </div>
   </div>
-</section> */}
+</section>
 
 <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-r from-blue-200 to-purple-100">
   <div className="container px-4 md:px-6">

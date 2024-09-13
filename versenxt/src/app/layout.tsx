@@ -6,7 +6,8 @@ import RootLayoutServer from './root-layout';
 import Layout from '@/components/Layout';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Manrope } from 'next/font/google'
+import { Manrope } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
 interface RootLayoutProps {
   children: ReactNode;
 }
@@ -26,6 +27,8 @@ function RootLayout({ children }: RootLayoutProps) {
        <html lang="en" className={`${manrope.variable}`}>
        <body>
           {isLandingPage ? children : <Layout>{children}</Layout>}
+      
+         <Analytics/>
         </body>
       </html>
     </RootLayoutServer>

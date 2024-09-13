@@ -5,10 +5,10 @@ import '../styles/globals.css';
 import RootLayoutServer from './root-layout';
 import Layout from '@/components/Layout';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 import { Manrope } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
 interface RootLayoutProps {
   children: ReactNode;
 }
@@ -22,15 +22,16 @@ const manrope = Manrope({
 function RootLayout({ children }: RootLayoutProps) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
+  const excludedRoutes = ['/privacy', '/terms', '/cancellation', '/contact'];
+  const shouldExcludeLayout = isLandingPage || excludedRoutes.includes(pathname);
 
   return (
     <RootLayoutServer>
-       <html lang="en" className={`${manrope.variable}`}>
-       <body>
-          {isLandingPage ? children : <Layout>{children}</Layout>}
-
+      <html lang="en" className={`${manrope.variable}`}>
+        <body>
+          {shouldExcludeLayout ? children : <Layout>{children}</Layout>}
           <SpeedInsights/>
-         <Analytics/>
+          <Analytics/>
         </body>
       </html>
     </RootLayoutServer>

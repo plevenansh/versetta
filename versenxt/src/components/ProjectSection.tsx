@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProjectCard from './ProjectCard';
 import { trpc } from '@/trpc/client';
 import { Plus, X } from 'lucide-react';
@@ -175,16 +176,21 @@ export default function ProjectSection() {
   <div className="flex justify-between items-center">
     <div className="flex items-center space-x-4">
       <CardTitle className="text-2xl font-bold">Projects</CardTitle>
-      <select
-        value={selectedTeamId || ''}
-        onChange={(e) => setSelectedTeamId(Number(e.target.value))}
-        className="w-[140px] h-[30px] rounded-3xl bg-white shadow-sm p-1"
+      <Select
+        value={selectedTeamId?.toString() || ''}
+        onValueChange={(value) => setSelectedTeamId(Number(value))}
       >
-        <option value="">Select a Team</option>
-        {userTeams.map(team => (
-          <option key={team.id} value={team.id}>{team.name}</option>
-        ))}
-      </select>
+        <SelectTrigger className="w-[120px] h-[30px] rounded-3xl">
+          <SelectValue placeholder="Select Team" />
+        </SelectTrigger>
+        <SelectContent>
+          {userTeams.map((team) => (
+            <SelectItem key={team.id} value={team.id.toString()}>
+              {team.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
     <Button 
       onClick={handleAddProject} 
@@ -241,7 +247,7 @@ export default function ProjectSection() {
                 onKeyDown={(e) => handleKeyDown(e, 2)}
                 ref={(el) => {inputRefs.current[2] = el}}
               />
-              <select
+              {/* <select
                 value={selectedTeamId || ''}
                 onChange={(e) => setSelectedTeamId(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -250,7 +256,22 @@ export default function ProjectSection() {
                 {userTeams.map(team => (
                   <option key={team.id} value={team.id}>{team.name}</option>
                 ))}
-              </select>
+              </select> */}
+               <Select
+                  value={selectedTeamId?.toString() || ''}
+                  onValueChange={(value) => setSelectedTeamId(Number(value))}
+                >
+                  <SelectTrigger className="w-[465px] h-[42px] rounded-2xl">
+                    <SelectValue placeholder="Select Team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userTeams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+              </Select>
               <div>
                 <h3 className="text-sm font-medium mb-2">Select Stages:</h3>
                 <div className="flex flex-wrap gap-2">

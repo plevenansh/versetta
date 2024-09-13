@@ -135,31 +135,31 @@ export default function Appbar({ collapsed }: AppbarProps) {
   
 
   return (
-    <header className="flex items-center justify-between px-4 py-4 bg-white ">
+    <header className="flex items-center justify-between px-4 py-2 bg-white ">
    {collapsed && (
   <div className="flex items-center space-x-2"> {/* Added space-x-2 for horizontal spacing */}
    
     <Link className='flex items-center space-x-1' href="/dashboard" passHref>
-    <Image
+    {/* <Image
       src="/ver.png"
       alt="Versetta Logo"
       width={31} // Reduced width
       height={32} // Reduced height
       className="mr-1" // Added right margin
-    />
-      <h1 className="text-5xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
+    /> */}
+      <h1 className="text-3xl font-bold text-gray-800 cursor-pointer">Versetta</h1>
     </Link>
   </div>
 )}
       <p className="text-sm italic text-gray-600 mx-auto hidden md:block"></p>
       <div className="flex items-center space-x-3">
-        <div className="relative hidden md:block">
+        <div className="relative hidden sm:block">
           <Input
             type="search"
             placeholder="Search..."
-            className="pl-8 pr-4 py-1 bg-[#F0F8FF] text-gray-700 placeholder-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
+            className="pl-8 pr-4 py-1 bg-[#F0F8FF] text-gray-700 placeholder-gray-600 rounded-3xl focus:outline-none focus:ring-2 focus:ring-black"
           />
-          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h- w-4 text-gray-500" />
         </div>
         <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-900">
           <Bell className="h-5 w-5" />

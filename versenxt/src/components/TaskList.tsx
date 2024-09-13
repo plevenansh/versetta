@@ -332,7 +332,7 @@ export default function TaskList() {
         value={selectedTeamId?.toString() || ''}
         onValueChange={(value) => setSelectedTeamId(Number(value))}
       >
-        <SelectTrigger className="w-[100px] h-[30px] rounded-3xl">
+        <SelectTrigger className="w-[120px] h-[30px] rounded-3xl">
           <SelectValue placeholder="Select Team" />
         </SelectTrigger>
         <SelectContent>

@@ -473,7 +473,7 @@ export default function LandingPage() {
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Founding Member</h3>
             <div className="flex items-center gap-3">
-              <p className="text-4xl font-bold">₹7999/$99</p>
+              <p className="text-4xl font-bold">$99</p>
               <div className="inline-block bg-yellow-300 text-blue-900 px-3 py-1 rounded-full font-bold text-sm">
                 <span className="mr-1">🚀</span> Early Adopters 
               </div>

@@ -165,7 +165,7 @@ export const taskRouter = router({
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),
-      description: z.string().optional(),
+      description: z.string().optional().nullable(),
       status: z.enum(['pending', 'completed']).optional(),
       dueDate: z.string().optional().nullable(),
          projectId: z.number().optional().nullable(),

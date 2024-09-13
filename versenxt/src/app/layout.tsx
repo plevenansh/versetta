@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Manrope } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 interface RootLayoutProps {
   children: ReactNode;
 }
@@ -27,7 +28,8 @@ function RootLayout({ children }: RootLayoutProps) {
        <html lang="en" className={`${manrope.variable}`}>
        <body>
           {isLandingPage ? children : <Layout>{children}</Layout>}
-      
+
+          <SpeedInsights/>
          <Analytics/>
         </body>
       </html>

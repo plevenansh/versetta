@@ -580,7 +580,7 @@ export default function LandingPage() {
             Our AI features are designed to help, not replace you. We&#39;re developing:
           </p>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground md:text-lg">
-            <li>AI-generated video footage relevant to your content</li>
+            {/* <li>AI-generated video footage relevant to your content</li> */}
             <li>Audio and subtitle generation for accuracy</li>
             <li>A context engine to create precisely what you need from various tools</li>
             <li>Efficient storage solutions for team asset management</li>

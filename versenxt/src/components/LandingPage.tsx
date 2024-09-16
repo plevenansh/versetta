@@ -223,7 +223,7 @@ export default function LandingPage() {
         </p>
       </div>
       <div className="grid gap-1">
-        <h3 className="text-xl font-bold">Content Calendar(Coming Soon)</h3>
+        <h3 className="text-xl font-bold">Content <Calendar></Calendar></h3>
         <p className="text-muted-foreground">
           Visualize your content pipeline, track completion, and manage publication schedules effortlessly.
         </p>
@@ -497,7 +497,7 @@ export default function LandingPage() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckIcon className="h-4 w-4 text-green-500" />
-                Content calendar and production pipeline
+                Content calendar
               </li>
               <li className="flex items-center gap-2">
                 <CheckIcon className="h-4 w-4 text-green-500" />

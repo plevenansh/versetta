@@ -8,7 +8,7 @@ import TaskList from './TaskList';
 import { trpc } from '@/trpc/client';
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
-
+import CalendarComponent from './Calendar';
 interface User {
   id: number;
   workOsUserId: string;
@@ -53,6 +53,7 @@ export default function Dashboard() {
   //   }
   //  }, [user]);
 
+  const { data: userTeams } = trpc.teams.getUserTeams.useQuery({ workOsUserId: user?.workOsUserId || '' });
 
   const handleCreateTeam = () => {
     router.push('/teams');
@@ -129,6 +130,18 @@ export default function Dashboard() {
           <TaskList />
         </div>
       </div>
+      {userTeams && userTeams.length > 0 && (
+        <div className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Calendar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CalendarComponent teamId={userTeams[0].id} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

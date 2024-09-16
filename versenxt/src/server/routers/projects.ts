@@ -403,5 +403,39 @@ export const projectRouter = router({
       throw new Error('Failed to fetch projects for team member');
     }
   }),
+
+  getProjectsForCalendar: publicProcedure
+  .input(z.object({
+    teamId: z.number(),
+    startDate: z.date(),
+    endDate: z.date()
+  }))
+  .query(async ({ input }) => {
+    try {
+      const projects = await prisma.project.findMany({
+        where: {
+          teamId: input.teamId,
+          endDate: {
+            gte: input.startDate,
+            lte: input.endDate
+          }
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          endDate: true,
+          status: true
+        },
+        orderBy: {
+          endDate: 'asc'
+        }
+      });
+      return projects;
+    } catch (error) {
+      console.error('Error fetching projects for calendar:', error);
+      throw new Error('Failed to fetch projects for calendar');
+    }
+  }),
   
 });

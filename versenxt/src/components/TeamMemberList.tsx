@@ -1,89 +1,138 @@
-import React, { useState, useEffect } from 'react';
-import { trpc } from '@/trpc/client';
+import { useState } from 'react'
+import { trpc } from '@/trpc/client'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PlusCircle } from 'lucide-react'
 
 interface TeamMemberListProps {
-  teamId: number;
+  teamId: number
+  onTeamUpdated: () => void
 }
 
-const TeamMemberList: React.FC<TeamMemberListProps> = ({ teamId }) => {
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const { data: teamMembers, isLoading, refetch } = trpc.teams.listTeamMembers.useQuery(teamId);
-  const removeMemberMutation = trpc.teams.removeTeamMember.useMutation({
-    onSuccess: () => refetch()
-  });
-  const updateRoleMutation = trpc.teams.updateTeamMemberRole.useMutation({
-    onSuccess: () => {
-      refetch();
-      setShowSuccessPopup(true);
-      setTimeout(() => setShowSuccessPopup(false), 3000); // Hide popup after 3 seconds
-    }
-  });
+export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberListProps) {
+  const [showAddMember, setShowAddMember] = useState(false)
+  const { data: teamMembers, refetch: refetchMembers } = trpc.teams.listTeamMembers.useQuery(teamId)
+  const addTeamMemberMutation = trpc.teams.addTeamMember.useMutation()
+  const removeTeamMemberMutation = trpc.teams.removeTeamMember.useMutation()
+  const updateTeamMemberRoleMutation = trpc.teams.updateTeamMemberRole.useMutation()
 
-  useEffect(() => {
-    if (showSuccessPopup) {
-      const timer = setTimeout(() => setShowSuccessPopup(false), 3000);
-      return () => clearTimeout(timer);
+  const handleAddMember = async (email: string, role: string) => {
+    try {
+      await addTeamMemberMutation.mutateAsync({ teamId, email, role })
+      setShowAddMember(false)
+      refetchMembers()
+      onTeamUpdated()
+    } catch (error) {
+      console.error('Error adding team member:', error)
+      alert('Failed to add team member. Please try again.')
     }
-  }, [showSuccessPopup]);
-
-  if (isLoading) return <div className="text-center">Loading team members...</div>;
+  }
 
   const handleRemoveMember = async (memberId: number) => {
-    if (window.confirm('Are you sure you want to remove this member?')) {
-      try {
-        await removeMemberMutation.mutateAsync(memberId);
-      } catch (error) {
-        console.error('Error removing team member:', error);
-        alert('Failed to remove team member. Please try again.');
-      }
+    try {
+      await removeTeamMemberMutation.mutateAsync(memberId)
+      refetchMembers()
+      onTeamUpdated()
+    } catch (error) {
+      console.error('Error removing team member:', error)
+      alert('Failed to remove team member. Please try again.')
     }
-  };
+  }
 
   const handleUpdateRole = async (memberId: number, newRole: string) => {
     try {
-      await updateRoleMutation.mutateAsync({ teamMemberId: memberId, newRole });
+      await updateTeamMemberRoleMutation.mutateAsync({ teamMemberId: memberId, newRole })
+      refetchMembers()
+      onTeamUpdated()
     } catch (error) {
-      console.error('Error updating team member role:', error);
-      alert('Failed to update team member role. Please try again.');
+      console.error('Error updating team member role:', error)
+      alert('Failed to update team member role. Please try again.')
     }
-  };
+  }
 
   return (
-    <div className="relative">
-      {showSuccessPopup && (
-        <div className="absolute top-0 left-0 right-0 bg-pink-300 text-black p-2 rounded-md text-center">
-          Role updated successfully!
-        </div>
-      )}
-      <h2 className="text-2xl font-semibold mb-4">Team Members</h2>
-      <ul className="space-y-4">
-        {teamMembers?.map((member) => (
-          <li key={member.id} className="bg-blue-100 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <span className="font-medium">{member.user.name}</span>
-              <span className="ml-2 text-sm text-gray-600">({member.role})</span>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {teamMembers?.map((member) => (
+            <TableRow key={member.id}>
+              <TableCell>{member.user.name}</TableCell>
+              <TableCell>{member.user.email}</TableCell>
+              <TableCell>
+                <Select
+                  value={member.role}
+                  onValueChange={(newRole) => handleUpdateRole(member.id, newRole)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell>
+                <Button variant="destructive" size="sm" onClick={() => handleRemoveMember(member.id)}>
+                  Remove
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <Button onClick={() => setShowAddMember(true)} className="mt-4">
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Add Member
+      </Button>
+      <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const formData = new FormData(e.target as HTMLFormElement)
+            handleAddMember(formData.get('email') as string, formData.get('role') as string)
+          }}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input id="email" name="email" className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">
+                  Role
+                </Label>
+                <Select name="role">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <select
-                value={member.role}
-                onChange={(e) => handleUpdateRole(member.id, e.target.value)}
-                className="border rounded px-2 py-1 text-sm"
-              >
-                <option value="admin">Admin</option>
-                <option value="member">Member</option>
-              </select>
-              <button 
-                onClick={() => handleRemoveMember(member.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
-              >
-                Remove
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+            <Button type="submit">Add Member</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
-};
-
-export default TeamMemberList;
+  )
+}

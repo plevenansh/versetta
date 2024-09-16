@@ -1,66 +1,68 @@
-import React, { useState } from 'react';
-import { trpc } from '@/trpc/client';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import AddTeamMemberForm from './AddTeamMemberForm';
-import TeamMemberList from './TeamMemberList';
+
+
+
+
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { CreditCard, ChevronRight, Trash2 } from 'lucide-react'
+import TeamMemberList from './TeamMemberList'
 
 interface TeamCardProps {
-  team: any;
-  onTeamUpdated: () => void;
+  team: any
+  onDeleteTeam: (teamId: number) => void
+  onTeamUpdated: () => void
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({ team, onTeamUpdated }) => {
-  const [showAddMember, setShowAddMember] = useState(false);
-  const deleteTeamMutation = trpc.teams.deleteTeam.useMutation();
-
-  const handleDeleteTeam = async () => {
-    try {
-      await deleteTeamMutation.mutateAsync(team.id);
-      onTeamUpdated();
-    } catch (error) {
-      console.error('Error deleting team:', error);
-      alert('Failed to delete team. Please try again.');
-    }
-  };
+export default function TeamCard({ team, onDeleteTeam, onTeamUpdated }: TeamCardProps) {
+  const [activeTab, setActiveTab] = useState('members')
 
   return (
-    <Card className="w-full bg-white shadow-lg rounded-2xl overflow-hidden">
-      <CardHeader className="bg-gray-50 border-b border-gray-200">
-        <CardTitle className="text-xl font-semibold text-gray-800">{team.name}</CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>{team.name}</CardTitle>
+        <CardDescription>{team.description}</CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
-        <p className="text-gray-600 mb-4">{team.description}</p>
-        <Accordion type="single" collapsible>
-          <AccordionItem value="members">
-            <AccordionTrigger>Team Members</AccordionTrigger>
-            <AccordionContent>
-              <TeamMemberList teamId={team.id} />
-              <Button 
-                onClick={() => setShowAddMember(!showAddMember)} 
-                className="mt-4 w-full bg-green-600 hover:bg-green-600 text-white"
-              >
-                {showAddMember ? 'Cancel' : 'Add Member'}
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+          </TabsList>
+          <TabsContent value="members">
+            <TeamMemberList teamId={team.id} onTeamUpdated={onTeamUpdated} />
+          </TabsContent>
+          <TabsContent value="settings">
+            <p>Team settings will be implemented here.</p>
+          </TabsContent>
+          <TabsContent value="billing">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Subscription Details</h3>
+              <p>Current Plan: <Badge variant="secondary">{team.subscription?.status || 'No active subscription'}</Badge></p>
+              <p>Next billing date: {team.subscription?.nextBillingDate || 'N/A'}</p>
+              <Button>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Manage Subscription
               </Button>
-              {showAddMember && (
-                <AddTeamMemberForm 
-                  teamId={team.id} 
-                  onMemberAdded={() => {
-                    setShowAddMember(false);
-                    onTeamUpdated();
-                  }} 
-                />
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline">
+          View Team Dashboard
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">Delete Team</Button>
+            <Button variant="destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Team
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -72,7 +74,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onTeamUpdated }) => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteTeam}>
+              <AlertDialogAction onClick={() => onDeleteTeam(team.id)}>
                 Yes, delete team
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -80,7 +82,5 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onTeamUpdated }) => {
         </AlertDialog>
       </CardFooter>
     </Card>
-  );
-};
-
-export default TeamCard;
+  )
+}

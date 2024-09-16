@@ -42,7 +42,33 @@ export const teamRouter = router({
   
 // In teams.ts tRPC router
 
-getUserTeams: publicProcedure
+// getUserTeams: publicProcedure
+//   .input(z.object({ workOsUserId: z.string() }))
+//   .query(async ({ input }) => {
+//     const user = await prisma.user.findUnique({
+//       where: { workOsUserId: input.workOsUserId },
+//       include: {
+//         teamMemberships: {
+//           include: {
+//             team: true
+//           }
+//         }
+//       }
+//     });
+
+//     if (!user) {
+//       throw new TRPCError({
+//         code: 'NOT_FOUND',
+//         message: 'User not found',
+//       });
+//     }
+
+//     return user.teamMemberships.map(membership => membership.team);
+//   }),
+
+
+
+  getUserTeams: publicProcedure
   .input(z.object({ workOsUserId: z.string() }))
   .query(async ({ input }) => {
     const user = await prisma.user.findUnique({
@@ -50,22 +76,22 @@ getUserTeams: publicProcedure
       include: {
         teamMemberships: {
           include: {
-            team: true
+            team: {
+              include: {
+                creator: true
+              }
+            }
           }
         }
       }
     });
 
     if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      });
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
     }
 
     return user.teamMemberships.map(membership => membership.team);
   }),
-
 
 
     initiateTeamCreation: publicProcedure

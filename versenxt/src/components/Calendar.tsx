@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
+import { Calendar, momentLocalizer, View, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { trpc } from '@/trpc/client';
@@ -15,7 +15,7 @@ interface Event {
 }
 
 const CalendarComponent = ({ teamId }: { teamId: number }) => {
-  const [view, setView] = useState(Views.MONTH);
+  const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
 
   const { data: projects, isLoading } = trpc.projects.getByTeamId.useQuery(teamId);
@@ -27,23 +27,22 @@ const CalendarComponent = ({ teamId }: { teamId: number }) => {
         id: project.id,
         title: project.title,
         start: publishDate,
-        end: moment(publishDate).add(0, 'day').toDate(), // Make it a full-day event
+        end: moment(publishDate).add(0, 'day').toDate(),
       }];
     }
-    return []; // Skip projects without an endDate
+    return [];
   }) || [];
 
   const handleNavigate = useCallback((newDate: Date) => {
     setDate(newDate);
   }, []);
 
-  const handleViewChange = useCallback((newView: string) => {
+  const handleViewChange = useCallback((newView: View) => {
     setView(newView);
   }, []);
 
   const handleSelectEvent = useCallback((event: Event) => {
     alert(`Selected project: ${event.title}\nPublish date: ${moment(event.start).format('MMMM D, YYYY')}`);
-    // You can implement more interactive behavior here, like opening a modal with event details
   }, []);
 
   if (isLoading) return <div>Loading calendar...</div>;
@@ -51,9 +50,7 @@ const CalendarComponent = ({ teamId }: { teamId: number }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <h2 className="text-xl font-bold">{moment(date).format('MMMM YYYY')}</h2>
-       
       </div>
       
       <div style={{ height: '500px' }}>

@@ -65,14 +65,16 @@ model Subscription {
   team          Team     @relation(fields: [teamId], references: [id])
   teamName      String
   status        String   // 'active', 'inactive', 'pending'
-  provider      String   // 'razorpay' or 'polar'
+  type          String   // 'paid', 'invite'
+  provider      String?  // 'razorpay', 'polar', or null for invite
   providerId    String?  // ID from the payment provider
   subActive     Boolean  @default(false)
-  creatorId     Int      // New field to store the creator's user ID
+  creatorId     Int
   creator       User     @relation(fields: [creatorId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
 model Project {
   id            Int            @id @default(autoincrement())
   title         String

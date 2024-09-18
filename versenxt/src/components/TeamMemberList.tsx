@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PlusCircle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface TeamMemberListProps {
   teamId: number
@@ -15,6 +16,8 @@ interface TeamMemberListProps {
 
 export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberListProps) {
   const [showAddMember, setShowAddMember] = useState(false)
+  const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const { data: teamMembers, refetch: refetchMembers } = trpc.teams.listTeamMembers.useQuery(teamId)
   const addTeamMemberMutation = trpc.teams.addTeamMember.useMutation()
   const removeTeamMemberMutation = trpc.teams.removeTeamMember.useMutation()
@@ -26,11 +29,16 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
       setShowAddMember(false)
       refetchMembers()
       onTeamUpdated()
-    } catch (error) {
-      console.error('Error adding team member:', error)
-      alert('Failed to add team member. Please try again.')
+    } catch (error: any) {
+      console.error('Error adding team member:', error);
+      if (error.message.includes('User not found')) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Failed to add team member. Please try again.');
+      }
+      setShowErrorDialog(true);
     }
-  }
+  };
 
   const handleRemoveMember = async (memberId: number) => {
     try {
@@ -131,6 +139,18 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
             </div>
             <Button type="submit">Add Member</Button>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Error</DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive">
+            <AlertTitle>Failed to add team member</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+          <Button onClick={() => setShowErrorDialog(false)}>Close</Button>
         </DialogContent>
       </Dialog>
     </div>

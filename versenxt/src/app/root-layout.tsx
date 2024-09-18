@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
+
 import {cn} from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'Versetta',

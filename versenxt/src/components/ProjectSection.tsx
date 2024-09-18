@@ -156,6 +156,10 @@ export default function ProjectSection() {
     }
   };
 
+  const handleAddAllStages = () => {
+    setSelectedStages([...new Set([...selectedStages, ...availableStages])]);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -294,6 +298,8 @@ export default function ProjectSection() {
                   onChange={(e) => setNewStage(e.target.value)}
                 />
                 <Button onClick={handleAddNewStage}>Add</Button>
+                <Button onClick={handleAddAllStages}>Add All</Button>
+
               </div>
             </div>
             <DialogFooter>

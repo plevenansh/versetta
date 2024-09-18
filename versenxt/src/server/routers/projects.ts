@@ -437,5 +437,50 @@ export const projectRouter = router({
       throw new Error('Failed to fetch projects for calendar');
     }
   }),
+
+  getActiveProjectsCount: publicProcedure
+  .input(z.number())
+  .query(async ({ input: teamId }) => {
+    const count = await prisma.project.count({
+      where: {
+        teamId,
+        status: 'active',
+        completed: false
+      }
+    });
+    return count;
+  }),
+
+getNextProjectProgress: publicProcedure
+  .input(z.number())
+  .query(async ({ input: teamId }) => {
+    const nextProject = await prisma.project.findFirst({
+      where: {
+        teamId,
+        status: 'active',
+        completed: false
+      },
+      orderBy: {
+        endDate: 'asc'
+      },
+      include: {
+        stages: true
+      }
+    });
+
+    if (!nextProject) {
+      return null;
+    }
+
+    const totalStages = nextProject.stages.length;
+    const completedStages = nextProject.stages.filter(stage => stage.completed).length;
+    const progress = totalStages > 0 ? (completedStages / totalStages) * 100 : 0;
+
+    return {
+      projectId: nextProject.id,
+      title: nextProject.title,
+      progress: Math.round(progress)
+    };
+  }),
   
 });

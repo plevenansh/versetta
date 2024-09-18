@@ -2,18 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Cross } from 'lucide-react'; // Replace X with Cross
+import { Cross } from 'lucide-react';
 import ProjectSection from './ProjectSection';
 import TaskList from './TaskList';
 import { trpc } from '@/trpc/client';
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import CalendarComponent from './Calendar';
+
 interface User {
   id: number;
   workOsUserId: string;
   teams: any[];
-  // Add other user properties as needed
 }
 
 export default function Dashboard() {
@@ -47,13 +47,17 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
-  // useEffect(() => {
-  //   if(!user) {
-  //     router.push('/');
-  //   }
-  //  }, [user]);
-
   const { data: userTeams } = trpc.teams.getUserTeams.useQuery({ workOsUserId: user?.workOsUserId || '' });
+  
+  const teamId = userTeams && userTeams.length > 0 ? userTeams[0].id : undefined;
+
+  const { data: activeProjectsCount } = trpc.projects.getActiveProjectsCount.useQuery(teamId || 0, {
+    enabled: !!teamId
+  });
+
+  const { data: nextProjectProgress } = trpc.projects.getNextProjectProgress.useQuery(teamId || 0, {
+    enabled: !!teamId
+  });
 
   const handleCreateTeam = () => {
     router.push('/teams');
@@ -77,11 +81,10 @@ export default function Dashboard() {
 
   return (
     <div className="p-0 space-y-6">
-     {showTeamPopup && (
+      {showTeamPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-lg relative">
-         
-          <h2 className="text-xl font-bold mb-4">Create Your First Team</h2>
+          <div className="bg-white p-6 rounded-lg shadow-lg relative">
+            <h2 className="text-xl font-bold mb-4">Create Your First Team</h2>
             <p className="mb-4">You don&#39;t have any teams yet. Create one to get started!</p>
             <div className="flex justify-between">
               <Button onClick={handleCreateTeam}>Create a Team</Button>
@@ -97,29 +100,29 @@ export default function Dashboard() {
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Videos in Production</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">12</div>
-            <p className="text-sm text-gray-500">+2 from last week</p>
+            <div className="text-3xl font-bold">{activeProjectsCount || 0}</div>
+            <p className="text-sm text-gray-500">Active projects</p>
           </CardContent>
         </Card>
         <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
-    <CardHeader className="pb-2">
-      <CardTitle className="text-2xl font-bold text-[#2f66dd]">Views on Last Video</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="text-3xl font-bold">54,231</div>
-      <p className="text-sm text-gray-500">+20% from last video</p>
-    </CardContent>
-  </Card>
-
-  <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
-    <CardHeader className="pb-2">
-      <CardTitle className="text-2xl font-bold text-[#2f66dd]">Next Project Progress</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="text-3xl font-bold">68%</div>
-      <Progress value={68} className="mt-2 h-2 bg-gray-200 progress-pink"  />
-    </CardContent>
-  </Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl font-bold text-[#2f66dd]">Views on Last Video</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">54,231</div>
+            <p className="text-sm text-gray-500">+20% from last video</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl font-bold text-[#2f66dd]">Next Project Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{nextProjectProgress?.progress || 0}%</div>
+            <Progress value={nextProjectProgress?.progress || 0} className="mt-2 h-2 bg-gray-200 progress-pink" />
+            <p className="text-sm text-gray-500 mt-2">{nextProjectProgress?.title || 'No active projects'}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

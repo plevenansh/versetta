@@ -94,33 +94,107 @@ export const teamRouter = router({
   }),
 
 
-    initiateTeamCreation: publicProcedure
-  .input(z.object({
-    name: z.string(),
-    description: z.string().optional(),
-    workOsUserId: z.string(),
-    paymentProvider: z.enum(['razorpay', 'polar']),
-  }))
-  .mutation(async ({ input }) => {
-    const user = await prisma.user.findUnique({
-      where: { workOsUserId: input.workOsUserId },
-    });
+  //   initiateTeamCreation: publicProcedure
+  // .input(z.object({
+  //   name: z.string(),
+  //   description: z.string().optional(),
+  //   workOsUserId: z.string(),
+  //   paymentProvider: z.enum(['razorpay', 'polar']),
+  // }))
+  // .mutation(async ({ input }) => {
+  //   const user = await prisma.user.findUnique({
+  //     where: { workOsUserId: input.workOsUserId },
+  //   });
 
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
+  //   if (!user) {
+  //     throw new TRPCError({
+  //       code: 'NOT_FOUND',
+  //       message: 'User not found',
+  //     });
+  //   }
+
+  //   // Create WorkOS organization
+  //   const workOsOrg = await workos.organizations.createOrganization({
+  //     name: input.name,
+  //   });
+  //   console.log('workOsOrg', workOsOrg);
+
+
+  //    const team = await prisma.team.create({
+  //       data: {
+  //         name: input.name,
+  //         description: input.description,
+  //         creatorId: user.id,
+  //         workOsOrgId: workOsOrg.id,
+  //         members: {
+  //           create: {
+  //             userId: user.id,
+  //             role: 'admin',
+  //           },
+  //         },
+  //       },
+  //     });
+
+      
+  //   console.log('team', team);
+
+  //   // Initiate payment based on provider
+  //   if (input.paymentProvider === 'razorpay') {
+  //     const subscription = await razorpay.subscriptions.create({
+  //       plan_id: "plan_Otr2kSSAMC9lc2",
+  //       customer_notify: 1,
+  //       total_count: 60, // 5 year subscription
+  //       notes: {
+  //         team_id: team.id.toString(),
+  //       },
+  //     });
+
+  //     // Create subscription record in database
+  //     await prisma.subscription.create({
+  //       data: {
+  //         teamId: team.id,
+  //         teamName: team.name,
+  //         status: 'pending',
+  //         provider: 'razorpay',
+  //         providerId: subscription.id,
+  //         subActive: false,
+  //         creatorId: user.id,
+  //       },
+  //     });
+
+  //     return { teamId: team.id, subscriptionId: subscription.id };
+  //   } else {
+  //     // Implement Polar subscription creation
+  //     // This is a placeholder for Polar implementation
+  //     throw new TRPCError({
+  //       code: 'NOT_IMPLEMENTED',
+  //       message: 'Polar payment not implemented yet',
+  //     });
+  //   }
+  // }),
+
+  initiateTeamCreation: publicProcedure
+    .input(z.object({
+      name: z.string(),
+      description: z.string().optional(),
+      workOsUserId: z.string(),
+      subscriptionType: z.enum(['razorpay', 'polar', 'invite']),
+    }))
+    .mutation(async ({ input }) => {
+      const user = await prisma.user.findUnique({
+        where: { workOsUserId: input.workOsUserId },
       });
-    }
+      console.log('user', user);
 
-    // Create WorkOS organization
-    const workOsOrg = await workos.organizations.createOrganization({
-      name: input.name,
-    });
-    console.log('workOsOrg', workOsOrg);
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
 
+      const workOsOrg = await workos.organizations.createOrganization({
+        name: input.name,
+      });
 
-     const team = await prisma.team.create({
+      const team = await prisma.team.create({
         data: {
           name: input.name,
           description: input.description,
@@ -135,43 +209,42 @@ export const teamRouter = router({
         },
       });
 
-      
-    console.log('team', team);
+      if (input.subscriptionType === 'invite') {
+        await prisma.subscription.create({
+          data: {
+            teamId: team.id,
+            teamName: team.name,
+            status: 'active',
+            type: 'invite',
+            subActive: true,
+            creatorId: user.id,
+          },
+        });
+        return { teamId: team.id };
+      } else {
+        const subscription = await razorpay.subscriptions.create({
+          plan_id: "plan_Otr2kSSAMC9lc2",
+          customer_notify: 1,
+          total_count: 60,
+          notes: { team_id: team.id.toString() },
+        });
 
-    // Initiate payment based on provider
-    if (input.paymentProvider === 'razorpay') {
-      const subscription = await razorpay.subscriptions.create({
-        plan_id: "plan_Otr2kSSAMC9lc2",
-        customer_notify: 1,
-        total_count: 60, // 5 year subscription
-        notes: {
-          team_id: team.id.toString(),
-        },
-      });
+        await prisma.subscription.create({
+          data: {
+            teamId: team.id,
+            teamName: team.name,
+            status: 'pending',
+            type: 'paid',
+            provider: input.subscriptionType,
+            providerId: subscription.id,
+            subActive: false,
+            creatorId: user.id,
+          },
+        });
 
-      // Create subscription record in database
-      await prisma.subscription.create({
-        data: {
-          teamId: team.id,
-          teamName: team.name,
-          status: 'pending',
-          provider: 'razorpay',
-          providerId: subscription.id,
-          subActive: false,
-          creatorId: user.id,
-        },
-      });
-
-      return { teamId: team.id, subscriptionId: subscription.id };
-    } else {
-      // Implement Polar subscription creation
-      // This is a placeholder for Polar implementation
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Polar payment not implemented yet',
-      });
-    }
-  }),
+        return { teamId: team.id, subscriptionId: subscription.id };
+      }
+    }),
 
   completeTeamCreation: publicProcedure
   .input(z.object({
@@ -255,36 +328,35 @@ export const teamRouter = router({
 
   
   addTeamMember: publicProcedure
-    .input(
-      z.object({
-        teamId: z.number(),
-        email: z.string().email(),
-        role: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const team = await prisma.team.findUnique({
-        where: { id: input.teamId },
+  .input(
+    z.object({
+      teamId: z.number(),
+      email: z.string().email(),
+      role: z.string(),
+    })
+  )
+  .mutation(async ({ input }) => {
+    const team = await prisma.team.findUnique({
+      where: { id: input.teamId },
+    });
+
+    if (!team) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Team not found',
       });
+    }
 
-      if (!team) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Team not found',
-        });
-      }
+    const user = await prisma.user.findUnique({
+      where: { email: input.email },
+    });
 
-      const user = await prisma.user.findUnique({
-        where: { email: input.email },
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found. Please ask them to sign up on Versetta before adding them to the team.',
       });
-
-      if (!user) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found. Make sure the user has signed up on VERSET.',
-        });
-      }
-
+    }
       // Check if the user is already a member of the team
       const existingMember = await prisma.teamMember.findUnique({
         where: {

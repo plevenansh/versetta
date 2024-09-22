@@ -92,10 +92,26 @@ model Project {
   team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   stages        ProjectStage[]
   tasks         Task[]
+  concept       String?
+  keyPoints     KeyPoint[]
+  references    Reference[]
+  inspirations  Inspiration[]
+  script        String?
+  keywords      Keyword[]
+  equipment     Equipment[]
+  storyboard    StoryboardFrame[]
+  filmingSchedule FilmingSession[]
+  bRollIdeas    BRollIdea[]
+  shotList      Shot[]
+  productionNotes String?
+  videoAssets   VideoAsset[]
+  thumbnails    Thumbnail[]
+  publishDetails PublishDetails?
 
   @@index([teamId])
   @@index([creatorId])
 }
+
 
 model ProjectStage {
   id        Int     @id @default(autoincrement())
@@ -131,4 +147,124 @@ model Task {
   @@index([projectId])
   @@index([creatorId])
   @@index([assigneeId])
+}
+
+
+model KeyPoint {
+  id        Int     @id @default(autoincrement())
+  content   String
+  completed Boolean @default(false)
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Reference {
+  id        Int     @id @default(autoincrement())
+  title     String
+  link      String?
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Inspiration {
+  id        Int     @id @default(autoincrement())
+  imageUrl  String
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Keyword {
+  id        Int     @id @default(autoincrement())
+  word      String
+  volume    String?
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Equipment {
+  id        Int     @id @default(autoincrement())
+  name      String
+  checked   Boolean @default(false)
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model StoryboardFrame {
+  id        Int     @id @default(autoincrement())
+  imageUrl  String
+  scene     Int
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model FilmingSession {
+  id        Int      @id @default(autoincrement())
+  scene     String
+  time      String
+  location  String
+  projectId Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model BRollIdea {
+  id        Int     @id @default(autoincrement())
+  idea      String
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Shot {
+  id        Int     @id @default(autoincrement())
+  description String
+  completed Boolean @default(false)
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model VideoAsset {
+  id        Int     @id @default(autoincrement())
+  title     String
+  url       String
+  type      String  // e.g., "raw", "edited", "final"
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Thumbnail {
+  id        Int     @id @default(autoincrement())
+  imageUrl  String
+  selected  Boolean @default(false)
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model PublishDetails {
+  id            Int      @id @default(autoincrement())
+  publishDate   DateTime?
+  platform      String?
+  status        String   @default("draft") // "draft", "scheduled", "published"
+  projectId     Int      @unique
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

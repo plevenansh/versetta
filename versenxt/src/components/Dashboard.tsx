@@ -95,7 +95,7 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Videos in Production</CardTitle>
           </CardHeader>
@@ -104,7 +104,7 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500">Active projects</p>
           </CardContent>
         </Card>
-        <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Views on Last Video</CardTitle>
           </CardHeader>
@@ -113,19 +113,19 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500">+20% from last video</p>
           </CardContent>
         </Card>
-        <Card className="bg-[#F0F8FF] rounded-2xl shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Next Project Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{nextProjectProgress?.progress || 0}%</div>
-            <Progress value={nextProjectProgress?.progress || 0} className="mt-2 h-2 bg-gray-200 progress-pink" />
+            <Progress value={nextProjectProgress?.progress || 0} className="mt-2 h-2 bg-gray-200 progress-grey" />
             <p className="text-sm text-gray-500 mt-2">{nextProjectProgress?.title || 'No active projects'}</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 space-y-6">
           <ProjectSection />
         </div>

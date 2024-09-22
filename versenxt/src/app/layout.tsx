@@ -5,19 +5,13 @@ import '../styles/globals.css';
 import RootLayoutServer from './root-layout';
 import Layout from '@/components/Layout';
 import { usePathname } from 'next/navigation';
-import { Manrope } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 interface RootLayoutProps {
   children: ReactNode;
 }
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-manrope',
-})
 
 function RootLayout({ children }: RootLayoutProps) {
   const pathname = usePathname();
@@ -27,8 +21,8 @@ function RootLayout({ children }: RootLayoutProps) {
 
   return (
     <RootLayoutServer>
-      <html lang="en" className={`${manrope.variable}`}>
-        <body>
+      <html lang="en" className={GeistSans.variable}>
+        <body className={GeistSans.className}>
           {shouldExcludeLayout ? children : <Layout>{children}</Layout>}
           <SpeedInsights/>
           <Analytics/>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, SquareCheck, Folder, Database, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { Home, SquareCheck,Video, CalendarDays,Film, NotebookPen, Folder,Tv, GalleryThumbnails,Database, NotepadTextDashed ,MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
 
@@ -16,12 +16,20 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const menuItems = [
     { href: '/dashboard', icon: Home, label: 'Home' },
-    { href: '/projects', icon: Folder, label: 'Projects' },
+    { href: '/projects', icon: Folder, label: 'Videos' },
     { href: '/tasks', icon: SquareCheck, label: 'Tasks' },
     { href: '/comments', icon: MessageSquare, label: 'Comments' },
     { href: '/storage', icon: Database, label: 'Storage' },
     { href: '/production', icon: Clapperboard, label: 'Production' },
     { href: '/analyzer', icon: BarChart2, label: 'Analyzer' },
+    { href: '/storage', icon: NotepadTextDashed, label: 'Script' },
+    { href: '/production', icon: GalleryThumbnails, label: 'Thumbnail' },
+    { href: '/', icon: Tv, label: 'Platforms' },
+    { href: '/storage', icon: CalendarDays, label: 'Calendar' },
+    { href: '/analyzer', icon: Film, label: 'Editing' },
+    { href: '/production', icon: NotebookPen, label: 'Production Notes' },
+    { href: '/production', icon: Video, label: 'Shooting' },
+    
   ];
 
   return (

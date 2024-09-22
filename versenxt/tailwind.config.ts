@@ -59,20 +59,28 @@ const config = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+		
   	
 		fontFamily: {
-			sans: ['var(--font-manrope)', ...fontFamily.sans],
+			'australia': ['Australia', 'sans-serif'],
+			'avantgarde': ['AvantGarde', 'sans-serif'],
+			//sans: ['var(--font-manrope)', ...fontFamily.sans],
+			
+			sans: ['var(--font-geist-sans)'],
 			heading: ['var(--font-manrope)', ...fontFamily.sans],
 			body: ['var(--font-manrope)', ...fontFamily.sans],
 		  },
 		  fontSize: {
-				  '6xl': '6rem',
-				  '8xl': '6rem',
-				  '9xl': '7rem',
-				  'xl': '1.25rem',
-				  
-				  // Add more custom sizes as needed
-				},
+			'xl': '1.25rem',     // 20px
+			'2xl': '1.5rem',     // 24px
+			'3xl': '1.875rem',   // 30px
+			'4xl': '2.25rem',    // 36px
+			'5xl': '3rem',       // 48px
+			'6xl': '3.75rem',    // 60px
+			'7xl': '4.5rem',     // 72px
+			'8xl': '6rem',       // 96px
+			'9xl': '8rem',       // 128px
+		  },
   		keyframes: {
 			'accordion-down': {
 			  from: {

@@ -311,7 +311,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </Button>
-            <Link href={`/projects/${project.id}/${slugify(project.title)}`}>
+            <Link href={`/videos/${project.id}/${slugify(project.title)}`}>
               <Button variant="outline" className="justify-between">
                 Expand
               </Button>

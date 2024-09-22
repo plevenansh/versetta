@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,9 +6,81 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
+import { trpc } from '@/trpc/client';
 
-export default function Production() {
+export default function Production({ project }) {
+  const [newFilmingSession, setNewFilmingSession] = useState({ scene: '', time: '', location: '' })
+  const [newBRollIdea, setNewBRollIdea] = useState('')
+  const [newShot, setNewShot] = useState('')
+  const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
+
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
+  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
+  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation()
+  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation()
+  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation()
+  const addShot = trpc.projectPage.addShot.useMutation()
+  const updateShot = trpc.projectPage.updateShot.useMutation()
+  const deleteShot = trpc.projectPage.deleteShot.useMutation()
+
+  const handleProductionNotesChange = async (notes) => {
+    setProductionNotes(notes)
+    await updateProject.mutateAsync({
+      id: project.id,
+      productionNotes: notes,
+    })
+  }
+
+  const handleAddFilmingSession = async () => {
+    if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
+      await addFilmingSession.mutateAsync({
+        projectId: project.id,
+        ...newFilmingSession,
+      })
+      setNewFilmingSession({ scene: '', time: '', location: '' })
+    }
+  }
+
+  const handleDeleteFilmingSession = async (id) => {
+    await deleteFilmingSession.mutateAsync(id)
+  }
+
+  const handleAddBRollIdea = async () => {
+    if (newBRollIdea.trim()) {
+      await addBRollIdea.mutateAsync({
+        projectId: project.id,
+        idea: newBRollIdea,
+      })
+      setNewBRollIdea('')
+    }
+  }
+
+  const handleDeleteBRollIdea = async (id) => {
+    await deleteBRollIdea.mutateAsync(id)
+  }
+
+  const handleAddShot = async () => {
+    if (newShot.trim()) {
+      await addShot.mutateAsync({
+        projectId: project.id,
+        description: newShot,
+      })
+      setNewShot('')
+    }
+  }
+
+  const handleUpdateShot = async (id, completed) => {
+    await updateShot.mutateAsync({
+      id,
+      completed,
+    })
+  }
+
+  const handleDeleteShot = async (id) => {
+    await deleteShot.mutateAsync(id)
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -16,109 +88,112 @@ export default function Production() {
           <CardTitle>Filming Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-            <div className="space-y-4">
-              {[
-                { scene: "Introduction", time: "9:00 AM - 10:00 AM", location: "Home Kitchen" },
-                { scene: "Choosing Coffee Beans", time: "10:15 AM - 11:15 AM", location: "Local Coffee Shop" },
-                { scene: "Grinding Process", time: "11:30 AM - 12:30 PM", location: "Home Kitchen" },
-                { scene: "Brewing Techniques", time: "2:00 PM - 3:30 PM", location: "Home Kitchen" },
-                { scene: "Tasting and Conclusion", time: "3:45 PM - 4:45 PM", location: "Living Room" }
-              ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Badge variant="outline">{`Scene ${index + 1}`}</Badge>
-                    <span>{item.scene}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">{item.time}</p>
-                    <p className="text-xs text-muted-foreground">{item.location}</p>
-                  </div>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.filmingSchedule.map((session) => (
+              <div key={session.id} className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-medium">{session.scene}</p>
+                  <p className="text-sm text-muted-foreground">{session.time} - {session.location}</p>
                 </div>
-              ))}
-            </div>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteFilmingSession(session.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </ScrollArea>
-          <Button className="w-full mt-4">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Filming Session
-          </Button>
+          <div className="flex flex-col space-y-2 mt-4">
+            <Input 
+              placeholder="Scene" 
+              value={newFilmingSession.scene}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, scene: e.target.value})}
+            />
+            <Input 
+              placeholder="Time" 
+              value={newFilmingSession.time}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, time: e.target.value})}
+            />
+            <Input 
+              placeholder="Location" 
+              value={newFilmingSession.location}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, location: e.target.value})}
+            />
+            <Button onClick={handleAddFilmingSession}>Add Filming Session</Button>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>B-Roll Ideas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-              <div className="space-y-2">
-                {[
-                  "Close-up of coffee beans",
-                  "Steam rising from freshly brewed coffee",
-                  "Slow-motion coffee pour",
-                  "Time-lapse of coffee brewing process",
-                  "Various coffee preparation tools",
-                  "Latte art creation",
-                  "Coffee farm scenery",
-                  "Roasting process",
-                  "Cupping session",
-                  "Barista techniques"
-                ].map((idea, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span>{idea}</span>
-                    <Button variant="ghost" size="sm">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+      <Card>
+        <CardHeader>
+          <CardTitle>B-Roll Ideas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.bRollIdeas.map((idea) => (
+              <div key={idea.id} className="flex items-center justify-between mb-2">
+                <p>{idea.idea}</p>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </ScrollArea>
-            <div className="flex items-center mt-4">
-              <Input placeholder="Add new B-roll idea" className="flex-1 mr-2" />
-              <Button>Add</Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Shot List</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-              <div className="space-y-2">
-                {[
-                  "Wide shot of kitchen setup",
-                  "Medium shot of coffee grinder in action",
-                  "Close-up of water being poured over coffee grounds",
-                  "Over-the-shoulder shot of barista preparing coffee",
-                  "Extreme close-up of coffee dripping into cup",
-                  "Tracking shot following steam from cup",
-                  "Low angle shot of coffee being stirred",
-                  "High angle shot of completed coffee presentation"
-                ].map((shot, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Checkbox id={`shot-${index}`} />
-                    <label htmlFor={`shot-${index}`} className="text-sm">{shot}</label>
-                  </div>
-                ))}
+            ))}
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Add new B-roll idea" 
+              value={newBRollIdea}
+              onChange={(e) => setNewBRollIdea(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddBRollIdea}>Add</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Shot List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.shotList.map((shot) => (
+              <div key={shot.id} className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Checkbox 
+                    id={`shot-${shot.id}`}
+                    checked={shot.completed}
+                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked)}
+                  />
+                  <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(shot.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </ScrollArea>
-            <div className="flex items-center mt-4">
-              <Input placeholder="Add new shot" className="flex-1 mr-2" />
-              <Button>Add</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Add new shot" 
+              value={newShot}
+              onChange={(e) => setNewShot(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddShot}>Add</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Production Notes</CardTitle>
         </CardHeader>
         <CardContent>
-          <Textarea placeholder="Add any production notes, reminders, or special instructions here..." className="min-h-[150px]" />
-          <Button className="w-full mt-4">Save Notes</Button>
+          <Textarea 
+            placeholder="Add any production notes, reminders, or special instructions here..." 
+            value={productionNotes}
+            onChange={(e) => handleProductionNotesChange(e.target.value)}
+            className="min-h-[150px]"
+          />
         </CardContent>
       </Card>
     </div>

@@ -7,9 +7,35 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Plus, X } from 'lucide-react'
-import { trpc } from '@/trpc/client';
+import { trpc } from '@/trpc/client'
 
-export default function Production({ project }) {
+interface FilmingSession {
+  id: number
+  scene: string
+  time: string
+  location: string
+}
+
+interface BRollIdea {
+  id: number
+  idea: string
+}
+
+interface Shot {
+  id: number
+  description: string
+  completed: boolean
+}
+
+interface Project {
+  id: number
+  productionNotes: string
+  filmingSchedule: FilmingSession[]
+  bRollIdeas: BRollIdea[]
+  shotList: Shot[]
+}
+
+export default function Production({ project }: { project: Project }) {
   const [newFilmingSession, setNewFilmingSession] = useState({ scene: '', time: '', location: '' })
   const [newBRollIdea, setNewBRollIdea] = useState('')
   const [newShot, setNewShot] = useState('')
@@ -24,7 +50,7 @@ export default function Production({ project }) {
   const updateShot = trpc.projectPage.updateShot.useMutation()
   const deleteShot = trpc.projectPage.deleteShot.useMutation()
 
-  const handleProductionNotesChange = async (notes) => {
+  const handleProductionNotesChange = async (notes: string) => {
     setProductionNotes(notes)
     await updateProject.mutateAsync({
       id: project.id,
@@ -42,7 +68,7 @@ export default function Production({ project }) {
     }
   }
 
-  const handleDeleteFilmingSession = async (id) => {
+  const handleDeleteFilmingSession = async (id: number) => {
     await deleteFilmingSession.mutateAsync(id)
   }
 
@@ -56,7 +82,7 @@ export default function Production({ project }) {
     }
   }
 
-  const handleDeleteBRollIdea = async (id) => {
+  const handleDeleteBRollIdea = async (id: number) => {
     await deleteBRollIdea.mutateAsync(id)
   }
 
@@ -70,14 +96,14 @@ export default function Production({ project }) {
     }
   }
 
-  const handleUpdateShot = async (id, completed) => {
+  const handleUpdateShot = async (id: number, completed: boolean) => {
     await updateShot.mutateAsync({
       id,
       completed,
     })
   }
 
-  const handleDeleteShot = async (id) => {
+  const handleDeleteShot = async (id: number) => {
     await deleteShot.mutateAsync(id)
   }
 
@@ -89,7 +115,7 @@ export default function Production({ project }) {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.filmingSchedule.map((session) => (
+            {project.filmingSchedule.map((session: FilmingSession) => (
               <div key={session.id} className="flex items-center justify-between mb-2">
                 <div>
                   <p className="font-medium">{session.scene}</p>
@@ -128,7 +154,7 @@ export default function Production({ project }) {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.bRollIdeas.map((idea) => (
+            {project.bRollIdeas.map((idea: BRollIdea) => (
               <div key={idea.id} className="flex items-center justify-between mb-2">
                 <p>{idea.idea}</p>
                 <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
@@ -155,13 +181,13 @@ export default function Production({ project }) {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.shotList.map((shot) => (
+            {project.shotList.map((shot: Shot) => (
               <div key={shot.id} className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                   <Checkbox 
                     id={`shot-${shot.id}`}
                     checked={shot.completed}
-                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked)}
+                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked as boolean)}
                   />
                   <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
                 </div>

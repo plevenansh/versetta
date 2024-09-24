@@ -3,6 +3,7 @@
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export const projectPageRouter = router({
   getProjectDetails: publicProcedure
@@ -296,7 +297,8 @@ export const projectPageRouter = router({
         data: input,
       });
     }),
-    updateThumbnail: publicProcedure
+
+  updateThumbnail: publicProcedure
     .input(z.object({
       id: z.number(),
       selected: z.boolean(),
@@ -353,11 +355,20 @@ export const projectPageRouter = router({
       description: z.string().optional(),
       assigneeId: z.number().optional(),
       dueDate: z.string().optional(),
+      teamId: z.number(),
+      creatorId: z.number(),
     }))
     .mutation(async ({ input }) => {
-      return prisma.task.create({
-        data: input,
-      });
+      const { dueDate, ...restInput } = input;
+      const data: Prisma.TaskCreateInput = {
+        ...restInput,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        project: { connect: { id: input.projectId } },
+        team: { connect: { id: input.teamId } },
+        creator: { connect: { id: input.creatorId } },
+        assignee: input.assigneeId ? { connect: { id: input.assigneeId } } : undefined,
+      };
+      return prisma.task.create({ data });
     }),
 
   updateTask: publicProcedure
@@ -370,10 +381,15 @@ export const projectPageRouter = router({
       dueDate: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
-      const { id, ...updateData } = input;
+      const { id, dueDate, assigneeId, ...updateData } = input;
+      const data: Prisma.TaskUpdateInput = {
+        ...updateData,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        assignee: assigneeId ? { connect: { id: assigneeId } } : undefined,
+      };
       return prisma.task.update({
         where: { id },
-        data: updateData,
+        data,
       });
     }),
 

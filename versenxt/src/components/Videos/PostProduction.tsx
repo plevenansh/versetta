@@ -5,193 +5,190 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Plus, X } from 'lucide-react'
-import { trpc } from '@/trpc/client';
+import { Upload, X } from 'lucide-react'
+import { trpc } from '@/trpc/client'
+import Image from 'next/image'
 
-export default function Production({ project }) {
-  const [newFilmingSession, setNewFilmingSession] = useState({ scene: '', time: '', location: '' })
-  const [newBRollIdea, setNewBRollIdea] = useState('')
-  const [newShot, setNewShot] = useState('')
-  const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
+interface Project {
+  id: number;
+  videoAssets: VideoAsset[];
+  thumbnails: Thumbnail[];
+}
 
+interface VideoAsset {
+  id: number;
+  title: string;
+  url: string;
+  type: string;
+}
+
+interface Thumbnail {
+  id: number;
+  imageUrl: string;
+  selected: boolean;
+}
+
+interface NewVideoAsset {
+  title: string;
+  url: string;
+  type: string;
+}
+
+interface NewThumbnail {
+  imageUrl: string;
+}
+
+export default function PostProduction({ project }: { project: Project }) {
+  const [newVideoAsset, setNewVideoAsset] = useState<NewVideoAsset>({ title: '', url: '', type: '' })
+  const [newThumbnail, setNewThumbnail] = useState<NewThumbnail>({ imageUrl: '' })
+  const [feedback, setFeedback] = useState('')
+
+  const addVideoAsset = trpc.projectPage.addVideoAsset.useMutation()
+  const deleteVideoAsset = trpc.projectPage.deleteVideoAsset.useMutation()
+  const addThumbnail = trpc.projectPage.addThumbnail.useMutation()
+  const updateThumbnail = trpc.projectPage.updateThumbnail.useMutation()
+  const deleteThumbnail = trpc.projectPage.deleteThumbnail.useMutation()
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
-  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
-  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation()
-  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation()
-  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation()
-  const addShot = trpc.projectPage.addShot.useMutation()
-  const updateShot = trpc.projectPage.updateShot.useMutation()
-  const deleteShot = trpc.projectPage.deleteShot.useMutation()
 
-  const handleProductionNotesChange = async (notes) => {
-    setProductionNotes(notes)
+  const handleAddVideoAsset = async () => {
+    if (newVideoAsset.title.trim() && newVideoAsset.url.trim() && newVideoAsset.type.trim()) {
+      await addVideoAsset.mutateAsync({
+        projectId: project.id,
+        ...newVideoAsset,
+      })
+      setNewVideoAsset({ title: '', url: '', type: '' })
+    }
+  }
+
+  const handleDeleteVideoAsset = async (id: number) => {
+    await deleteVideoAsset.mutateAsync(id)
+  }
+
+  const handleAddThumbnail = async () => {
+    if (newThumbnail.imageUrl.trim()) {
+      await addThumbnail.mutateAsync({
+        projectId: project.id,
+        ...newThumbnail,
+      })
+      setNewThumbnail({ imageUrl: '' })
+    }
+  }
+
+  const handleUpdateThumbnail = async (id: number, selected: boolean) => {
+    await updateThumbnail.mutateAsync({
+      id,
+      selected,
+    })
+  }
+
+  const handleDeleteThumbnail = async (id: number) => {
+    await deleteThumbnail.mutateAsync(id)
+  }
+
+  const handleFeedbackChange = async (newFeedback: string) => {
+    setFeedback(newFeedback)
     await updateProject.mutateAsync({
       id: project.id,
-      productionNotes: notes,
+      productionNotes: newFeedback, // Assuming 'productionNotes' is the correct field for feedback
     })
-  }
-
-  const handleAddFilmingSession = async () => {
-    if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
-      await addFilmingSession.mutateAsync({
-        projectId: project.id,
-        ...newFilmingSession,
-      })
-      setNewFilmingSession({ scene: '', time: '', location: '' })
-    }
-  }
-
-  const handleDeleteFilmingSession = async (id) => {
-    await deleteFilmingSession.mutateAsync(id)
-  }
-
-  const handleAddBRollIdea = async () => {
-    if (newBRollIdea.trim()) {
-      await addBRollIdea.mutateAsync({
-        projectId: project.id,
-        idea: newBRollIdea,
-      })
-      setNewBRollIdea('')
-    }
-  }
-
-  const handleDeleteBRollIdea = async (id) => {
-    await deleteBRollIdea.mutateAsync(id)
-  }
-
-  const handleAddShot = async () => {
-    if (newShot.trim()) {
-      await addShot.mutateAsync({
-        projectId: project.id,
-        description: newShot,
-      })
-      setNewShot('')
-    }
-  }
-
-  const handleUpdateShot = async (id, completed) => {
-    await updateShot.mutateAsync({
-      id,
-      completed,
-    })
-  }
-
-  const handleDeleteShot = async (id) => {
-    await deleteShot.mutateAsync(id)
   }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Filming Schedule</CardTitle>
+          <CardTitle>Video Assets</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.filmingSchedule.map((session) => (
-              <div key={session.id} className="flex items-center justify-between mb-2">
+            {project.videoAssets.map((asset) => (
+              <div key={asset.id} className="flex items-center justify-between mb-2">
                 <div>
-                  <p className="font-medium">{session.scene}</p>
-                  <p className="text-sm text-muted-foreground">{session.time} - {session.location}</p>
+                  <p className="font-medium">{asset.title}</p>
+                  <p className="text-sm text-muted-foreground">{asset.type}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteFilmingSession(session.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteVideoAsset(asset.id)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </ScrollArea>
           <div className="flex flex-col space-y-2 mt-4">
             <Input 
-              placeholder="Scene" 
-              value={newFilmingSession.scene}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, scene: e.target.value})}
+              placeholder="Asset Title" 
+              value={newVideoAsset.title}
+              onChange={(e) => setNewVideoAsset({...newVideoAsset, title: e.target.value})}
             />
             <Input 
-              placeholder="Time" 
-              value={newFilmingSession.time}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, time: e.target.value})}
+              placeholder="Asset URL" 
+              value={newVideoAsset.url}
+              onChange={(e) => setNewVideoAsset({...newVideoAsset, url: e.target.value})}
             />
             <Input 
-              placeholder="Location" 
-              value={newFilmingSession.location}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, location: e.target.value})}
+              placeholder="Asset Type (e.g., raw, edited, final)" 
+              value={newVideoAsset.type}
+              onChange={(e) => setNewVideoAsset({...newVideoAsset, type: e.target.value})}
             />
-            <Button onClick={handleAddFilmingSession}>Add Filming Session</Button>
+            <Button onClick={handleAddVideoAsset}>Add Video Asset</Button>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>B-Roll Ideas</CardTitle>
+          <CardTitle>Thumbnails</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.bRollIdeas.map((idea) => (
-              <div key={idea.id} className="flex items-center justify-between mb-2">
-                <p>{idea.idea}</p>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Add new B-roll idea" 
-              value={newBRollIdea}
-              onChange={(e) => setNewBRollIdea(e.target.value)}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddBRollIdea}>Add</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Shot List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.shotList.map((shot) => (
-              <div key={shot.id} className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {project.thumbnails.map((thumbnail) => (
+              <div key={thumbnail.id} className="relative">
+                <Image 
+                  src={thumbnail.imageUrl} 
+                  alt="Thumbnail" 
+                  width={200} 
+                  height={150} 
+                  layout="responsive"
+                  className="rounded"
+                />
+                <div className="absolute top-2 right-2 space-x-2">
                   <Checkbox 
-                    id={`shot-${shot.id}`}
-                    checked={shot.completed}
-                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked)}
+                    checked={thumbnail.selected}
+                    onCheckedChange={(checked) => handleUpdateThumbnail(thumbnail.id, checked as boolean)}
                   />
-                  <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
+                  <Button variant="destructive" size="sm" onClick={() => handleDeleteThumbnail(thumbnail.id)}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(shot.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
             ))}
-          </ScrollArea>
+          </div>
           <div className="flex items-center mt-4">
             <Input 
-              placeholder="Add new shot" 
-              value={newShot}
-              onChange={(e) => setNewShot(e.target.value)}
+              placeholder="Thumbnail Image URL" 
+              value={newThumbnail.imageUrl}
+              onChange={(e) => setNewThumbnail({...newThumbnail, imageUrl: e.target.value})}
               className="flex-1 mr-2"
             />
-            <Button onClick={handleAddShot}>Add</Button>
+            <Button onClick={handleAddThumbnail}>Add Thumbnail</Button>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Production Notes</CardTitle>
+          <CardTitle>Feedback and Revisions</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea 
-            placeholder="Add any production notes, reminders, or special instructions here..." 
-            value={productionNotes}
-            onChange={(e) => handleProductionNotesChange(e.target.value)}
+            placeholder="Add feedback or revision notes here..." 
+            value={feedback}
+            onChange={(e) => handleFeedbackChange(e.target.value)}
             className="min-h-[150px]"
           />
         </CardContent>

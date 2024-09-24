@@ -5,12 +5,34 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { Plus, X, ImageIcon } from 'lucide-react'
-import { trpc } from '@/trpc/client';
-//import { trpc } from '@/utils/trpc'
+import { trpc } from '@/trpc/client'
+import Image from 'next/image'
 
-export default function PreProduction({ project }) {
+interface Equipment {
+  id: number;
+  name: string;
+  checked: boolean;
+}
+
+interface StoryboardFrame {
+  id: number;
+  imageUrl: string;
+  scene: number;
+}
+
+interface Project {
+  id: number;
+  script: string;
+  equipment: Equipment[];
+  storyboard: StoryboardFrame[];
+}
+
+interface PreProductionProps {
+  project: Project;
+}
+
+export default function PreProduction({ project }: PreProductionProps) {
   const [newEquipment, setNewEquipment] = useState('')
   const [script, setScript] = useState(project.script || '')
 
@@ -21,7 +43,7 @@ export default function PreProduction({ project }) {
   const addStoryboardFrame = trpc.projectPage.addStoryboardFrame.useMutation()
   const deleteStoryboardFrame = trpc.projectPage.deleteStoryboardFrame.useMutation()
 
-  const handleScriptChange = async (newScript) => {
+  const handleScriptChange = async (newScript: string) => {
     setScript(newScript)
     await updateProject.mutateAsync({
       id: project.id,
@@ -39,14 +61,14 @@ export default function PreProduction({ project }) {
     }
   }
 
-  const handleUpdateEquipment = async (id, checked) => {
+  const handleUpdateEquipment = async (id: number, checked: boolean) => {
     await updateEquipment.mutateAsync({
       id,
       checked,
     })
   }
 
-  const handleDeleteEquipment = async (id) => {
+  const handleDeleteEquipment = async (id: number) => {
     await deleteEquipment.mutateAsync(id)
   }
 
@@ -60,7 +82,7 @@ export default function PreProduction({ project }) {
     })
   }
 
-  const handleDeleteStoryboardFrame = async (id) => {
+  const handleDeleteStoryboardFrame = async (id: number) => {
     await deleteStoryboardFrame.mutateAsync(id)
   }
 
@@ -94,7 +116,7 @@ export default function PreProduction({ project }) {
                       <Checkbox 
                         id={`equipment-${item.id}`}
                         checked={item.checked}
-                        onCheckedChange={(checked) => handleUpdateEquipment(item.id, checked)}
+                        onCheckedChange={(checked) => handleUpdateEquipment(item.id, checked as boolean)}
                       />
                       <label htmlFor={`equipment-${item.id}`} className="text-sm">{item.name}</label>
                     </div>
@@ -125,7 +147,14 @@ export default function PreProduction({ project }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {project.storyboard.map((frame) => (
                 <div key={frame.id} className="relative">
-                  <img src={frame.imageUrl} alt={`Scene ${frame.scene}`} className="w-full h-auto rounded" />
+                  <Image 
+                    src={frame.imageUrl} 
+                    alt={`Scene ${frame.scene}`} 
+                    width={200} 
+                    height={150} 
+                    layout="responsive"
+                    className="rounded"
+                  />
                   <Button 
                     variant="destructive" 
                     size="sm" 

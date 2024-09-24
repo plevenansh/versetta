@@ -6,13 +6,27 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus, X } from 'lucide-react'
-import { trpc } from '@/trpc/client';
+import { Plus, X, Image as ImageIcon } from 'lucide-react'
+import { trpc } from '@/trpc/client'
+import Image from 'next/image'
 
-export default function Ideation({ project }) {
+interface Project {
+  id: number;
+  concept: string;
+  keyPoints: Array<{ id: number; content: string; completed: boolean }>;
+  references: Array<{ id: number; title: string; link?: string }>;
+  inspirations: Array<{ id: number; imageUrl: string }>;
+}
+
+interface IdeationProps {
+  project: Project;
+}
+
+export default function Ideation({ project }: IdeationProps) {
   const [newKeyPoint, setNewKeyPoint] = useState('')
   const [newReferenceTitle, setNewReferenceTitle] = useState('')
   const [newReferenceLink, setNewReferenceLink] = useState('')
+  const [newInspirationUrl, setNewInspirationUrl] = useState('')
 
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
   const addKeyPoint = trpc.projectPage.addKeyPoint.useMutation()
@@ -20,8 +34,10 @@ export default function Ideation({ project }) {
   const deleteKeyPoint = trpc.projectPage.deleteKeyPoint.useMutation()
   const addReference = trpc.projectPage.addReference.useMutation()
   const deleteReference = trpc.projectPage.deleteReference.useMutation()
+  const addInspiration = trpc.projectPage.addInspiration.useMutation()
+  const deleteInspiration = trpc.projectPage.deleteInspiration.useMutation()
 
-  const handleConceptChange = async (concept) => {
+  const handleConceptChange = async (concept: string) => {
     await updateProject.mutateAsync({
       id: project.id,
       concept,
@@ -38,14 +54,14 @@ export default function Ideation({ project }) {
     }
   }
 
-  const handleUpdateKeyPoint = async (id, completed) => {
+  const handleUpdateKeyPoint = async (id: number, completed: boolean) => {
     await updateKeyPoint.mutateAsync({
       id,
       completed,
     })
   }
 
-  const handleDeleteKeyPoint = async (id) => {
+  const handleDeleteKeyPoint = async (id: number) => {
     await deleteKeyPoint.mutateAsync(id)
   }
 
@@ -61,8 +77,22 @@ export default function Ideation({ project }) {
     }
   }
 
-  const handleDeleteReference = async (id) => {
+  const handleDeleteReference = async (id: number) => {
     await deleteReference.mutateAsync(id)
+  }
+
+  const handleAddInspiration = async () => {
+    if (newInspirationUrl.trim()) {
+      await addInspiration.mutateAsync({
+        projectId: project.id,
+        imageUrl: newInspirationUrl,
+      })
+      setNewInspirationUrl('')
+    }
+  }
+
+  const handleDeleteInspiration = async (id: number) => {
+    await deleteInspiration.mutateAsync(id)
   }
 
   return (
@@ -87,15 +117,15 @@ export default function Ideation({ project }) {
             <CardTitle>Key Points</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-              <ul className="space-y-2">
+            <ScrollArea className="h-[200px] w-full">
+              <ul className="space-y-2 pr-4">
                 {project.keyPoints.map((point) => (
                   <li key={point.id} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id={`point-${point.id}`}
                         checked={point.completed}
-                        onCheckedChange={(checked) => handleUpdateKeyPoint(point.id, checked)}
+                        onCheckedChange={(checked) => handleUpdateKeyPoint(point.id, checked as boolean)}
                       />
                       <label htmlFor={`point-${point.id}`} className="text-sm">{point.content}</label>
                     </div>
@@ -123,8 +153,8 @@ export default function Ideation({ project }) {
             <CardTitle>Research & References</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-              <ul className="space-y-2">
+            <ScrollArea className="h-[200px] w-full">
+              <ul className="space-y-2 pr-4">
                 {project.references.map((ref) => (
                   <li key={ref.id} className="flex items-center justify-between">
                     <span className="text-sm">
@@ -159,6 +189,55 @@ export default function Ideation({ project }) {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Inspiration Board</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[300px] w-full">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-4">
+              {project.inspirations.map((inspiration) => (
+                <div key={inspiration.id} className="relative group">
+                  <Image 
+                    src={inspiration.imageUrl} 
+                    alt="Inspiration" 
+                    width={300}
+                    height={128}
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleDeleteInspiration(inspiration.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex items-center justify-center w-full h-32 bg-gray-100 rounded-md">
+                <div className="text-center">
+                  <ImageIcon className="mx-auto h-8 w-8 text-gray-400" />
+                  <label htmlFor="file-upload" className="mt-2 cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500">
+                    <span>Upload a file</span>
+                    <input id="file-upload" name="file-upload" type="file" className="sr-only" />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Image URL" 
+              value={newInspirationUrl}
+              onChange={(e) => setNewInspirationUrl(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddInspiration}>Add Image</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

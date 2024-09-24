@@ -1,15 +1,21 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { trpc } from '@/trpc/client';
+import { trpc } from '@/trpc/client'
 
 interface AnalysisData {
   general: string;
   topComments: string[];
   contentIdeas: string[];
+}
+
+interface Project {
+  id: number;
+  title: string;
+  videoUrl?: string;
+  // Add other project properties as needed
 }
 
 const suggestedPrompts = [
@@ -18,13 +24,13 @@ const suggestedPrompts = [
   "Suggest content ideas based on these comments"
 ];
 
-export default function Analytics({ project }) {
+export default function Analytics({ project }: { project: Project }) {
   const [customPrompt, setCustomPrompt] = useState('')
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const analyzeCommentsMutation = trpc.youtube.analyzeComments.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       const analysisData: AnalysisData = {
         general: data.general || "No general analysis provided",
         topComments: Array.isArray(data.topComments) ? data.topComments : [],
@@ -40,9 +46,13 @@ export default function Analytics({ project }) {
   });
 
   const handleAnalyzeComments = async () => {
+    if (!project.videoUrl) {
+      console.error('No video URL provided');
+      return;
+    }
     setIsLoading(true);
     await analyzeCommentsMutation.mutateAsync({ 
-      url: project.videoUrl, // Assuming the project has a videoUrl field
+      url: project.videoUrl,
       prompt: customPrompt || suggestedPrompts[0]
     });
   };
@@ -66,7 +76,7 @@ export default function Analytics({ project }) {
         <CardContent className="space-y-4">
           <Textarea
             value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomPrompt(e.target.value)}
             placeholder="Enter custom prompt (optional)"
           />
           <div className="flex flex-wrap gap-2">

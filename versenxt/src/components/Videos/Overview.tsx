@@ -7,9 +7,43 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Edit3, Video, Users, Activity } from 'lucide-react'
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Plus } from 'lucide-react'
-import { trpc } from '@/trpc/client';
+import { trpc } from '@/trpc/client'
+import { Progress } from "@/components/ui/progress"
 
-export default function Overview({ project }) {
+interface ProjectStage {
+  id: number;
+  stage: string;
+  completed: boolean;
+  order: number;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+  assignee?: {
+    user: {
+      name: string;
+    };
+  };
+}
+
+interface Project {
+  id: number;
+  title: string;
+  description?: string;
+  status: string;
+  endDate?: string;
+  duration?: string;
+  stages: ProjectStage[];
+  tasks: Task[];
+}
+
+interface OverviewProps {
+  project: Project;
+}
+
+export default function Overview({ project }: OverviewProps) {
   const addTask = trpc.projectPage.addTask.useMutation()
   const updateTask = trpc.projectPage.updateTask.useMutation()
 
@@ -21,7 +55,7 @@ export default function Overview({ project }) {
     })
   }
 
-  const handleUpdateTask = async (taskId, completed) => {
+  const handleUpdateTask = async (taskId: number, completed: boolean) => {
     await updateTask.mutateAsync({
       id: taskId,
       status: completed ? "Completed" : "In Progress",
@@ -77,6 +111,30 @@ export default function Overview({ project }) {
         </Card>
       </div>
 
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Project Stages</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {project.stages.map((stage: ProjectStage, index: number) => (
+              <div key={index} className="flex items-center space-x-4">
+                <div className="w-24 text-sm font-medium">{stage.stage}</div>
+                <div className="flex-1">
+                  <Progress value={stage.completed ? 100 : 0} className="h-2" />
+                </div>
+                <div className="w-16 text-sm text-right">
+                  {stage.completed ? (
+                    <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
+                  ) : (
+                    '0%'
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Task Management</CardTitle>
@@ -84,13 +142,13 @@ export default function Overview({ project }) {
         <CardContent>
           <ScrollArea className="h-[300px] w-full rounded-md border p-4">
             <div className="space-y-4">
-              {project.tasks.map((task) => (
+              {project.tasks.map((task: Task) => (
                 <div key={task.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id={`task-${task.id}`} 
                       checked={task.status === "Completed"}
-                      onCheckedChange={(checked) => handleUpdateTask(task.id, checked)}
+                      onCheckedChange={(checked) => handleUpdateTask(task.id, checked as boolean)}
                     />
                     <label htmlFor={`task-${task.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {task.title}

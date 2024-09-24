@@ -1,157 +1,231 @@
-import React, { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React, { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus } from 'lucide-react'
-import Overview from './Overview'
-import Ideation from './Ideation'
-import PreProduction from './PreProduction'
-import Production from './Production'
-import PostProduction from './PostProduction'
-import Publishing from './Publishing'
-import Analytics from './Analytics'
-import { trpc } from '@/trpc/client';
+import { Plus, X } from 'lucide-react'
+import { trpc } from '@/trpc/client'
 
-
-interface ProjectStage {
+interface FilmingSession {
   id: number;
-  stage: string;
-  completed: boolean;
-  order: number;
+  scene: string;
+  time: string;
+  location: string;
 }
 
-interface TeamMember {
+interface BRollIdea {
   id: number;
-  user: {
-    name: string;
-    avatarUrl?: string;
-  };
+  idea: string;
+}
+
+interface Shot {
+  id: number;
+  description: string;
+  completed: boolean;
 }
 
 interface Project {
   id: number;
-  title: string;
-  description: string | null;
-  stages: ProjectStage[];
-  team: {
-    members: TeamMember[];
-  };
+  filmingSchedule: FilmingSession[];
+  bRollIdeas: BRollIdea[];
+  shotList: Shot[];
+  productionNotes: string | null;
 }
 
+interface ProductionProps {
+  project: Project;
+}
 
-export default function VideoPage({ projectId }: { projectId: number }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [progress, setProgress] = useState(0)
+export default function Production({ project }: ProductionProps) {
+  const [newFilmingSession, setNewFilmingSession] = useState<Omit<FilmingSession, 'id'>>({ scene: '', time: '', location: '' })
+  const [newBRollIdea, setNewBRollIdea] = useState('')
+  const [newShot, setNewShot] = useState('')
+  const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
 
-  // Assuming you have a projectPage router defined in your tRPC setup
-  const { data: project, refetch } = trpc.projectPage.getProjectDetails.useQuery(projectId)
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
+  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
+  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation()
+  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation()
+  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation()
+  const addShot = trpc.projectPage.addShot.useMutation()
+  const updateShot = trpc.projectPage.updateShot.useMutation()
+  const deleteShot = trpc.projectPage.deleteShot.useMutation()
 
-  useEffect(() => {
-    if (project) {
-      setTitle(project.title)
-      setDescription(project.description || "")
-      // Calculate progress based on completed stages
-      const completedStages = project.stages.filter(stage => stage.completed).length
-      setProgress((completedStages / project.stages.length) * 100)
-    }
-  }, [project])
-
-  const handleSave = async () => {
+  const handleProductionNotesChange = async (notes: string) => {
+    setProductionNotes(notes)
     await updateProject.mutateAsync({
-      id: projectId,
-      title,
-      description,
+      id: project.id,
+      productionNotes: notes,
     })
-    setIsEditing(false)
-    refetch()
   }
 
-  if (!project) return <div>Loading...</div>
+  const handleAddFilmingSession = async () => {
+    if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
+      await addFilmingSession.mutateAsync({
+        projectId: project.id,
+        ...newFilmingSession,
+      })
+      setNewFilmingSession({ scene: '', time: '', location: '' })
+    }
+  }
+
+  const handleDeleteFilmingSession = async (id: number) => {
+    await deleteFilmingSession.mutateAsync(id)
+  }
+
+  const handleAddBRollIdea = async () => {
+    if (newBRollIdea.trim()) {
+      await addBRollIdea.mutateAsync({
+        projectId: project.id,
+        idea: newBRollIdea,
+      })
+      setNewBRollIdea('')
+    }
+  }
+
+  const handleDeleteBRollIdea = async (id: number) => {
+    await deleteBRollIdea.mutateAsync(id)
+  }
+
+  const handleAddShot = async () => {
+    if (newShot.trim()) {
+      await addShot.mutateAsync({
+        projectId: project.id,
+        description: newShot,
+      })
+      setNewShot('')
+    }
+  }
+
+  const handleUpdateShot = async (id: number, completed: boolean) => {
+    await updateShot.mutateAsync({
+      id,
+      completed,
+    })
+  }
+
+  const handleDeleteShot = async (id: number) => {
+    await deleteShot.mutateAsync(id)
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-8 max-w-7xl">
-      {/* ... (header content remains the same) ... */}
-
-      {/* <div className="flex flex-wrap items-center gap-2 mb-8">
-        {project.team.members.map((member: TeamMember) => (
-          <Avatar key={member.id}>
-            <AvatarImage src={member.user.avatarUrl} alt={member.user.name} />
-            <AvatarFallback>{member.user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-        ))}
-        <Button variant="outline" size="icon">
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div> */}
-
-      <Card className="mb-8">
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            {project.stages.map((stage: ProjectStage, index: number) => (
-              <div key={index} className="flex items-center space-x-4">
-                <div className="w-24 text-sm font-medium">{stage.stage}</div>
-                <div className="flex-1">
-                  <Progress value={stage.completed ? 100 : 0} className="h-2" />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Filming Schedule</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.filmingSchedule.map((session) => (
+              <div key={session.id} className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-medium">{session.scene}</p>
+                  <p className="text-sm text-muted-foreground">{session.time} - {session.location}</p>
                 </div>
-                <div className="w-16 text-sm text-right">
-                  {stage.completed ? (
-                    <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
-                  ) : (
-                    '0%'
-                  )}
-                </div>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteFilmingSession(session.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             ))}
+          </ScrollArea>
+          <div className="flex flex-col space-y-2 mt-4">
+            <Input 
+              placeholder="Scene" 
+              value={newFilmingSession.scene}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, scene: e.target.value})}
+            />
+            <Input 
+              placeholder="Time" 
+              value={newFilmingSession.time}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, time: e.target.value})}
+            />
+            <Input 
+              placeholder="Location" 
+              value={newFilmingSession.location}
+              onChange={(e) => setNewFilmingSession({...newFilmingSession, location: e.target.value})}
+            />
+            <Button onClick={handleAddFilmingSession}>Add Filming Session</Button>
           </div>
         </CardContent>
       </Card>
-      
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 h-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="ideation">Ideation</TabsTrigger>
-          <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
-          <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="post-production">Post-Production</TabsTrigger>
-          <TabsTrigger value="publishing">Publishing</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
 
-        <TabsContent value="overview">
-          <Overview project={project} />
-        </TabsContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>B-Roll Ideas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.bRollIdeas.map((idea) => (
+              <div key={idea.id} className="flex items-center justify-between mb-2">
+                <p>{idea.idea}</p>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Add new B-roll idea" 
+              value={newBRollIdea}
+              onChange={(e) => setNewBRollIdea(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddBRollIdea}>Add</Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="ideation">
-          <Ideation project={project} />
-        </TabsContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Shot List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {project.shotList.map((shot) => (
+              <div key={shot.id} className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Checkbox 
+                    id={`shot-${shot.id}`}
+                    checked={shot.completed}
+                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked as boolean)}
+                  />
+                  <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(shot.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Add new shot" 
+              value={newShot}
+              onChange={(e) => setNewShot(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddShot}>Add</Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="pre-production">
-          <PreProduction project={project} />
-        </TabsContent>
-
-        <TabsContent value="production">
-          <Production project={project} />
-        </TabsContent>
-
-        <TabsContent value="post-production">
-          <PostProduction project={project} />
-        </TabsContent>
-
-        <TabsContent value="publishing">
-          <Publishing project={project} />
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <Analytics project={project} />
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader>
+          <CardTitle>Production Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea 
+            placeholder="Add any production notes, reminders, or special instructions here..." 
+            value={productionNotes}
+            onChange={(e) => handleProductionNotesChange(e.target.value)}
+            className="min-h-[150px]"
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

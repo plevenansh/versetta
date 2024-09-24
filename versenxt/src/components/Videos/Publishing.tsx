@@ -6,7 +6,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { trpc } from '@/trpc/client';
 
-export default function Publishing() {
+
+interface PublishingProps {
+  project: {
+    id: number;
+    title: string;
+    description: string | null;
+    // Add other project properties as needed
+  };
+}
+
+
+export default function Publishing({ project }: PublishingProps) {
   return (
     <div className="space-y-6">
       <Card>

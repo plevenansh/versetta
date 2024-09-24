@@ -1,247 +1,178 @@
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import Overview from './Overview'
+import Ideation from './Ideation'
+import PreProduction from './PreProduction'
+import Production from './Production'
+import PostProduction from './PostProduction'
+import Publishing from './Publishing'
+import Analytics from './Analytics'
 import { trpc } from '@/trpc/client'
 
-interface FilmingSession {
+interface ProjectStage {
   id: number;
-  scene: string;
-  time: string;
-  location: string;
-}
-
-interface BRollIdea {
-  id: number;
-  idea: string;
-}
-
-interface Shot {
-  id: number;
-  description: string;
+  stage: string;
   completed: boolean;
+  order: number;
+}
+
+interface TeamMember {
+  id: number;
+  user: {
+    name: string;
+    avatarUrl?: string;
+  };
 }
 
 interface Project {
   id: number;
-  filmingSchedule: FilmingSession[];
-  bRollIdeas: BRollIdea[];
-  shotList: Shot[];
+  title: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  teamId: number;
+  creatorId: number;
+  creationOrder: number;
+  completed: boolean;
+  concept: string | null;
+  script: string | null;
   productionNotes: string | null;
+  stages: ProjectStage[];
+  keyPoints: Array<{ id: number; content: string; completed: boolean }>;
+  references: Array<{ id: number; title: string; link?: string | null }>;
+  inspirations: Array<{ id: number; imageUrl: string }>;
+  // Add other fields as necessary
 }
 
-interface VideoPageProps {
-  projectId: number;
-}
+export default function VideoPage({ projectId }: { projectId: number }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [progress, setProgress] = useState(0)
 
-export default function VideoPage({ projectId }: VideoPageProps) {
-  const [project, setProject] = useState<Project | null>(null);
-  const [newFilmingSession, setNewFilmingSession] = useState<Omit<FilmingSession, 'id'>>({ scene: '', time: '', location: '' })
-  const [newBRollIdea, setNewBRollIdea] = useState('')
-  const [newShot, setNewShot] = useState('')
-  const [productionNotes, setProductionNotes] = useState('')
-
-  const { data: projectData, isLoading, error } = trpc.projectPage.getProjectDetails.useQuery(projectId);
+  const { data: project, refetch } = trpc.projectPage.getProjectDetails.useQuery(projectId)
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
 
   useEffect(() => {
-    if (projectData) {
-      setProject(projectData);
-      setProductionNotes(projectData.productionNotes || '');
+    if (project) {
+      setTitle(project.title)
+      setDescription(project.description || "")
+      const completedStages = project.stages.filter(stage => stage.completed).length
+      setProgress((completedStages / project.stages.length) * 100)
     }
-  }, [projectData]);
+  }, [project])
 
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
-  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
-  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation()
-  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation()
-  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation()
-  const addShot = trpc.projectPage.addShot.useMutation()
-  const updateShot = trpc.projectPage.updateShot.useMutation()
-  const deleteShot = trpc.projectPage.deleteShot.useMutation()
-
-  const handleProductionNotesChange = async (notes: string) => {
-    setProductionNotes(notes)
+  const handleSave = async () => {
     if (project) {
       await updateProject.mutateAsync({
-        id: project.id,
-        productionNotes: notes,
+        id: projectId,
+        title,
+        description,
       })
+      setIsEditing(false)
+      refetch()
     }
   }
 
-  const handleAddFilmingSession = async () => {
-    if (project && newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
-      await addFilmingSession.mutateAsync({
-        projectId: project.id,
-        ...newFilmingSession,
-      })
-      setNewFilmingSession({ scene: '', time: '', location: '' })
-    }
-  }
-
-  const handleDeleteFilmingSession = async (id: number) => {
-    await deleteFilmingSession.mutateAsync(id)
-  }
-
-  const handleAddBRollIdea = async () => {
-    if (project && newBRollIdea.trim()) {
-      await addBRollIdea.mutateAsync({
-        projectId: project.id,
-        idea: newBRollIdea,
-      })
-      setNewBRollIdea('')
-    }
-  }
-
-  const handleDeleteBRollIdea = async (id: number) => {
-    await deleteBRollIdea.mutateAsync(id)
-  }
-
-  const handleAddShot = async () => {
-    if (project && newShot.trim()) {
-      await addShot.mutateAsync({
-        projectId: project.id,
-        description: newShot,
-      })
-      setNewShot('')
-    }
-  }
-
-  const handleUpdateShot = async (id: number, completed: boolean) => {
-    await updateShot.mutateAsync({
-      id,
-      completed,
-    })
-  }
-
-  const handleDeleteShot = async (id: number) => {
-    await deleteShot.mutateAsync(id)
-  }
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-  if (!project) return <div>No project data available</div>;
+  if (!project) return <div>Loading...</div>
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Filming Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.filmingSchedule.map((session) => (
-              <div key={session.id} className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-medium">{session.scene}</p>
-                  <p className="text-sm text-muted-foreground">{session.time} - {session.location}</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteFilmingSession(session.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex flex-col space-y-2 mt-4">
-            <Input 
-              placeholder="Scene" 
-              value={newFilmingSession.scene}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, scene: e.target.value})}
+    <div className="container mx-auto p-6 space-y-8 max-w-7xl">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
+        <div className="space-y-2 flex-1">
+          {isEditing ? (
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-3xl font-bold"
             />
-            <Input 
-              placeholder="Time" 
-              value={newFilmingSession.time}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, time: e.target.value})}
+          ) : (
+            <h1 className="text-3xl font-bold">{title}</h1>
+          )}
+          {isEditing ? (
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="text-muted-foreground"
             />
-            <Input 
-              placeholder="Location" 
-              value={newFilmingSession.location}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, location: e.target.value})}
-            />
-            <Button onClick={handleAddFilmingSession}>Add Filming Session</Button>
-          </div>
-        </CardContent>
-      </Card>
+          ) : (
+            <p className="text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button onClick={() => isEditing ? handleSave() : setIsEditing(true)}>
+            {isEditing ? 'Save' : 'Edit'}
+          </Button>
+          <Button variant="default">Publish</Button>
+        </div>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>B-Roll Ideas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.bRollIdeas.map((idea) => (
-              <div key={idea.id} className="flex items-center justify-between mb-2">
-                <p>{idea.idea}</p>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Add new B-roll idea" 
-              value={newBRollIdea}
-              onChange={(e) => setNewBRollIdea(e.target.value)}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddBRollIdea}>Add</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center space-x-4 mb-6">
+        <Progress value={progress} className="w-full" />
+        <span className="text-sm font-medium whitespace-nowrap">{Math.round(progress)}% Complete</span>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Shot List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.shotList.map((shot) => (
-              <div key={shot.id} className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Checkbox 
-                    id={`shot-${shot.id}`}
-                    checked={shot.completed}
-                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked as boolean)}
-                  />
-                  <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(shot.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Add new shot" 
-              value={newShot}
-              onChange={(e) => setNewShot(e.target.value)}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddShot}>Add</Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* <div className="flex flex-wrap items-center gap-2 mb-8">
+        {project.team.members.map((member: TeamMember) => (
+          <Avatar key={member.id}>
+            <AvatarImage src={member.user.avatarUrl} alt={member.user.name} />
+            <AvatarFallback>{member.user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+        ))}
+        <Button variant="outline" size="icon">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div> */}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Production Notes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea 
-            placeholder="Add any production notes, reminders, or special instructions here..." 
-            value={productionNotes}
-            onChange={(e) => handleProductionNotesChange(e.target.value)}
-            className="min-h-[150px]"
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 h-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ideation">Ideation</TabsTrigger>
+          <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
+          <TabsTrigger value="production">Production</TabsTrigger>
+          <TabsTrigger value="post-production">Post-Production</TabsTrigger>
+          <TabsTrigger value="publishing">Publishing</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <Overview project={project} />
+        </TabsContent>
+
+        <TabsContent value="ideation">
+          <Ideation project={project} />
+        </TabsContent>
+
+        <TabsContent value="pre-production">
+          <PreProduction project={project} />
+        </TabsContent>
+
+        <TabsContent value="production">
+          <Production project={project} />
+        </TabsContent>
+
+        <TabsContent value="post-production">
+          <PostProduction project={project} />
+        </TabsContent>
+
+        <TabsContent value="publishing">
+          <Publishing project={project} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <Analytics project={project} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

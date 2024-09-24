@@ -31,16 +31,24 @@ interface Task {
 interface Project {
   id: number;
   title: string;
-  description?: string;
+  description: string | null;
   status: string;
-  endDate?: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  teamId: number;
+  creatorId: number;
+  creationOrder: number;
+  completed: boolean;
+  concept: string | null;
+  script: string | null;
+  productionNotes: string | null;
   duration?: string;
   stages: ProjectStage[];
   tasks: Task[];
-  teamId: number;
-  creatorId: number;
+  // Add other properties as needed
 }
-
 interface OverviewProps {
   project: Project;
 }

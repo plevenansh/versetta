@@ -23,9 +23,25 @@ interface StoryboardFrame {
 
 interface Project {
   id: number;
-  script: string;
+  script: string | null;  // Change this to allow null
   equipment: Equipment[];
   storyboard: StoryboardFrame[];
+  // Add other properties that are present in the project data
+  title: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  teamId: number;
+  creatorId: number;
+  creationOrder: number;
+  completed: boolean;
+  concept: string | null;
+  productionNotes: string | null;
+ // stages: ProjectStage[];
+  // Add any other properties that are part of your project data
 }
 
 interface PreProductionProps {
@@ -44,13 +60,13 @@ export default function PreProduction({ project }: PreProductionProps) {
   const deleteStoryboardFrame = trpc.projectPage.deleteStoryboardFrame.useMutation()
 
   const handleScriptChange = async (newScript: string) => {
-    setScript(newScript)
+    setScript(newScript);
     await updateProject.mutateAsync({
       id: project.id,
       script: newScript,
-    })
+    });
   }
-
+  
   const handleAddEquipment = async () => {
     if (newEquipment.trim()) {
       await addEquipment.mutateAsync({

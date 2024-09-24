@@ -28,11 +28,26 @@ interface Shot {
 }
 
 interface Project {
-  id: number
-  productionNotes: string
-  filmingSchedule: FilmingSession[]
-  bRollIdeas: BRollIdea[]
-  shotList: Shot[]
+  id: number;
+  productionNotes: string | null;
+  filmingSchedule: FilmingSession[];
+  bRollIdeas: BRollIdea[];
+  shotList: Shot[];
+  // Add other properties that are present in the project data
+  title: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  teamId: number;
+  creatorId: number;
+  creationOrder: number;
+  completed: boolean;
+  concept: string | null;
+  script: string | null;
+  // Add any other properties that are present in your project data
 }
 
 export default function Production({ project }: { project: Project }) {

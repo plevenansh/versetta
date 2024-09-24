@@ -12,9 +12,9 @@ import Image from 'next/image'
 
 interface Project {
   id: number;
-  concept: string;
+  concept: string | null;
   keyPoints: Array<{ id: number; content: string; completed: boolean }>;
-  references: Array<{ id: number; title: string; link?: string }>;
+  references: Array<{ id: number; title: string; link?: string | null }>;
   inspirations: Array<{ id: number; imageUrl: string }>;
 }
 
@@ -103,11 +103,11 @@ export default function Ideation({ project }: IdeationProps) {
         </CardHeader>
         <CardContent>
           <Textarea 
-            placeholder="Describe your video concept here..." 
-            className="min-h-[150px]"
-            defaultValue={project.concept}
-            onChange={(e) => handleConceptChange(e.target.value)}
-          />
+          placeholder="Describe your video concept here..." 
+          className="min-h-[150px]"
+          defaultValue={project.concept || ''}
+          onChange={(e) => handleConceptChange(e.target.value)}
+        />
         </CardContent>
       </Card>
 

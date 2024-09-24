@@ -37,6 +37,8 @@ interface Project {
   duration?: string;
   stages: ProjectStage[];
   tasks: Task[];
+  teamId: number;
+  creatorId: number;
 }
 
 interface OverviewProps {
@@ -50,6 +52,8 @@ export default function Overview({ project }: OverviewProps) {
   const handleAddTask = async () => {
     await addTask.mutateAsync({
       projectId: project.id,
+      teamId: project.teamId,
+      creatorId: project.creatorId,
       title: "New Task",
       description: "Task description",
     })

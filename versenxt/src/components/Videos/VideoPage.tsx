@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,15 +35,25 @@ interface Project {
   productionNotes: string | null;
 }
 
-interface ProductionProps {
-  project: Project;
+interface VideoPageProps {
+  projectId: number;
 }
 
-export default function Production({ project }: ProductionProps) {
+export default function VideoPage({ projectId }: VideoPageProps) {
+  const [project, setProject] = useState<Project | null>(null);
   const [newFilmingSession, setNewFilmingSession] = useState<Omit<FilmingSession, 'id'>>({ scene: '', time: '', location: '' })
   const [newBRollIdea, setNewBRollIdea] = useState('')
   const [newShot, setNewShot] = useState('')
-  const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
+  const [productionNotes, setProductionNotes] = useState('')
+
+  const { data: projectData, isLoading, error } = trpc.projectPage.getProjectDetails.useQuery(projectId);
+
+  useEffect(() => {
+    if (projectData) {
+      setProject(projectData);
+      setProductionNotes(projectData.productionNotes || '');
+    }
+  }, [projectData]);
 
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
   const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
@@ -56,14 +66,16 @@ export default function Production({ project }: ProductionProps) {
 
   const handleProductionNotesChange = async (notes: string) => {
     setProductionNotes(notes)
-    await updateProject.mutateAsync({
-      id: project.id,
-      productionNotes: notes,
-    })
+    if (project) {
+      await updateProject.mutateAsync({
+        id: project.id,
+        productionNotes: notes,
+      })
+    }
   }
 
   const handleAddFilmingSession = async () => {
-    if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
+    if (project && newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
       await addFilmingSession.mutateAsync({
         projectId: project.id,
         ...newFilmingSession,
@@ -77,7 +89,7 @@ export default function Production({ project }: ProductionProps) {
   }
 
   const handleAddBRollIdea = async () => {
-    if (newBRollIdea.trim()) {
+    if (project && newBRollIdea.trim()) {
       await addBRollIdea.mutateAsync({
         projectId: project.id,
         idea: newBRollIdea,
@@ -91,7 +103,7 @@ export default function Production({ project }: ProductionProps) {
   }
 
   const handleAddShot = async () => {
-    if (newShot.trim()) {
+    if (project && newShot.trim()) {
       await addShot.mutateAsync({
         projectId: project.id,
         description: newShot,
@@ -110,6 +122,10 @@ export default function Production({ project }: ProductionProps) {
   const handleDeleteShot = async (id: number) => {
     await deleteShot.mutateAsync(id)
   }
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!project) return <div>No project data available</div>;
 
   return (
     <div className="space-y-6">

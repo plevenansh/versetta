@@ -1,12 +1,12 @@
 // components/YouTubeCommentAnalyzer.tsx
 'use client';
 import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { trpc } from '@/trpc/client';
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { trpc } from '../trpc/client';
 interface AnalysisData {
   general: string;
   topComments: string[];
@@ -103,12 +103,12 @@ export default function YouTubeCommentAnalyzer() {
                 <TabsTrigger value="contentIdeas">Content Ideas</TabsTrigger>
               </TabsList>
               <TabsContent value="general">
-                <p className="mt-4 text-gray-700">{analysis.general}</p>
+                <p className="mt-4 ">{analysis.general}</p>
               </TabsContent>
               <TabsContent value="topComments">
                 <ul className="mt-4 space-y-2">
                   {analysis.topComments.map((comment, index) => (
-                    <li key={index} className="bg-gray-100 p-3 rounded-md">
+                    <li key={index} className="bg-gray-100 text-black p-3 rounded-md">
                       {comment}
                     </li>
                   ))}
@@ -117,7 +117,7 @@ export default function YouTubeCommentAnalyzer() {
               <TabsContent value="contentIdeas">
                 <ul className="mt-4 space-y-2">
                   {analysis.contentIdeas.map((idea, index) => (
-                    <li key={index} className="bg-blue-100 p-3 rounded-md">
+                    <li key={index} className="bg-blue-100 p-3 text-black rounded-md">
                       {idea}
                     </li>
                   ))}

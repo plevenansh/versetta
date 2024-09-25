@@ -2,13 +2,13 @@
 "use client"
 
 import { useEffect, useState,useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { trpc } from '@/trpc/client';
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { trpc } from '../trpc/client';
 import { Trash, FilePen, Plus, X } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Task  {

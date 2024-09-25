@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { trpc } from '@/trpc/client'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { trpc } from '../trpc/client'
+import { Button } from "./ui/button"
+import { Input } from "./ui/input"
+import { Label } from "./ui/label"
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
 import Script from 'next/script'
 
 interface CreateTeamFormProps {

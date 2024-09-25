@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import ProjectPage from '@/components/ProjectPage';
+import ProjectPage from '../../../../components/ProjectPage';
 
 export default function ProjectDetailPage() {
   const params = useParams();

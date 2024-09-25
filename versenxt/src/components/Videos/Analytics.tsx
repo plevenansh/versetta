@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { trpc } from '@/trpc/client'
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
+import { Textarea } from "../ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { trpc } from '../../trpc/client'
 
 interface AnalysisData {
   general: string;

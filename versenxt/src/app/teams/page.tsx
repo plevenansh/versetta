@@ -2,13 +2,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { trpc } from '@/trpc/client'
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import { trpc } from '../../trpc/client'
+import { Button } from "../../components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Dialog, DialogTrigger } from "../../components/ui/dialog"
 import { PlusCircle } from 'lucide-react'
-import TeamCard from '@/components/TeamCard'
-import CreateTeamForm from '@/components/CreateTeamForm'
+import TeamCard from '../../components/TeamCard'
+import CreateTeamForm from '../../components/CreateTeamForm'
 
 export default function TeamsPage() {
   const [user, setUser] = useState<any>(null)

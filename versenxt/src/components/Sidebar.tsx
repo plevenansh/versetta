@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, SquareCheck,Video, CalendarDays,Film, NotebookPen, Folder,Tv, GalleryThumbnails,Database, NotepadTextDashed ,MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose } from 'lucide-react';
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 import Image from 'next/image'
 
 interface SidebarProps {

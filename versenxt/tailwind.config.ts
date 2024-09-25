@@ -82,6 +82,10 @@ const config = {
 			'9xl': '8rem',       // 128px
 		  },
   		keyframes: {
+			fadeIn: {
+				'0%': { opacity: '0', transform: 'translateY(10px)' },
+				'100%': { opacity: '1', transform: 'translateY(0)' },
+			  },
 			'accordion-down': {
 			  from: {
 				height: '0'
@@ -125,6 +129,8 @@ const config = {
 		  'accordion-down2': 'accordion-down2 0.2s ease-out',
 		  'accordion-up2': 'accordion-up2 0.2s ease-out',
 		  'border-spin': 'border-spin 8s linear infinite',
+		  fadeIn: 'fadeIn 1.5s ease-out forwards',
+
 		}
   	}
   },

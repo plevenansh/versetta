@@ -1,9 +1,9 @@
 "use client"
 import { ReactNode } from 'react';
-import { trpc } from '@/trpc/client';
+import { trpc } from '../trpc/client';
 import '../styles/globals.css';
 import RootLayoutServer from './root-layout';
-import Layout from '@/components/Layout';
+import Layout from '../components/Layout';
 import { usePathname } from 'next/navigation';
 import { GeistSans } from 'geist/font/sans';
 import { Analytics } from '@vercel/analytics/react';

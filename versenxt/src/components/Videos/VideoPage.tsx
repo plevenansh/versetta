@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Progress } from "../ui/progress"
+import { Card, CardContent } from "../ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Badge } from "../ui/badge"
 import { Plus } from 'lucide-react'
 import Overview from './Overview'
 import Ideation from './Ideation'
@@ -14,7 +14,7 @@ import Production from './Production'
 import PostProduction from './PostProduction'
 import Publishing from './Publishing'
 import Analytics from './Analytics'
-import { trpc } from '@/trpc/client'
+import { trpc } from '../../trpc/client'
 
 interface ProjectStage {
   id: number;

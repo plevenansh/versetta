@@ -1,8 +1,8 @@
 // server/routers/youtube.ts
 import { router, publicProcedure } from '../trpc';
 import { z } from 'zod';
-import { fetchYouTubeComments } from '@/utils/youtubeApi';
-import { analyzeComments } from '@/utils/aiAnalysis';
+import { fetchYouTubeComments } from '../../utils/youtubeApi';
+import { analyzeComments } from '../../utils/aiAnalysis';
 
 export const youtubeRouter = router({
   analyzeComments: publicProcedure

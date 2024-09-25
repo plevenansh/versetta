@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { trpc } from '@/trpc/client';
+import { trpc } from '../trpc/client';
 
 interface AddTeamMemberFormProps {
   teamId: number;

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { trpc } from '@/trpc/client';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { trpc } from '../trpc/client';
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { X, Plus } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 interface EditProjectModalProps {
   project: {
     id: number;

@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Textarea } from "../ui/textarea"
+import { ScrollArea } from "../ui/scroll-area"
+import { Checkbox } from "../ui/checkbox"
+import { Badge } from "../ui/badge"
 import { Plus, X, Image as ImageIcon } from 'lucide-react'
-import { trpc } from '@/trpc/client'
+import { trpc } from '../../trpc/client'
 import Image from 'next/image'
 
 interface Project {
@@ -99,7 +99,7 @@ export default function Ideation({ project }: IdeationProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Project Concept</CardTitle>
+          <CardTitle>Video Concept</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea 

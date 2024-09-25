@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import SignUpPage from '@/components/signup';
-import { trpc } from '@/trpc/client';
+import SignUpPage from '../../components/signup';
+import { trpc } from '../../trpc/client';
 
 // Define the structure of the sign-up form data
 interface SignUpFormData {

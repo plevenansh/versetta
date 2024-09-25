@@ -1,14 +1,14 @@
 import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Badge } from "../ui/badge"
+import { Button } from "../ui/button"
+import { ScrollArea } from "../ui/scroll-area"
+import { Checkbox } from "../ui/checkbox"
 import { Edit3, Video, Users, Activity } from 'lucide-react'
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "../ui/avatar"
 import { Plus } from 'lucide-react'
-import { trpc } from '@/trpc/client'
-import { Progress } from "@/components/ui/progress"
+import { trpc } from '../../trpc/client'
+import { Progress } from "../ui/progress"
 
 interface ProjectStage {
   id: number;

@@ -1,17 +1,17 @@
 "use client"
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Progress } from "./ui/progress";
+import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "./ui/switch";
 import { CheckCircle, Plus, X, Circle, ChevronDown, ChevronUp, Send, Edit, Trash2 } from 'lucide-react';
 import { EditProjectModal } from './EditProjectModal';
-import { trpc } from '@/trpc/client';
+import { trpc } from '../trpc/client';
 import Link from 'next/link';
-import { slugify } from '@/utils/slugify';
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { slugify } from '../utils/slugify';
+import { Input } from "./ui/input";
+import { Checkbox } from "./ui/checkbox";
 
 interface Project {
   id: number;

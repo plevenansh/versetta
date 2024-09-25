@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import VideoPage from '@/components/Videos/VideoPage';
+import VideoPage from '../../../../components/Videos/VideoPage';
 import { useParams } from 'next/navigation';
 
 export default function Video() {

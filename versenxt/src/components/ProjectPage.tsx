@@ -2,9 +2,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { trpc } from '@/trpc/client';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { trpc } from '../trpc/client';
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Progress } from "./ui/progress";
 import { CheckCircle, Circle, Calendar, Users, User } from 'lucide-react';
 
 interface ProjectStage {

@@ -28,33 +28,34 @@ export default function Analytics({ project }: { project: Project }) {
   const [customPrompt, setCustomPrompt] = useState('')
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const analyzeCommentsMutation = trpc.youtube.analyzeComments.useMutation({
-    onSuccess: (data: any) => {
+  const analyzeCommentsMutation = trpc.youtube.analyzeComments.useMutation()
+
+  const handleAnalyzeComments = async () => {
+    if (!project.videoUrl) {
+      setError('No video URL provided');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await analyzeCommentsMutation.mutateAsync({ 
+        url: project.videoUrl,
+        prompt: customPrompt || suggestedPrompts[0]
+      });
       const analysisData: AnalysisData = {
         general: data.general || "No general analysis provided",
         topComments: Array.isArray(data.topComments) ? data.topComments : [],
         contentIdeas: Array.isArray(data.contentIdeas) ? data.contentIdeas : []
       };
       setAnalysis(analysisData);
+    } catch (err) {
+      console.error('Error analyzing comments:', err);
+      setError('Failed to analyze comments. Please try again.');
+    } finally {
       setIsLoading(false);
-    },
-    onError: (error) => {
-      console.error('Error analyzing comments:', error);
-      setIsLoading(false);
-    },
-  });
-
-  const handleAnalyzeComments = async () => {
-    if (!project.videoUrl) {
-      console.error('No video URL provided');
-      return;
     }
-    setIsLoading(true);
-    await analyzeCommentsMutation.mutateAsync({ 
-      url: project.videoUrl,
-      prompt: customPrompt || suggestedPrompts[0]
-    });
   };
 
   return (
@@ -94,6 +95,10 @@ export default function Analytics({ project }: { project: Project }) {
           <Button onClick={handleAnalyzeComments} disabled={isLoading} className="w-full">
             {isLoading ? 'Analyzing Comments...' : 'Analyze Comments'}
           </Button>
+
+          {error && (
+            <p className="text-red-500 mt-2">{error}</p>
+          )}
 
           {analysis && (
             <Tabs defaultValue="general">

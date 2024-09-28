@@ -1,3 +1,4 @@
+// components/TeamMemberList.tsx
 import { useState } from 'react'
 import { trpc } from '../trpc/client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
@@ -18,7 +19,8 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
   const [showAddMember, setShowAddMember] = useState(false)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const { data: teamMembers, refetch: refetchMembers } = trpc.teams.listTeamMembers.useQuery(teamId)
+
+  const { data: teamMembers, refetch: refetchMembers, error: teamMembersError } = trpc.teams.listTeamMembers.useQuery(teamId)
   const addTeamMemberMutation = trpc.teams.addTeamMember.useMutation()
   const removeTeamMemberMutation = trpc.teams.removeTeamMember.useMutation()
   const updateTeamMemberRoleMutation = trpc.teams.updateTeamMemberRole.useMutation()
@@ -31,11 +33,7 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
       onTeamUpdated()
     } catch (error: any) {
       console.error('Error adding team member:', error);
-      if (error.message.includes('User not found')) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Failed to add team member. Please try again.');
-      }
+      setErrorMessage(error.message || 'Failed to add team member. Please try again.');
       setShowErrorDialog(true);
     }
   };
@@ -45,9 +43,10 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
       await removeTeamMemberMutation.mutateAsync(memberId)
       refetchMembers()
       onTeamUpdated()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing team member:', error)
-      alert('Failed to remove team member. Please try again.')
+      setErrorMessage(error.message || 'Failed to remove team member. Please try again.');
+      setShowErrorDialog(true);
     }
   }
 
@@ -56,10 +55,15 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
       await updateTeamMemberRoleMutation.mutateAsync({ teamMemberId: memberId, newRole })
       refetchMembers()
       onTeamUpdated()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating team member role:', error)
-      alert('Failed to update team member role. Please try again.')
+      setErrorMessage(error.message || 'Failed to update team member role. Please try again.');
+      setShowErrorDialog(true);
     }
+  }
+
+  if (teamMembersError) {
+    return <div>Error loading team members: {teamMembersError.message}</div>
   }
 
   return (
@@ -147,7 +151,7 @@ export default function TeamMemberList({ teamId, onTeamUpdated }: TeamMemberList
             <DialogTitle>Error</DialogTitle>
           </DialogHeader>
           <Alert variant="destructive">
-            <AlertTitle>Failed to add team member</AlertTitle>
+            <AlertTitle>Operation Failed</AlertTitle>
             <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
           <Button onClick={() => setShowErrorDialog(false)}>Close</Button>

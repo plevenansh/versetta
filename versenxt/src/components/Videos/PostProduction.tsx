@@ -13,6 +13,7 @@ interface Project {
   id: number;
   videoAssets: VideoAsset[];
   thumbnails: Thumbnail[];
+  productionNotes: string | null;
 }
 
 interface VideoAsset {
@@ -41,56 +42,117 @@ interface NewThumbnail {
 export default function PostProduction({ project }: { project: Project }) {
   const [newVideoAsset, setNewVideoAsset] = useState<NewVideoAsset>({ title: '', url: '', type: '' })
   const [newThumbnail, setNewThumbnail] = useState<NewThumbnail>({ imageUrl: '' })
-  const [feedback, setFeedback] = useState('')
+  const [feedback, setFeedback] = useState(project.productionNotes || '')
 
-  const addVideoAsset = trpc.projectPage.addVideoAsset.useMutation()
-  const deleteVideoAsset = trpc.projectPage.deleteVideoAsset.useMutation()
-  const addThumbnail = trpc.projectPage.addThumbnail.useMutation()
-  const updateThumbnail = trpc.projectPage.updateThumbnail.useMutation()
-  const deleteThumbnail = trpc.projectPage.deleteThumbnail.useMutation()
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
+  const utils = trpc.useContext();
+
+  const addVideoAsset = trpc.projectPage.addVideoAsset.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteVideoAsset = trpc.projectPage.deleteVideoAsset.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addThumbnail = trpc.projectPage.addThumbnail.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const updateThumbnail = trpc.projectPage.updateThumbnail.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteThumbnail = trpc.projectPage.deleteThumbnail.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
 
   const handleAddVideoAsset = async () => {
     if (newVideoAsset.title.trim() && newVideoAsset.url.trim() && newVideoAsset.type.trim()) {
-      await addVideoAsset.mutateAsync({
-        projectId: project.id,
-        ...newVideoAsset,
-      })
-      setNewVideoAsset({ title: '', url: '', type: '' })
+      try {
+        await addVideoAsset.mutateAsync({
+          projectId: project.id,
+          ...newVideoAsset,
+        });
+        setNewVideoAsset({ title: '', url: '', type: '' });
+      } catch (error) {
+        console.error('Failed to add video asset:', error);
+        // Handle error (e.g., show error message to user)
+      }
     }
   }
 
   const handleDeleteVideoAsset = async (id: number) => {
-    await deleteVideoAsset.mutateAsync(id)
+    try {
+      await deleteVideoAsset.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to delete video asset:', error);
+      // Handle error
+    }
   }
 
   const handleAddThumbnail = async () => {
     if (newThumbnail.imageUrl.trim()) {
-      await addThumbnail.mutateAsync({
-        projectId: project.id,
-        ...newThumbnail,
-      })
-      setNewThumbnail({ imageUrl: '' })
+      try {
+        await addThumbnail.mutateAsync({
+          projectId: project.id,
+          ...newThumbnail,
+        });
+        setNewThumbnail({ imageUrl: '' });
+      } catch (error) {
+        console.error('Failed to add thumbnail:', error);
+        // Handle error
+      }
     }
   }
 
   const handleUpdateThumbnail = async (id: number, selected: boolean) => {
-    await updateThumbnail.mutateAsync({
-      id,
-      selected,
-    })
+    try {
+      await updateThumbnail.mutateAsync({
+        id,
+        selected,
+      });
+    } catch (error) {
+      console.error('Failed to update thumbnail:', error);
+      // Handle error
+    }
   }
 
   const handleDeleteThumbnail = async (id: number) => {
-    await deleteThumbnail.mutateAsync(id)
+    try {
+      await deleteThumbnail.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to delete thumbnail:', error);
+      // Handle error
+    }
   }
 
   const handleFeedbackChange = async (newFeedback: string) => {
-    setFeedback(newFeedback)
-    await updateProject.mutateAsync({
-      id: project.id,
-      productionNotes: newFeedback, // Assuming 'productionNotes' is the correct field for feedback
-    })
+    setFeedback(newFeedback);
+    try {
+      await updateProject.mutateAsync({
+        id: project.id,
+        productionNotes: newFeedback,
+      });
+    } catch (error) {
+      console.error('Failed to update feedback:', error);
+      // Handle error
+    }
   }
 
   return (

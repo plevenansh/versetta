@@ -1,3 +1,4 @@
+// src/components/EditProjectModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { trpc } from '../trpc/client';
 import { Button } from "./ui/button";
@@ -5,6 +6,9 @@ import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { X, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useToast } from "@/hooks/use-toast"
+
+
 interface EditProjectModalProps {
   project: {
     id: number;
@@ -32,31 +36,41 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const [newStage, setNewStage] = useState('');
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { toast } = useToast();
 
-  const updateProjectMutation = trpc.projects.update.useMutation({
-    onSuccess: () => {
+  const updateProjectMutation = trpc.projects.update.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateProjectMutation.mutateAsync({
+        id: project.id,
+        title,
+        description,
+        status,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        teamId,
+        stages: stages.map((s, index) => ({
+          id: s.id,
+          stage: s.stage,
+          completed: s.completed,
+          order: s.order !== undefined ? s.order : index
+        }))
+      });
       onUpdate();
       onClose();
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProjectMutation.mutate({
-      id: project.id,
-      title,
-      description,
-      status,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      teamId,
-      stages: stages.map((s, index) => ({
-        id: s.id,
-        stage: s.stage,
-        completed: s.completed,
-        order: s.order !== undefined ? s.order : index // Use existing order or fallback to index
-      }))
-    });
+      toast({
+        title: "Project updated",
+        description: "Your project has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update project. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -76,10 +90,10 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
   const handleAddStage = () => {
     if (newStage.trim()) {
       setStages([...stages, {
-        id: Date.now(), // Temporary ID for new stages
+        id: Date.now(),
         stage: newStage.trim(),
         completed: false,
-        order: stages.length // Assign the next available order
+        order: stages.length
       }]);
       setNewStage('');
     }
@@ -96,7 +110,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
           <DialogTitle>Edit Project</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Project Title"
@@ -111,22 +125,13 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
             onKeyDown={(e) => handleKeyDown(e, 1)}
             ref={(el) => {inputRefs.current[1] = el;}}
           />
-          {/* <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-          </Select> */}
           <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             placeholder="Start Date"
             onKeyDown={(e) => handleKeyDown(e, 2)}
-            ref={(el) => {(inputRefs.current[2] = el);}}
+            ref={(el) => {inputRefs.current[2] = el;}}
           />
           <Input
             type="date"
@@ -164,7 +169,9 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
               </Button>
             </div>
           </div>
-          <Button type="submit">Update Project</Button>
+          <Button type="submit" disabled={updateProjectMutation.isPending}>
+            {updateProjectMutation.isPending ? 'Updating...' : 'Update Project'}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

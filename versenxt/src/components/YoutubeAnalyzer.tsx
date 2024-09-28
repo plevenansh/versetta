@@ -7,6 +7,9 @@ import { Textarea } from "./ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { trpc } from '../trpc/client';
+import { useRouter } from 'next/navigation';
+import { TRPCClientError } from '@trpc/client';
+
 interface AnalysisData {
   general: string;
   topComments: string[];
@@ -24,32 +27,42 @@ export default function YouTubeCommentAnalyzer() {
   const [customPrompt, setCustomPrompt] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-    
+  const analyzeCommentsMutation = trpc.youtube.analyzeComments.useMutation();
 
-  const analyzeCommentsMutation = trpc.youtube.analyzeComments.useMutation({
-    onSuccess: (data) => {
-      // Ensure the data matches AnalysisData interface
-      const analysisData: AnalysisData = {
-        general: data.general || "No general analysis provided",
-        topComments: Array.isArray(data.topComments) ? data.topComments : [],
-        contentIdeas: Array.isArray(data.contentIdeas) ? data.contentIdeas : []
-      };
-      setAnalysis(analysisData);
-      setIsLoading(false);
-    },
-    onError: (error) => {
-      console.error('Error analyzing comments:', error);
-      setIsLoading(false);
-    },
-  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await analyzeCommentsMutation.mutateAsync({ 
-      url: youtubeUrl,
-      prompt: customPrompt || suggestedPrompts[0]
-    });
+    setError(null);
+
+    try {
+      const result = await analyzeCommentsMutation.mutateAsync({ 
+        url: youtubeUrl,
+        prompt: customPrompt || suggestedPrompts[0]
+      });
+
+      const analysisData: AnalysisData = {
+        general: result.general || "No general analysis provided",
+        topComments: Array.isArray(result.topComments) ? result.topComments : [],
+        contentIdeas: Array.isArray(result.contentIdeas) ? result.contentIdeas : []
+      };
+      setAnalysis(analysisData);
+    } catch (err) {
+      if (err instanceof TRPCClientError) {
+        if (err.data?.code === 'UNAUTHORIZED') {
+          router.push('/login');
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
+      console.error('Error analyzing comments:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,6 +103,14 @@ export default function YouTubeCommentAnalyzer() {
         </CardContent>
       </Card>
 
+      {error && (
+        <Card>
+          <CardContent>
+            <p className="text-red-500">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {analysis && (
         <Card>
           <CardHeader>
@@ -103,7 +124,7 @@ export default function YouTubeCommentAnalyzer() {
                 <TabsTrigger value="contentIdeas">Content Ideas</TabsTrigger>
               </TabsList>
               <TabsContent value="general">
-                <p className="mt-4 ">{analysis.general}</p>
+                <p className="mt-4">{analysis.general}</p>
               </TabsContent>
               <TabsContent value="topComments">
                 <ul className="mt-4 space-y-2">

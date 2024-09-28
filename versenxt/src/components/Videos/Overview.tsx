@@ -4,9 +4,8 @@ import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
-import { Edit3, Video, Users, Activity } from 'lucide-react'
+import { Edit3, Video, Users, Activity, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback } from "../ui/avatar"
-import { Plus } from 'lucide-react'
 import { trpc } from '../../trpc/client'
 import { Progress } from "../ui/progress"
 
@@ -47,32 +46,52 @@ interface Project {
   duration?: string;
   stages: ProjectStage[];
   tasks: Task[];
-  // Add other properties as needed
 }
+
 interface OverviewProps {
   project: Project;
 }
 
 export default function Overview({ project }: OverviewProps) {
-  const addTask = trpc.projectPage.addTask.useMutation()
-  const updateTask = trpc.projectPage.updateTask.useMutation()
+  const utils = trpc.useContext();
+
+  const addTask = trpc.projectPage.addTask.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    },
+  });
+
+  // const updateTask = trpc.projectPage.updateTask.useMutation({
+  //   onSuccess: () => {
+  //     utils.projectPage.getProjectDetails.invalidate(project.id);
+  //   },
+  // });
 
   const handleAddTask = async () => {
-    await addTask.mutateAsync({
-      projectId: project.id,
-      teamId: project.teamId,
-      creatorId: project.creatorId,
-      title: "New Task",
-      description: "Task description",
-    })
+    try {
+      await addTask.mutateAsync({
+        projectId: project.id,
+        teamId: project.teamId,
+        title: "New Task",
+        description: "Task description",
+      });
+    } catch (error) {
+      console.error('Error adding task:', error);
+      // Handle error (e.g., show error message to user)
+    }
   }
 
-  const handleUpdateTask = async (taskId: number, completed: boolean) => {
-    await updateTask.mutateAsync({
-      id: taskId,
-      status: completed ? "Completed" : "In Progress",
-    })
-  }
+  // const handleUpdateTask = async (taskId: number, completed: boolean) => {
+  //   try {
+  //     await updateTask.mutateAsync({
+  //       id: taskId,
+  //       status: completed ? "completed" : "pending",
+  //     });
+  //   } catch (error) {
+  //     console.error('Error updating task:', error);
+  //     // Handle error (e.g., show error message to user)
+  //   }
+  // }
 
   return (
     <div className="space-y-6">
@@ -157,11 +176,11 @@ export default function Overview({ project }: OverviewProps) {
               {project.tasks.map((task: Task) => (
                 <div key={task.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
+                    {/* <Checkbox 
                       id={`task-${task.id}`} 
-                      checked={task.status === "Completed"}
+                      checked={task.status === "completed"}
                       onCheckedChange={(checked) => handleUpdateTask(task.id, checked as boolean)}
-                    />
+                    /> */}
                     <label htmlFor={`task-${task.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {task.title}
                     </label>

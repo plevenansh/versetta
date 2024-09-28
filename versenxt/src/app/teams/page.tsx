@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { trpc } from '../../trpc/client'
 import { Button } from "../../components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
@@ -9,32 +8,33 @@ import { Dialog, DialogTrigger } from "../../components/ui/dialog"
 import { PlusCircle } from 'lucide-react'
 import TeamCard from '../../components/TeamCard'
 import CreateTeamForm from '../../components/CreateTeamForm'
+import { useRouter } from 'next/navigation'
 
 export default function TeamsPage() {
-  const [user, setUser] = useState<any>(null)
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false)
+  const router = useRouter()
 
-  const { data: userTeams, isLoading, refetch } = trpc.teams.getUserTeams.useQuery(
-    { workOsUserId: user?.workOsUserId || '' },
-    { enabled: !!user?.workOsUserId }
-  )
+  const { data: userTeams, isLoading, error, refetch } = trpc.teams.getUserTeams.useQuery(undefined, {
+    retry: false,
+  })
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user')
-        if (!response.ok) {
-          throw new Error('Failed to fetch user')
-        }
-        const userData = await response.json()
-        setUser(userData)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      }
+  if (error) {
+    if (error.data?.code === 'UNAUTHORIZED') {
+      router.push('/login')
+      return null
     }
+    return <div>Error: {error.message}</div>
+  }
 
-    fetchUser()
-  }, [])
+  const deleteTeamMutation = trpc.teams.deleteTeam.useMutation({
+    onSuccess: () => {
+      refetch()
+    },
+    onError: (error) => {
+      console.error('Error deleting team:', error)
+      alert('Failed to delete team. Please try again.')
+    }
+  })
 
   const handleTeamCreated = () => {
     setIsCreateTeamDialogOpen(false)
@@ -43,18 +43,16 @@ export default function TeamsPage() {
 
   const handleDeleteTeam = async (teamId: number) => {
     try {
-      await trpc.teams.deleteTeam.useMutation().mutateAsync(teamId)
-      refetch()
+      await deleteTeamMutation.mutateAsync(teamId)
     } catch (error) {
       console.error('Error deleting team:', error)
-      alert('Failed to delete team. Please try again.')
     }
   }
 
   if (isLoading) return <div className="container mx-auto py-10">Loading teams...</div>
 
-  const myTeams = userTeams?.filter(team => team.creator.id === user?.id) || []
-  const otherTeams = userTeams?.filter(team => team.creator.id !== user?.id) || []
+  const myTeams = userTeams?.filter(team => team.creatorId === team.creator.id) || []
+  const otherTeams = userTeams?.filter(team => team.creatorId !== team.creator.id) || []
 
   return (
     <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -94,5 +92,3 @@ export default function TeamsPage() {
     </div>
   )
 }
-
-

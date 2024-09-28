@@ -1,4 +1,4 @@
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
 import { WorkOS } from '@workos-inc/node';
@@ -6,28 +6,27 @@ import { TRPCError } from '@trpc/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-  const workos = new WorkOS(process.env.WORKOS_API_KEY);
-  const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_SECRET_KEY!,
-    });
+const workos = new WorkOS(process.env.WORKOS_API_KEY);
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_SECRET_KEY!,
+});
 
-    function verifyRazorpaySignature(paymentId: string, subscriptionId: string, razorpaySignature: string, keySecret: string): boolean {
-      const payload = `${paymentId}|${subscriptionId}`;
-      const generatedSignature = crypto
-        .createHmac('sha256', keySecret)
-        .update(payload)
-        .digest('hex');
-    
-      return generatedSignature === razorpaySignature;
-    }
+function verifyRazorpaySignature(paymentId: string, subscriptionId: string, razorpaySignature: string, keySecret: string): boolean {
+  const payload = `${paymentId}|${subscriptionId}`;
+  const generatedSignature = crypto
+    .createHmac('sha256', keySecret)
+    .update(payload)
+    .digest('hex');
 
+  return generatedSignature === razorpaySignature;
+}
 
 export const teamRouter = router({
-  getTeam: publicProcedure
+  getTeam: protectedProcedure
     .input(z.number())
-    .query(async ({ input }) => {
-      return prisma.team.findUnique({
+    .query(async ({ input, ctx }) => {
+      const team = await prisma.team.findUnique({
         where: { id: input },
         include: {
           members: {
@@ -37,64 +36,70 @@ export const teamRouter = router({
           tasks: true,
         },
       });
+
+      if (!team) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Team not found' });
+      }
+
+      const isMember = team.members.some(member => member.userId === ctx.user.id);
+      if (!isMember) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not have access to this team' });
+      }
+
+      return team;
     }),
 
-  
-// In teams.ts tRPC router
+  // In teams.ts tRPC router
 
-// getUserTeams: publicProcedure
-//   .input(z.object({ workOsUserId: z.string() }))
-//   .query(async ({ input }) => {
-//     const user = await prisma.user.findUnique({
-//       where: { workOsUserId: input.workOsUserId },
-//       include: {
-//         teamMemberships: {
-//           include: {
-//             team: true
-//           }
-//         }
-//       }
-//     });
+  // getUserTeams: publicProcedure
+  //   .input(z.object({ workOsUserId: z.string() }))
+  //   .query(async ({ input }) => {
+  //     const user = await prisma.user.findUnique({
+  //       where: { workOsUserId: input.workOsUserId },
+  //       include: {
+  //         teamMemberships: {
+  //           include: {
+  //             team: true
+  //           }
+  //         }
+  //       }
+  //     });
 
-//     if (!user) {
-//       throw new TRPCError({
-//         code: 'NOT_FOUND',
-//         message: 'User not found',
-//       });
-//     }
+  //     if (!user) {
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: 'User not found',
+  //       });
+  //     }
 
-//     return user.teamMemberships.map(membership => membership.team);
-//   }),
+  //     return user.teamMemberships.map(membership => membership.team);
+  //   }),
 
-
-
-  getUserTeams: publicProcedure
-  .input(z.object({ workOsUserId: z.string() }))
-  .query(async ({ input }) => {
-    const user = await prisma.user.findUnique({
-      where: { workOsUserId: input.workOsUserId },
-      include: {
-        teamMemberships: {
-          include: {
-            team: {
-              include: {
-                creator: true
+  getUserTeams: protectedProcedure
+    .query(async ({ ctx }) => {
+      const user = await prisma.user.findUnique({
+        where: { id: ctx.user.id },
+        include: {
+          teamMemberships: {
+            include: {
+              team: {
+                include: {
+                  creator: true
+                }
               }
             }
           }
         }
+      });
+
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
       }
-    });
 
-    if (!user) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
-    }
+      return user.teamMemberships.map(membership => membership.team);
+    }),
 
-    return user.teamMemberships.map(membership => membership.team);
-  }),
-
-
-  //   initiateTeamCreation: publicProcedure
+  // initiateTeamCreation: publicProcedure
   // .input(z.object({
   //   name: z.string(),
   //   description: z.string().optional(),
@@ -119,7 +124,6 @@ export const teamRouter = router({
   //   });
   //   console.log('workOsOrg', workOsOrg);
 
-
   //    const team = await prisma.team.create({
   //       data: {
   //         name: input.name,
@@ -135,7 +139,6 @@ export const teamRouter = router({
   //       },
   //     });
 
-      
   //   console.log('team', team);
 
   //   // Initiate payment based on provider
@@ -173,22 +176,15 @@ export const teamRouter = router({
   //   }
   // }),
 
-  initiateTeamCreation: publicProcedure
+  initiateTeamCreation: protectedProcedure
     .input(z.object({
       name: z.string(),
       description: z.string().optional(),
-      workOsUserId: z.string(),
       subscriptionType: z.enum(['razorpay', 'polar', 'invite']),
     }))
-    .mutation(async ({ input }) => {
-      const user = await prisma.user.findUnique({
-        where: { workOsUserId: input.workOsUserId },
-      });
+    .mutation(async ({ input, ctx }) => {
+      const user = ctx.user;
       console.log('user', user);
-
-      if (!user) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
-      }
 
       const workOsOrg = await workos.organizations.createOrganization({
         name: input.name,
@@ -246,117 +242,132 @@ export const teamRouter = router({
       }
     }),
 
-  completeTeamCreation: publicProcedure
-  .input(z.object({
-    teamId: z.number(),
-    razorpayPaymentId: z.string(),
-    razorpaySignature: z.string(),
-  }))
-  .mutation(async ({ input }) => {
-    const subscription = await prisma.subscription.findUnique({
-      where: { teamId: input.teamId },
-      include: { 
-        team: {
-          include: {
-            creator: true
-          }
-        }
-      },
-    });
-
-    if (!subscription) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Subscription not found',
-      });
-    }
-
-    // Verify Razorpay signature
-    const isValid = verifyRazorpaySignature(
-      input.razorpayPaymentId,
-      subscription.providerId || '',
-      input.razorpaySignature,
-      process.env.RAZORPAY_SECRET_KEY as string
-    );
-
-    if (!isValid) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Invalid signature',
-      });
-    }
-
-    // Update subscription status
-    await prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        status: 'active',
-        subActive: true,
-      },
-    });
-
-    if (!subscription.team.creator) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Team creator not found',
-      });
-    }
-
-    // Create WorkOS organization membership for the creator
-    const workOsMembership = await workos.userManagement.createOrganizationMembership({
-      organizationId: subscription.team.workOsOrgId,
-      userId: subscription.team.creator.workOsUserId,
-      roleSlug: 'admin',
-    });
-
-    // Update TeamMember with WorkOS membership ID
-    await prisma.teamMember.update({
-      where: {
-        userId_teamId: {
-          userId: subscription.team.creatorId,
-          teamId: subscription.teamId,
-        },
-      },
-      data: {
-        workOsMembershipId: workOsMembership.id,
-      },
-    });
-
-    return { success: true };
-  }),
-  
-
-  
-  addTeamMember: publicProcedure
-  .input(
-    z.object({
+  completeTeamCreation: protectedProcedure
+    .input(z.object({
       teamId: z.number(),
-      email: z.string().email(),
-      role: z.string(),
-    })
-  )
-  .mutation(async ({ input }) => {
-    const team = await prisma.team.findUnique({
-      where: { id: input.teamId },
-    });
-
-    if (!team) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Team not found',
+      razorpayPaymentId: z.string(),
+      razorpaySignature: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const subscription = await prisma.subscription.findUnique({
+        where: { teamId: input.teamId },
+        include: { 
+          team: {
+            include: {
+              creator: true
+            }
+          }
+        },
       });
-    }
 
-    const user = await prisma.user.findUnique({
-      where: { email: input.email },
-    });
+      if (!subscription) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
+      }
 
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found. Please ask them to sign up on Versetta before adding them to the team.',
+      if (subscription.team.creatorId !== ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to complete this team creation',
+        });
+      }
+
+      // Verify Razorpay signature
+      const isValid = verifyRazorpaySignature(
+        input.razorpayPaymentId,
+        subscription.providerId || '',
+        input.razorpaySignature,
+        process.env.RAZORPAY_SECRET_KEY as string
+      );
+
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid signature',
+        });
+      }
+
+      // Update subscription status
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          status: 'active',
+          subActive: true,
+        },
       });
-    }
+
+      if (!subscription.team.creator) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Team creator not found',
+        });
+      }
+
+      // Create WorkOS organization membership for the creator
+      const workOsMembership = await workos.userManagement.createOrganizationMembership({
+        organizationId: subscription.team.workOsOrgId,
+        userId: subscription.team.creator.workOsUserId,
+        roleSlug: 'admin',
+      });
+
+      // Update TeamMember with WorkOS membership ID
+      await prisma.teamMember.update({
+        where: {
+          userId_teamId: {
+            userId: subscription.team.creatorId,
+            teamId: subscription.teamId,
+          },
+        },
+        data: {
+          workOsMembershipId: workOsMembership.id,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  addTeamMember: protectedProcedure
+    .input(
+      z.object({
+        teamId: z.number(),
+        email: z.string().email(),
+        role: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const team = await prisma.team.findUnique({
+        where: { id: input.teamId },
+        include: { members: true },
+      });
+
+      if (!team) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Team not found',
+        });
+      }
+
+      const isAdmin = team.members.some(member => member.userId === ctx.user.id && member.role === 'admin');
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to add team members',
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email: input.email },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found. Please ask them to sign up on Versetta before adding them to the team.',
+        });
+      }
+
       // Check if the user is already a member of the team
       const existingMember = await prisma.teamMember.findUnique({
         where: {
@@ -400,9 +411,9 @@ export const teamRouter = router({
       }
     }),
 
-  removeTeamMember: publicProcedure
+  removeTeamMember: protectedProcedure
     .input(z.number())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const teamMember = await prisma.teamMember.findUnique({
         where: { id: input },
         include: { team: true },
@@ -412,6 +423,21 @@ export const teamRouter = router({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Team member not found',
+        });
+      }
+
+      const isAdmin = await prisma.teamMember.findFirst({
+        where: {
+          teamId: teamMember.teamId,
+          userId: ctx.user.id,
+          role: 'admin',
+        },
+      });
+
+      if (!isAdmin && ctx.user.id !== teamMember.userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to remove this team member',
         });
       }
 
@@ -428,26 +454,42 @@ export const teamRouter = router({
       return { success: true };
     }),
 
-  updateTeamMemberRole: publicProcedure
+    updateTeamMemberRole: protectedProcedure
     .input(
       z.object({
         teamMemberId: z.number(),
         newRole: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const teamMember = await prisma.teamMember.findUnique({
         where: { id: input.teamMemberId },
         include: { team: true },
       });
-
+  
       if (!teamMember) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Team member not found',
         });
       }
-
+  
+      // Check if the user has permission to update roles
+      const isAdmin = await prisma.teamMember.findFirst({
+        where: {
+          userId: ctx.user.id,
+          teamId: teamMember.teamId,
+          role: 'admin',
+        },
+      });
+  
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to update team member roles',
+        });
+      }
+  
       if (teamMember.workOsMembershipId) {
         await workos.userManagement.updateOrganizationMembership(
           teamMember.workOsMembershipId,
@@ -456,31 +498,62 @@ export const teamRouter = router({
           }
         );
       }
-
+  
       const updatedTeamMember = await prisma.teamMember.update({
         where: { id: input.teamMemberId },
         data: { role: input.newRole },
       });
-
+  
       return updatedTeamMember;
     }),
-
-  listTeamMembers: publicProcedure
+  
+  listTeamMembers: protectedProcedure
     .input(z.number())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Check if the user is a member of the team
+      const isMember = await prisma.teamMember.findFirst({
+        where: {
+          userId: ctx.user.id,
+          teamId: input,
+        },
+      });
+  
+      if (!isMember) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this team',
+        });
+      }
+  
       const teamMembers = await prisma.teamMember.findMany({
         where: { teamId: input },
         include: { user: true },
       });
-
+  
       return teamMembers;
     }),
-
-    getOrganizationMembership: publicProcedure
+  
+  getOrganizationMembership: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const organizationMembership = await workos.userManagement.getOrganizationMembership(input);
+        
+        // Check if the user has permission to view this membership
+        const isMember = await prisma.teamMember.findFirst({
+          where: {
+            userId: ctx.user.id,
+            workOsMembershipId: input,
+          },
+        });
+  
+        if (!isMember) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to view this organization membership',
+          });
+        }
+  
         return organizationMembership;
       } catch (error) {
         throw new TRPCError({
@@ -489,8 +562,8 @@ export const teamRouter = router({
         });
       }
     }),
-
-  listOrganizationMemberships: publicProcedure
+  
+  listOrganizationMemberships: protectedProcedure
     .input(z.object({
       userId: z.string().optional(),
       organizationId: z.string().optional(),
@@ -500,8 +573,23 @@ export const teamRouter = router({
       after: z.string().optional(),
       order: z.enum(['asc', 'desc']).optional(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
+        // Check if the user has permission to list organization memberships
+        const isAdmin = await prisma.teamMember.findFirst({
+          where: {
+            userId: ctx.user.id,
+            role: 'admin',
+          },
+        });
+  
+        if (!isAdmin) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to list organization memberships',
+          });
+        }
+  
         const organizationMemberships = await workos.userManagement.listOrganizationMemberships(input);
         return organizationMemberships;
       } catch (error) {
@@ -511,69 +599,76 @@ export const teamRouter = router({
         });
       }
     }),
-    
-    deleteTeam: publicProcedure
-  .input(z.number())
-  .mutation(async ({ input }) => {
-    try {
-      const team = await prisma.team.findUnique({
-        where: { id: input },
-        include: { members: true, subscription: true }
-      });
-
-      if (!team) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Team not found',
+  
+  deleteTeam: protectedProcedure
+    .input(z.number())
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const team = await prisma.team.findUnique({
+          where: { id: input },
+          include: { members: true, subscription: true }
         });
-      }
-
-      // Start a transaction
-      await prisma.$transaction(async (prisma) => {
-        // Delete associated subscription if it exists
-        if (team.subscription) {
-          await prisma.subscription.delete({
-            where: { teamId: team.id }
+  
+        if (!team) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Team not found',
           });
         }
-
-        // Delete WorkOS organization
-        await workos.organizations.deleteOrganization(team.workOsOrgId);
-
-        // Delete team members
-        await prisma.teamMember.deleteMany({
-          where: { teamId: team.id }
+  
+        // Check if the user is the team admin
+        const isAdmin = team.members.some(member => member.userId === ctx.user.id && member.role === 'admin');
+  
+        if (!isAdmin) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to delete this team',
+          });
+        }
+  
+        // Start a transaction
+        await prisma.$transaction(async (prisma) => {
+          // Delete associated subscription if it exists
+          if (team.subscription) {
+            await prisma.subscription.delete({
+              where: { teamId: team.id }
+            });
+          }
+  
+          // Delete WorkOS organization
+          await workos.organizations.deleteOrganization(team.workOsOrgId);
+  
+          // Delete team members
+          await prisma.teamMember.deleteMany({
+            where: { teamId: team.id }
+          });
+  
+          // Delete associated projects
+          await prisma.project.deleteMany({
+            where: { teamId: team.id }
+          });
+  
+          // Delete associated tasks
+          await prisma.task.deleteMany({
+            where: { teamId: team.id }
+          });
+  
+          // Finally, delete the team
+          await prisma.team.delete({
+            where: { id: team.id }
+          });
         });
-
-        // Delete associated projects
-        await prisma.project.deleteMany({
-          where: { teamId: team.id }
+  
+        return { success: true };
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete team',
+          cause: error,
         });
-
-        // Delete associated tasks
-        await prisma.task.deleteMany({
-          where: { teamId: team.id }
-        });
-
-        // Finally, delete the team
-        await prisma.team.delete({
-          where: { id: team.id }
-        });
-      });
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error deleting team:', error);
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to delete team',
-        cause: error,
-      });
-    }
-  }),
-
-    
-
+      }
+    }),
 });
 
 //   createTeam: publicProcedure

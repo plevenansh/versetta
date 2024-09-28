@@ -5,7 +5,6 @@ import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
 import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
-import { Badge } from "../ui/badge"
 import { Plus, X } from 'lucide-react'
 import { trpc } from '../../trpc/client'
 
@@ -33,7 +32,6 @@ interface Project {
   filmingSchedule: FilmingSession[];
   bRollIdeas: BRollIdea[];
   shotList: Shot[];
-  // Add other properties that are present in the project data
   title: string;
   description: string | null;
   status: string;
@@ -47,7 +45,6 @@ interface Project {
   completed: boolean;
   concept: string | null;
   script: string | null;
-  // Add any other properties that are present in your project data
 }
 
 export default function Production({ project }: { project: Project }) {
@@ -56,70 +53,143 @@ export default function Production({ project }: { project: Project }) {
   const [newShot, setNewShot] = useState('')
   const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
 
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
-  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation()
-  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation()
-  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation()
-  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation()
-  const addShot = trpc.projectPage.addShot.useMutation()
-  const updateShot = trpc.projectPage.updateShot.useMutation()
-  const deleteShot = trpc.projectPage.deleteShot.useMutation()
+  const utils = trpc.useContext();
+
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addShot = trpc.projectPage.addShot.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const updateShot = trpc.projectPage.updateShot.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteShot = trpc.projectPage.deleteShot.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
 
   const handleProductionNotesChange = async (notes: string) => {
     setProductionNotes(notes)
-    await updateProject.mutateAsync({
-      id: project.id,
-      productionNotes: notes,
-    })
+    try {
+      await updateProject.mutateAsync({
+        id: project.id,
+        productionNotes: notes,
+      })
+    } catch (error) {
+      console.error('Failed to update production notes:', error)
+    }
   }
 
   const handleAddFilmingSession = async () => {
     if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
-      await addFilmingSession.mutateAsync({
-        projectId: project.id,
-        ...newFilmingSession,
-      })
-      setNewFilmingSession({ scene: '', time: '', location: '' })
+      try {
+        await addFilmingSession.mutateAsync({
+          projectId: project.id,
+          ...newFilmingSession,
+        })
+        setNewFilmingSession({ scene: '', time: '', location: '' })
+      } catch (error) {
+        console.error('Failed to add filming session:', error)
+      }
     }
   }
 
   const handleDeleteFilmingSession = async (id: number) => {
-    await deleteFilmingSession.mutateAsync(id)
+    try {
+      await deleteFilmingSession.mutateAsync(id)
+    } catch (error) {
+      console.error('Failed to delete filming session:', error)
+    }
   }
 
   const handleAddBRollIdea = async () => {
     if (newBRollIdea.trim()) {
-      await addBRollIdea.mutateAsync({
-        projectId: project.id,
-        idea: newBRollIdea,
-      })
-      setNewBRollIdea('')
+      try {
+        await addBRollIdea.mutateAsync({
+          projectId: project.id,
+          idea: newBRollIdea,
+        })
+        setNewBRollIdea('')
+      } catch (error) {
+        console.error('Failed to add B-Roll idea:', error)
+      }
     }
   }
 
   const handleDeleteBRollIdea = async (id: number) => {
-    await deleteBRollIdea.mutateAsync(id)
+    try {
+      await deleteBRollIdea.mutateAsync(id)
+    } catch (error) {
+      console.error('Failed to delete B-Roll idea:', error)
+    }
   }
 
   const handleAddShot = async () => {
     if (newShot.trim()) {
-      await addShot.mutateAsync({
-        projectId: project.id,
-        description: newShot,
-      })
-      setNewShot('')
+      try {
+        await addShot.mutateAsync({
+          projectId: project.id,
+          description: newShot,
+        })
+        setNewShot('')
+      } catch (error) {
+        console.error('Failed to add shot:', error)
+      }
     }
   }
 
   const handleUpdateShot = async (id: number, completed: boolean) => {
-    await updateShot.mutateAsync({
-      id,
-      completed,
-    })
+    try {
+      await updateShot.mutateAsync({
+        id,
+        completed,
+      })
+    } catch (error) {
+      console.error('Failed to update shot:', error)
+    }
   }
 
   const handleDeleteShot = async (id: number) => {
-    await deleteShot.mutateAsync(id)
+    try {
+      await deleteShot.mutateAsync(id)
+    } catch (error) {
+      console.error('Failed to delete shot:', error)
+    }
   }
 
   return (

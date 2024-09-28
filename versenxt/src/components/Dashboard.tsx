@@ -1,8 +1,8 @@
+// src/components/ClientDashboard.tsx
 "use client"
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
-import { Cross } from 'lucide-react';
 import ProjectSection from './ProjectSection';
 import TaskList from './TaskList';
 import { trpc } from '../trpc/client';
@@ -10,74 +10,43 @@ import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
 import CalendarComponent from './Calendar';
 
-interface User {
-  id: number;
-  workOsUserId: string;
-  teams: any[];
-}
-
-export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showTeamPopup, setShowTeamPopup] = useState(false);
+export default function ClientDashboard() {
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const userData = await response.json();
-        console.log('Fetched user data:', userData);
-        setUser(userData);
-        if (userData.teams && userData.teams.length === 0) {
-          setShowTeamPopup(true);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        setError('Failed to fetch user data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: user, isLoading: userLoading, error: userError } = trpc.users.getOrCreateUser.useQuery();
+  const { data: userTeams, isLoading: teamsLoading } = trpc.teams.getUserTeams.useQuery(undefined, {
+    enabled: !!user
+  });
 
-    fetchUser();
-  }, []);
-
-  const { data: userTeams } = trpc.teams.getUserTeams.useQuery({ workOsUserId: user?.workOsUserId || '' });
-  
   const teamId = userTeams && userTeams.length > 0 ? userTeams[0].id : undefined;
 
-  const { data: activeProjectsCount } = trpc.projects.getActiveProjectsCount.useQuery(teamId || 0, {
-    enabled: !!teamId
-  });
+  const { data: activeProjectsCount, isLoading: projectsLoading } = trpc.projects.getActiveProjectsCount.useQuery(
+    teamId || 0,
+    { enabled: !!teamId }
+  );
 
-  const { data: nextProjectProgress } = trpc.projects.getNextProjectProgress.useQuery(teamId || 0, {
-    enabled: !!teamId
-  });
+  const { data: nextProjectProgress, isLoading: progressLoading } = trpc.projects.getNextProjectProgress.useQuery(
+    teamId || 0,
+    { enabled: !!teamId }
+  );
 
   const handleCreateTeam = () => {
     router.push('/teams');
   };
 
-  const handleClosePopup = () => {
-    setShowTeamPopup(false);
-  };
-
-  if (loading) {
+  if (userLoading || teamsLoading || projectsLoading || progressLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  if (userError) {
+    return <div>Error: {userError.message}</div>;
   }
 
   if (!user) {
     return <div>No user data available</div>;
   }
+
+  const showTeamPopup = userTeams && userTeams.length === 0;
 
   return (
     <div className="p-0 space-y-6">
@@ -88,7 +57,7 @@ export default function Dashboard() {
             <p className="mb-4">You don&#39;t have any teams yet. Create one to get started!</p>
             <div className="flex justify-between">
               <Button onClick={handleCreateTeam}>Create a Team</Button>
-              <Button variant="outline" onClick={handleClosePopup}>Maybe Later</Button>
+              <Button variant="outline" onClick={() => router.push('/')}>Maybe Later</Button>
             </div>
           </div>
         </div>
@@ -148,8 +117,6 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
 
 
 // return (

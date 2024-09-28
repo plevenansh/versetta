@@ -1,4 +1,4 @@
-//ProjectSection.tsx
+// ProjectSection.tsx
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "./ui/button";
@@ -8,8 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import ProjectCard from './ProjectCard';
 import { trpc } from '../trpc/client';
-import { Plus, X } from 'lucide-react';
-
+import { Plus } from 'lucide-react';
 
 interface Project {
   id: number;
@@ -21,7 +20,6 @@ interface Project {
   creatorId: number;
   teamId: number;
   stages: ProjectStage[];
-  //tasks?: Task[];
   isopen?: boolean;
   completed?: boolean;
   createdAt: string;
@@ -37,12 +35,20 @@ interface Project {
   creationOrder: number;
 }
 
+interface Team {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  description: string | null;
+  workOsOrgId: string;
+  creatorId: number;
+}
 interface NewProject {
   title: string;
   description: string;
   endDate: string;
   teamId: number;
-  creatorId: number;
 }
 
 interface ProjectStage {
@@ -60,51 +66,29 @@ export default function ProjectSection() {
   const [selectedStages, setSelectedStages] = useState<string[]>([]);
   const [newStage, setNewStage] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [user, setUser] = useState<any>(null);
-  const [userTeams, setUserTeams] = useState<any[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
-
+  
   const [newProject, setNewProject] = useState<NewProject>({
     title: '',
     description: '',
     endDate: '',
     teamId: 0,
-    creatorId: 0
   });
 
-  const { data: fetchedProjects, refetch } = trpc.projects.getByTeamId.useQuery(
+  const { data: user, isLoading: isUserLoading, error: userError } = trpc.users.getUser.useQuery();
+const { data: userTeams, isLoading: isTeamsLoading, error: teamsError } = trpc.users.getUserTeams.useQuery(undefined, { enabled: !!user });
+  const { data: fetchedProjects, isLoading: isProjectsLoading, error: projectsError, refetch } = trpc.projects.getByTeamId.useQuery(
     selectedTeamId || -1,
     { enabled: !!selectedTeamId }
   );
 
-  const createProjectMutation = trpc.projects.create.useMutation({
-    onSuccess: () => {
-      refetch();
-      setIsAddModalOpen(false);
-      setNewProject({ title: '', description: '', teamId: 0, creatorId: 0, endDate: '' });
-    },
-  });
+  const createProjectMutation = trpc.projects.create.useMutation();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (!response.ok) {
-          throw new Error('Failed to fetch user');
-        }
-        const userData = await response.json();
-        setUser(userData);
-        setUserTeams(userData.teams || []);
-        if (userData.teams && userData.teams.length > 0) {
-          setSelectedTeamId(userData.teams[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+    if (userTeams && userTeams.length > 0) {
+      setSelectedTeamId(userTeams[0].id);
+    }
+  }, [userTeams]);
 
   useEffect(() => {
     if (fetchedProjects) {
@@ -129,20 +113,26 @@ export default function ProjectSection() {
     setIsAddModalOpen(true);
   };
 
-  const handleCreateProject = () => {
-    if (!user || !selectedTeamId) {
-      alert('Please select a team and ensure you are logged in.');
+  const handleCreateProject = async () => {
+    if (!selectedTeamId) {
+      alert('Please select a team.');
       return;
     }
-    createProjectMutation.mutate({
-      ...newProject,
-      teamId: selectedTeamId,
-      creatorId: user.id,
-      startDate: new Date().toISOString(),
-      stages: selectedStages,   
-    });
+    try {
+      await createProjectMutation.mutateAsync({
+        ...newProject,
+        teamId: selectedTeamId,
+        startDate: new Date().toISOString(),
+        stages: selectedStages,   
+      });
+      refetch();
+      setIsAddModalOpen(false);
+      setNewProject({ title: '', description: '', teamId: 0, endDate: '' });
+    } catch (error) {
+      console.error('Error creating project:', error);
+      alert('Failed to create project. Please try again.');
+    }
   };
-
 
   const handleStageSelect = (stage: string) => {
     setSelectedStages(prev => prev.includes(stage) ? prev.filter(s => s !== stage) : [...prev, stage]);
@@ -173,44 +163,54 @@ export default function ProjectSection() {
     }
   };
 
+  if (isUserLoading || isTeamsLoading) {
+    return <div>Loading...</div>;
+  }
 
+  if (userError || teamsError) {
+    return <div>Error loading user data. Please try again.</div>;
+  }
 
   return (
     <Card className="w-full shadow-sm">
-     <CardHeader className="pb-2">
-  <div className="flex justify-between items-center">
-    <div className="flex items-center space-x-4">
-      <CardTitle className="text-2xl font-bold">Projects</CardTitle>
-      <Select
-        value={selectedTeamId?.toString() || ''}
-        onValueChange={(value) => setSelectedTeamId(Number(value))}
-      >
-        <SelectTrigger className="w-[120px] h-[30px] ">
-          <SelectValue placeholder="Select Team" />
-        </SelectTrigger>
-        <SelectContent>
-          {userTeams.map((team) => (
-            <SelectItem key={team.id} value={team.id.toString()}>
-              {team.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <Button 
-      onClick={handleAddProject} 
-      size="sm" 
-      className=""
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      Add New Project
-    </Button>
-  </div>
-</CardHeader>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <CardTitle className="text-2xl font-bold">Projects</CardTitle>
+            <Select
+              value={selectedTeamId?.toString() || ''}
+              onValueChange={(value) => setSelectedTeamId(Number(value))}
+            >
+              <SelectTrigger className="w-[120px] h-[30px] ">
+                <SelectValue placeholder="Select Team" />
+              </SelectTrigger>
+              <SelectContent>
+                {userTeams?.map((team) => (
+                  <SelectItem key={team.id} value={team.id.toString()}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button 
+            onClick={handleAddProject} 
+            size="sm" 
+            className=""
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Project
+          </Button>
+        </div>
+      </CardHeader>
       <CardContent>
-        {projects.length === 0 ? (
+        {isProjectsLoading ? (
+          <p className="text-gray-600 text-center py-4">Loading projects...</p>
+        ) : projectsError ? (
+          <p className="text-red-600 text-center py-4">Error loading projects. Please try again.</p>
+        ) : projects.length === 0 ? (
           <p className="text-gray-600 text-center py-4">No projects exist for this team. Create a new project to get started!</p>
-             ) : (
+        ) : (
           <div className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default">
             <div className="space-y-4">
               {projects.map(project => (
@@ -252,30 +252,20 @@ export default function ProjectSection() {
                 onKeyDown={(e) => handleKeyDown(e, 2)}
                 ref={(el) => {inputRefs.current[2] = el}}
               />
-              {/* <select
-                value={selectedTeamId || ''}
-                onChange={(e) => setSelectedTeamId(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Select
+                value={selectedTeamId?.toString() || ''}
+                onValueChange={(value) => setSelectedTeamId(Number(value))}
               >
-                <option value="">Select a Team</option>
-                {userTeams.map(team => (
-                  <option key={team.id} value={team.id}>{team.name}</option>
-                ))}
-              </select> */}
-               <Select
-                  value={selectedTeamId?.toString() || ''}
-                  onValueChange={(value) => setSelectedTeamId(Number(value))}
-                >
-                  <SelectTrigger className="w-[465px] h-[42px] rounded-2xl">
-                    <SelectValue placeholder="Select Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userTeams.map((team) => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <SelectTrigger className="w-[465px] h-[42px] rounded-2xl">
+                  <SelectValue placeholder="Select Team" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userTeams?.map((team) => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
               <div>
                 <h3 className="text-sm font-medium mb-2">Select Stages:</h3>
@@ -300,7 +290,6 @@ export default function ProjectSection() {
                 />
                 <Button onClick={handleAddNewStage}>Add</Button>
                 <Button onClick={handleAddAllStages}>Add All</Button>
-
               </div>
             </div>
             <DialogFooter>
@@ -312,148 +301,3 @@ export default function ProjectSection() {
     </Card>
   );
 }
-
-
-
-
-
-
-
-
-//   return (
-//     <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-sm">
-//      <CardHeader className="pb-2">
-//   <div className="flex justify-between items-center">
-//     <div className="flex items-center space-x-4">
-//       <CardTitle className="text-2xl font-bold">Projects</CardTitle>
-//       <Select
-//         value={selectedTeamId?.toString() || ''}
-//         onValueChange={(value) => setSelectedTeamId(Number(value))}
-//       >
-//         <SelectTrigger className="w-[120px] h-[30px] rounded-3xl">
-//           <SelectValue placeholder="Select Team" />
-//         </SelectTrigger>
-//         <SelectContent>
-//           {userTeams.map((team) => (
-//             <SelectItem key={team.id} value={team.id.toString()}>
-//               {team.name}
-//             </SelectItem>
-//           ))}
-//         </SelectContent>
-//       </Select>
-//     </div>
-//     <Button 
-//       onClick={handleAddProject} 
-//       size="sm" 
-//       className="bg-pink-100 text-pink-600 hover:bg-pink-200 rounded-3xl"
-//     >
-//       <Plus className="h-4 w-4 mr-2" />
-//       Add New Project
-//     </Button>
-//   </div>
-// </CardHeader>
-//       <CardContent>
-//         {projects.length === 0 ? (
-//           <p className="text-gray-600 text-center py-4">No projects exist for this team. Create a new project to get started!</p>
-//              ) : (
-//           <div className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default">
-//             <div className="space-y-4">
-//               {projects.map(project => (
-//                 <ProjectCard
-//                   key={project.id}
-//                   project={project}
-//                   refetchProjects={refetch}
-//                 />
-//               ))}
-//             </div>
-//           </div>
-//         )}
-
-//         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-//           <DialogContent>
-//             <DialogHeader>
-//               <DialogTitle>Add New Project</DialogTitle>
-//             </DialogHeader>
-//             <div className="space-y-4">
-//               <Input
-//                 placeholder="Project Title"
-//                 value={newProject.title}
-//                 onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-//                 onKeyDown={(e) => handleKeyDown(e, 0)}
-//                 ref={(el) => {inputRefs.current[0] = el}}
-//               />
-//               <Input
-//                 placeholder="Project Description"
-//                 value={newProject.description}
-//                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-//                 onKeyDown={(e) => handleKeyDown(e, 1)}
-//                 ref={(el) => {inputRefs.current[1] = el}}
-//               />
-//               <Input
-//                 type="date"
-//                 placeholder="End Date"
-//                 value={newProject.endDate}
-//                 onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
-//                 onKeyDown={(e) => handleKeyDown(e, 2)}
-//                 ref={(el) => {inputRefs.current[2] = el}}
-//               />
-//               {/* <select
-//                 value={selectedTeamId || ''}
-//                 onChange={(e) => setSelectedTeamId(Number(e.target.value))}
-//                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-//               >
-//                 <option value="">Select a Team</option>
-//                 {userTeams.map(team => (
-//                   <option key={team.id} value={team.id}>{team.name}</option>
-//                 ))}
-//               </select> */}
-//                <Select
-//                   value={selectedTeamId?.toString() || ''}
-//                   onValueChange={(value) => setSelectedTeamId(Number(value))}
-//                 >
-//                   <SelectTrigger className="w-[465px] h-[42px] rounded-2xl">
-//                     <SelectValue placeholder="Select Team" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     {userTeams.map((team) => (
-//                       <SelectItem key={team.id} value={team.id.toString()}>
-//                         {team.name}
-//                       </SelectItem>
-//                     ))}
-//                   </SelectContent>
-//               </Select>
-//               <div>
-//                 <h3 className="text-sm font-medium mb-2">Select Stages:</h3>
-//                 <div className="flex flex-wrap gap-2">
-//                   {availableStages.map(stage => (
-//                     <Button
-//                       key={stage}
-//                       variant={selectedStages.includes(stage) ? "default" : "outline"}
-//                       size="sm"
-//                       onClick={() => handleStageSelect(stage)}
-//                     >
-//                       {stage}
-//                     </Button>
-//                   ))}
-//                 </div>
-//               </div>
-//               <div className="flex gap-2">
-//                 <Input
-//                   placeholder="Add New Stage"
-//                   value={newStage}
-//                   onChange={(e) => setNewStage(e.target.value)}
-//                 />
-//                 <Button onClick={handleAddNewStage}>Add</Button>
-//                 <Button onClick={handleAddAllStages}>Add All</Button>
-
-//               </div>
-//             </div>
-//             <DialogFooter>
-//               <Button onClick={handleCreateProject}>Create Project</Button>
-//             </DialogFooter>
-//           </DialogContent>
-//         </Dialog>
-//       </CardContent>
-//     </Card>
-//   );
-// }

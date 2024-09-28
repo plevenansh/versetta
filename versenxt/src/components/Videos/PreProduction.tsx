@@ -23,10 +23,9 @@ interface StoryboardFrame {
 
 interface Project {
   id: number;
-  script: string | null;  // Change this to allow null
+  script: string | null;
   equipment: Equipment[];
   storyboard: StoryboardFrame[];
-  // Add other properties that are present in the project data
   title: string;
   description: string | null;
   status: string;
@@ -40,8 +39,6 @@ interface Project {
   completed: boolean;
   concept: string | null;
   productionNotes: string | null;
- // stages: ProjectStage[];
-  // Add any other properties that are part of your project data
 }
 
 interface PreProductionProps {
@@ -52,54 +49,115 @@ export default function PreProduction({ project }: PreProductionProps) {
   const [newEquipment, setNewEquipment] = useState('')
   const [script, setScript] = useState(project.script || '')
 
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
-  const addEquipment = trpc.projectPage.addEquipment.useMutation()
-  const updateEquipment = trpc.projectPage.updateEquipment.useMutation()
-  const deleteEquipment = trpc.projectPage.deleteEquipment.useMutation()
-  const addStoryboardFrame = trpc.projectPage.addStoryboardFrame.useMutation()
-  const deleteStoryboardFrame = trpc.projectPage.deleteStoryboardFrame.useMutation()
+  const utils = trpc.useContext();
+
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addEquipment = trpc.projectPage.addEquipment.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const updateEquipment = trpc.projectPage.updateEquipment.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteEquipment = trpc.projectPage.deleteEquipment.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const addStoryboardFrame = trpc.projectPage.addStoryboardFrame.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
+
+  const deleteStoryboardFrame = trpc.projectPage.deleteStoryboardFrame.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    }
+  });
 
   const handleScriptChange = async (newScript: string) => {
     setScript(newScript);
-    await updateProject.mutateAsync({
-      id: project.id,
-      script: newScript,
-    });
+    try {
+      await updateProject.mutateAsync({
+        id: project.id,
+        script: newScript,
+      });
+    } catch (error) {
+      console.error('Failed to update script:', error);
+      // Handle error (e.g., show error message to user)
+    }
   }
   
   const handleAddEquipment = async () => {
     if (newEquipment.trim()) {
-      await addEquipment.mutateAsync({
-        projectId: project.id,
-        name: newEquipment,
-      })
-      setNewEquipment('')
+      try {
+        await addEquipment.mutateAsync({
+          projectId: project.id,
+          name: newEquipment,
+        });
+        setNewEquipment('');
+      } catch (error) {
+        console.error('Failed to add equipment:', error);
+        // Handle error
+      }
     }
   }
 
   const handleUpdateEquipment = async (id: number, checked: boolean) => {
-    await updateEquipment.mutateAsync({
-      id,
-      checked,
-    })
+    try {
+      await updateEquipment.mutateAsync({
+        id,
+        checked,
+      });
+    } catch (error) {
+      console.error('Failed to update equipment:', error);
+      // Handle error
+    }
   }
 
   const handleDeleteEquipment = async (id: number) => {
-    await deleteEquipment.mutateAsync(id)
+    try {
+      await deleteEquipment.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to delete equipment:', error);
+      // Handle error
+    }
   }
 
   const handleAddStoryboardFrame = async () => {
     // In a real application, you'd handle file upload here
-    const imageUrl = 'placeholder-image-url'
-    await addStoryboardFrame.mutateAsync({
-      projectId: project.id,
-      imageUrl,
-      scene: project.storyboard.length + 1,
-    })
+    const imageUrl = 'placeholder-image-url';
+    try {
+      await addStoryboardFrame.mutateAsync({
+        projectId: project.id,
+        imageUrl,
+        scene: project.storyboard.length + 1,
+      });
+    } catch (error) {
+      console.error('Failed to add storyboard frame:', error);
+      // Handle error
+    }
   }
 
   const handleDeleteStoryboardFrame = async (id: number) => {
-    await deleteStoryboardFrame.mutateAsync(id)
+    try {
+      await deleteStoryboardFrame.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to delete storyboard frame:', error);
+      // Handle error
+    }
   }
 
   return (

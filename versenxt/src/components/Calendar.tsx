@@ -4,6 +4,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { trpc } from '../trpc/client';
 import { Button } from "./ui/button";
+import { useRouter } from 'next/navigation';
 
 const localizer = momentLocalizer(moment);
 
@@ -17,21 +18,9 @@ interface Event {
 const CalendarComponent = ({ teamId }: { teamId: number }) => {
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
+  const router = useRouter();
 
-  const { data: projects, isLoading } = trpc.projects.getByTeamId.useQuery(teamId);
-
-  const events: Event[] = projects?.flatMap(project => {
-    if (project.endDate) {
-      const publishDate = new Date(project.endDate);
-      return [{
-        id: project.id,
-        title: project.title,
-        start: publishDate,
-        end: moment(publishDate).add(0, 'day').toDate(),
-      }];
-    }
-    return [];
-  }) || [];
+  const { data: projects, error, isLoading } = trpc.projects.getByTeamId.useQuery(teamId);
 
   const handleNavigate = useCallback((newDate: Date) => {
     setDate(newDate);
@@ -45,7 +34,28 @@ const CalendarComponent = ({ teamId }: { teamId: number }) => {
     alert(`Selected project: ${event.title}\nPublish date: ${moment(event.start).format('MMMM D, YYYY')}`);
   }, []);
 
+  if (error) {
+    if (error.data?.code === 'UNAUTHORIZED') {
+      router.push('/login');
+      return null;
+    }
+    return <div>Error: {error.message}</div>;
+  }
+
   if (isLoading) return <div>Loading calendar...</div>;
+
+  const events: Event[] = projects?.flatMap(project => {
+    if (project.endDate) {
+      const publishDate = new Date(project.endDate);
+      return [{
+        id: project.id,
+        title: project.title,
+        start: publishDate,
+        end: moment(publishDate).add(0, 'day').toDate(),
+      }];
+    }
+    return [];
+  }) || [];
 
   return (
     <div className="space-y-4">

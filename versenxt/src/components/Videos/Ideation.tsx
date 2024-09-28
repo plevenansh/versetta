@@ -5,7 +5,6 @@ import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
 import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
-import { Badge } from "../ui/badge"
 import { Plus, X, Image as ImageIcon } from 'lucide-react'
 import { trpc } from '../../trpc/client'
 import Image from 'next/image'
@@ -28,71 +27,121 @@ export default function Ideation({ project }: IdeationProps) {
   const [newReferenceLink, setNewReferenceLink] = useState('')
   const [newInspirationUrl, setNewInspirationUrl] = useState('')
 
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
-  const addKeyPoint = trpc.projectPage.addKeyPoint.useMutation()
-  const updateKeyPoint = trpc.projectPage.updateKeyPoint.useMutation()
-  const deleteKeyPoint = trpc.projectPage.deleteKeyPoint.useMutation()
-  const addReference = trpc.projectPage.addReference.useMutation()
-  const deleteReference = trpc.projectPage.deleteReference.useMutation()
-  const addInspiration = trpc.projectPage.addInspiration.useMutation()
-  const deleteInspiration = trpc.projectPage.deleteInspiration.useMutation()
+  const utils = trpc.useContext();
+
+  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const addKeyPoint = trpc.projectPage.addKeyPoint.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const updateKeyPoint = trpc.projectPage.updateKeyPoint.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const deleteKeyPoint = trpc.projectPage.deleteKeyPoint.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const addReference = trpc.projectPage.addReference.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const deleteReference = trpc.projectPage.deleteReference.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const addInspiration = trpc.projectPage.addInspiration.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
+  const deleteInspiration = trpc.projectPage.deleteInspiration.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
+  });
 
   const handleConceptChange = async (concept: string) => {
-    await updateProject.mutateAsync({
-      id: project.id,
-      concept,
-    })
+    try {
+      await updateProject.mutateAsync({
+        id: project.id,
+        concept,
+      })
+    } catch (error) {
+      console.error('Error updating concept:', error)
+    }
   }
 
   const handleAddKeyPoint = async () => {
     if (newKeyPoint.trim()) {
-      await addKeyPoint.mutateAsync({
-        projectId: project.id,
-        content: newKeyPoint,
-      })
-      setNewKeyPoint('')
+      try {
+        await addKeyPoint.mutateAsync({
+          projectId: project.id,
+          content: newKeyPoint,
+        })
+        setNewKeyPoint('')
+      } catch (error) {
+        console.error('Error adding key point:', error)
+      }
     }
   }
 
   const handleUpdateKeyPoint = async (id: number, completed: boolean) => {
-    await updateKeyPoint.mutateAsync({
-      id,
-      completed,
-    })
+    try {
+      await updateKeyPoint.mutateAsync({
+        id,
+        completed,
+      })
+    } catch (error) {
+      console.error('Error updating key point:', error)
+    }
   }
 
   const handleDeleteKeyPoint = async (id: number) => {
-    await deleteKeyPoint.mutateAsync(id)
+    try {
+      await deleteKeyPoint.mutateAsync(id)
+    } catch (error) {
+      console.error('Error deleting key point:', error)
+    }
   }
 
   const handleAddReference = async () => {
     if (newReferenceTitle.trim()) {
-      await addReference.mutateAsync({
-        projectId: project.id,
-        title: newReferenceTitle,
-        link: newReferenceLink,
-      })
-      setNewReferenceTitle('')
-      setNewReferenceLink('')
+      try {
+        await addReference.mutateAsync({
+          projectId: project.id,
+          title: newReferenceTitle,
+          link: newReferenceLink,
+        })
+        setNewReferenceTitle('')
+        setNewReferenceLink('')
+      } catch (error) {
+        console.error('Error adding reference:', error)
+      }
     }
   }
 
   const handleDeleteReference = async (id: number) => {
-    await deleteReference.mutateAsync(id)
+    try {
+      await deleteReference.mutateAsync(id)
+    } catch (error) {
+      console.error('Error deleting reference:', error)
+    }
   }
 
   const handleAddInspiration = async () => {
     if (newInspirationUrl.trim()) {
-      await addInspiration.mutateAsync({
-        projectId: project.id,
-        imageUrl: newInspirationUrl,
-      })
-      setNewInspirationUrl('')
+      try {
+        await addInspiration.mutateAsync({
+          projectId: project.id,
+          imageUrl: newInspirationUrl,
+        })
+        setNewInspirationUrl('')
+      } catch (error) {
+        console.error('Error adding inspiration:', error)
+      }
     }
   }
 
   const handleDeleteInspiration = async (id: number) => {
-    await deleteInspiration.mutateAsync(id)
+    try {
+      await deleteInspiration.mutateAsync(id)
+    } catch (error) {
+      console.error('Error deleting inspiration:', error)
+    }
   }
 
   return (
@@ -103,92 +152,90 @@ export default function Ideation({ project }: IdeationProps) {
         </CardHeader>
         <CardContent>
           <Textarea 
-          placeholder="Describe your video concept here..." 
-          className="min-h-[150px]"
-          defaultValue={project.concept || ''}
-          onChange={(e) => handleConceptChange(e.target.value)}
-        />
+            placeholder="Describe your video concept here..." 
+            className="min-h-[150px]"
+            defaultValue={project.concept || ''}
+            onChange={(e) => handleConceptChange(e.target.value)}
+          />
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Key Points</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px] w-full">
-              <ul className="space-y-2 pr-4">
-                {project.keyPoints.map((point) => (
-                  <li key={point.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`point-${point.id}`}
-                        checked={point.completed}
-                        onCheckedChange={(checked) => handleUpdateKeyPoint(point.id, checked as boolean)}
-                      />
-                      <label htmlFor={`point-${point.id}`} className="text-sm">{point.content}</label>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteKeyPoint(point.id)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-            <div className="flex items-center mt-4">
-              <Input 
-                placeholder="Add new key point" 
-                value={newKeyPoint}
-                onChange={(e) => setNewKeyPoint(e.target.value)}
-                className="flex-1 mr-2"
-              />
-              <Button onClick={handleAddKeyPoint}>Add</Button>
-            </div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Key Points</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full">
+            <ul className="space-y-2 pr-4">
+              {project.keyPoints.map((point) => (
+                <li key={point.id} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`point-${point.id}`}
+                      checked={point.completed}
+                      onCheckedChange={(checked) => handleUpdateKeyPoint(point.id, checked as boolean)}
+                    />
+                    <label htmlFor={`point-${point.id}`} className="text-sm">{point.content}</label>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteKeyPoint(point.id)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+          <div className="flex items-center mt-4">
+            <Input 
+              placeholder="Add new key point" 
+              value={newKeyPoint}
+              onChange={(e) => setNewKeyPoint(e.target.value)}
+              className="flex-1 mr-2"
+            />
+            <Button onClick={handleAddKeyPoint}>Add</Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Research & References</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px] w-full">
-              <ul className="space-y-2 pr-4">
-                {project.references.map((ref) => (
-                  <li key={ref.id} className="flex items-center justify-between">
-                    <span className="text-sm">
-                      {ref.link ? (
-                        <a href={ref.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                          {ref.title}
-                        </a>
-                      ) : (
-                        ref.title
-                      )}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteReference(ref.id)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-            <div className="flex flex-col space-y-2 mt-4">
-              <Input 
-                placeholder="Reference title" 
-                value={newReferenceTitle}
-                onChange={(e) => setNewReferenceTitle(e.target.value)}
-              />
-              <Input 
-                placeholder="Reference link (optional)" 
-                value={newReferenceLink}
-                onChange={(e) => setNewReferenceLink(e.target.value)}
-              />
-              <Button onClick={handleAddReference}>Add Reference</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Research & References</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[200px] w-full">
+            <ul className="space-y-2 pr-4">
+              {project.references.map((ref) => (
+                <li key={ref.id} className="flex items-center justify-between">
+                  <span className="text-sm">
+                    {ref.link ? (
+                      <a href={ref.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        {ref.title}
+                      </a>
+                    ) : (
+                      ref.title
+                    )}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteReference(ref.id)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+          <div className="flex flex-col space-y-2 mt-4">
+            <Input 
+              placeholder="Reference title" 
+              value={newReferenceTitle}
+              onChange={(e) => setNewReferenceTitle(e.target.value)}
+            />
+            <Input 
+              placeholder="Reference link (optional)" 
+              value={newReferenceLink}
+              onChange={(e) => setNewReferenceLink(e.target.value)}
+            />
+            <Button onClick={handleAddReference}>Add Reference</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

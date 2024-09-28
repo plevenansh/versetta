@@ -1,7 +1,7 @@
-//TaskList.tsx
+// TaskList.tsx
 "use client"
 
-import { useEffect, useState,useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
@@ -11,7 +11,7 @@ import { Trash, FilePen, Plus, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-interface Task  {
+interface Task {
   id: number;
   title: string;
   description: string | undefined;
@@ -21,30 +21,37 @@ interface Task  {
   teamId: number | undefined;
   creatorId: number;
   assigneeId: number | undefined;
-  // project: { id: number; name: string } | null;
-  // team: { id: number; name: string } | null;
-  // creator: { id: number; user: { id: number; name: string } } | null;
-  // assignee: { id: number; user: { id: number; name: string } } | null;
   createdAt: string;
   updatedAt: string;
   creationOrder: number;
-};
+}
+
 interface Project {
+  id: number;
   title: string;
   description: string | null;
+  status: string; // Change this from 'active' | 'completed' to string
+  startDate: string | null;
   endDate: string | null;
-  teamId: number;
   creatorId: number;
-  status: 'active' | 'completed';
-  id: number;
+  teamId: number;
+  //stages: ProjectStage[];
+  tasks?: Task[];
+  completed?: boolean;
   createdAt: string;
   updatedAt: string;
   team: {
+    id: number;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
     description: string | null;
-    // Add other team properties here
+    workOsOrgId: string;
+    creatorId: number;
   };
-  // Add other project properties here
   creationOrder: number;
+  productionNotes: string | null;
+  // Add any other properties that are present in fetchedProjects
 }
 
 interface TeamMember {
@@ -63,10 +70,7 @@ interface TeamMember {
   userId: number;
 }
 
-
 export default function TaskList() {
-  const [user, setUser] = useState<any>(null);
-  const [userTeams, setUserTeams] = useState<any[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -88,26 +92,8 @@ export default function TaskList() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'assigned'>('all');
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (!response.ok) {
-          throw new Error('Failed to fetch user');
-        }
-        const userData = await response.json();
-        setUser(userData);
-        setUserTeams(userData.teams || []);
-        if (userData.teams && userData.teams.length > 0) {
-          setSelectedTeamId(userData.teams[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const { data: user } = trpc.users.getUser.useQuery();
+  const { data: userTeams } = trpc.users.getUserTeams.useQuery(undefined, { enabled: !!user });
 
   const { data: fetchedProjects, refetch: refetchProjects } = trpc.projects.getByTeamId.useQuery(
     selectedTeamId || -1,
@@ -128,43 +114,23 @@ export default function TaskList() {
     assigneeId: undefined
   }, { enabled: !!user && !!selectedTeamId });
 
-  const updateTaskMutation = trpc.tasks.update.useMutation({
-    onSuccess: () => refetchTasks(),
-  });
-
-  const createTaskMutation = trpc.tasks.create.useMutation<{
-    id: number;
-    status?: 'pending' | 'completed';
-    assigneeId?: number | null;
-    dueDate?: string | null;
-    title?: string;
-    description?: string | undefined;
-    teamId?: number;
-    projectId?: number | null;
-  }>({
-    onSuccess: () => {
-      refetchTasks();
-      setShowNewTaskForm(false);
-      setNewTask({
-        title: '',
-        description: '',
-        status: 'pending',
-        dueDate: null,
-        projectId: null,
-        teamId: selectedTeamId || undefined,
-        creatorId: user?.id || 0,
-        assigneeId: undefined,
-      });
-    },
-  });
-
-  const deleteTaskMutation = trpc.tasks.delete.useMutation({
-    onSuccess: () => refetchTasks(),
-  });
+  const updateTaskMutation = trpc.tasks.update.useMutation();
+  const createTaskMutation = trpc.tasks.create.useMutation();
+  const deleteTaskMutation = trpc.tasks.delete.useMutation();
 
   useEffect(() => {
-    if (fetchedProjects) setProjects(fetchedProjects as Project[]);
-    if (fetchedTeamMembers) setTeamMembers(fetchedTeamMembers);
+    if (userTeams && userTeams.length > 0) {
+      setSelectedTeamId(userTeams[0].id);
+    }
+  }, [userTeams]);
+
+  useEffect(() => {
+    if (fetchedProjects) {
+      setProjects(fetchedProjects as Project[]);
+    }
+    if (fetchedTeamMembers) {
+      setTeamMembers(fetchedTeamMembers);
+    }
   }, [fetchedProjects, fetchedTeamMembers]);
 
   useEffect(() => {
@@ -183,7 +149,17 @@ export default function TaskList() {
         
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-      setTasks(sortedTasks as Task[]);
+  
+      // Map the sorted tasks to match the Task interface
+      const mappedTasks: Task[] = sortedTasks.map(task => ({
+        ...task,
+        description: task.description || undefined, // Convert null to undefined
+        status: task.status as 'pending' | 'completed', // Ensure correct status type
+        assigneeId: task.assigneeId || undefined, // Convert null to undefined if necessary
+        // Add any other necessary type conversions here
+      }));
+  
+      setTasks(mappedTasks);
     }
   }, [fetchedTasks]);
 
@@ -200,7 +176,6 @@ export default function TaskList() {
         status: newTask.status as "pending" | "completed",
         dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
         teamId: selectedTeamId,
-        creatorId: user.id,
         projectId: newTask.projectId ?? undefined,
         assigneeId: newTask.assigneeId ?? undefined
       };
@@ -208,18 +183,24 @@ export default function TaskList() {
       console.log('Sending task data:', taskData);
       const createdTask = await createTaskMutation.mutateAsync(taskData);
       console.log('Created task:', createdTask);
+      refetchTasks();
   
-      // Check if the assignee was successfully connected
-      if (taskData.assigneeId && !createdTask.assignee) {
-        console.warn('Task created, but assignee was not connected. The TeamMember might not exist.');
-        // You might want to show a warning to the user here
-      }
-  
+      setShowNewTaskForm(false);
+      setNewTask({
+        title: '',
+        description: undefined,
+        status: 'pending',
+        dueDate: null,
+        projectId: null,
+        teamId: selectedTeamId,
+        creatorId: user.id,
+        assigneeId: undefined,
+      });
     } catch (error) {
       console.error('Error creating task:', error);
-      // Show an error message to the user
     }
   };
+
   const toggleTask = async (id: number) => {
     const taskToUpdate = tasks.find(task => task.id === id);
     if (taskToUpdate) {
@@ -229,7 +210,6 @@ export default function TaskList() {
       };
       await updateTask(updatedTask);
       
-      // Re-sort tasks after updating
       const updatedTasks = tasks.map(t => t.id === id ? updatedTask : t);
       const sortedTasks = [...updatedTasks].sort((a, b) => {
         if (a.status === 'completed' && b.status !== 'completed') return 1;
@@ -254,6 +234,7 @@ export default function TaskList() {
         : [...prev, taskId]
     );
   };
+
   const updateTask = async (updatedTask: Task) => {
     try {
       const taskToUpdate: Partial<Task> = {
@@ -267,7 +248,6 @@ export default function TaskList() {
         assigneeId: updatedTask.assigneeId
       };
 
-      // Only include projectId and teamId if they are not undefined
       if (updatedTask.projectId !== null) {
         taskToUpdate.projectId = updatedTask.projectId;
       }
@@ -277,13 +257,13 @@ export default function TaskList() {
 
       console.log('Sending update to backend:', taskToUpdate);
       await updateTaskMutation.mutateAsync(taskToUpdate as Task);
+      refetchTasks();
       setEditingTask(null);
     } catch (error) {
       console.error('Error updating task:', error);
     }
   };
 
-  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Enter' && !e.ctrlKey) {
       e.preventDefault();
@@ -301,6 +281,7 @@ export default function TaskList() {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
         await deleteTaskMutation.mutateAsync(taskId);
+        refetchTasks();
       } catch (error) {
         console.error('Error deleting task:', error);
       }
@@ -314,8 +295,6 @@ export default function TaskList() {
   if (isLoading) return <div>Loading tasks...</div>;
   if (error) return <div>Error loading tasks: {error.message}</div>;
 
-
-
   const filterButtons = [
     { label: 'All', value: 'all' },
     { label: 'Pending', value: 'pending' },
@@ -324,62 +303,58 @@ export default function TaskList() {
 
   return (
     <Card className="w-full shadow-lg">
-   <CardHeader className="pb-2">
-  <div className="flex justify-between items-center">
-    <div className="flex items-center space-x-4">
-      <CardTitle>Tasks</CardTitle>
-      <Select
-        value={selectedTeamId?.toString() || ''}
-        onValueChange={(value) => setSelectedTeamId(Number(value))}
-      >
-        <SelectTrigger className="w-[120px] h-[30px] ">
-          <SelectValue placeholder="Select Team" />
-        </SelectTrigger>
-        <SelectContent>
-          {userTeams.map((team) => (
-            <SelectItem key={team.id} value={team.id.toString()}>
-              {team.name}
-            </SelectItem>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <CardTitle>Tasks</CardTitle>
+            <Select
+              value={selectedTeamId?.toString() || ''}
+              onValueChange={(value) => setSelectedTeamId(Number(value))}
+            >
+              <SelectTrigger className="w-[120px] h-[30px] ">
+                <SelectValue placeholder="Select Team" />
+              </SelectTrigger>
+              <SelectContent>
+                {userTeams?.map((team) => (
+                  <SelectItem key={team.id} value={team.id.toString()}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button 
+            onClick={() => setShowNewTaskForm(!showNewTaskForm)}
+            size="sm"
+            className=""
+          >
+            {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {showNewTaskForm ? 'Cancel' : 'Add New Task'}
+          </Button>
+        </div>
+      </CardHeader>
+      <div className="px-6 pb-4 w-full">
+        <div className="flex w-full p-1 h-12">
+          {filterButtons.map((btn) => (
+            <button
+              key={btn.value}
+              onClick={() => setFilter(btn.value as 'all' | 'pending' | 'assigned')}
+              className={`
+                flex-1 px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
+                ${filter === btn.value 
+                  ? 'bg-gray-700 text-white' 
+                  : 'text-gray-600 hover:bg-[#F0F8FF] hover:primary'}
+              `}
+            >
+              {btn.label}
+            </button>
           ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <Button 
-      onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-      size="sm"
-      className=""
-    >
-      {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-      {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-    </Button>
-  </div>
-</CardHeader>
-        <div className="px-6 pb-4 w-full">
-  <div className="flex w-full  p-1 h-12">
-    {filterButtons.map((btn) => (
-      <button
-        key={btn.value}
-        onClick={() => setFilter(btn.value as 'all' | 'pending' | 'assigned')}
-        className={`
-          flex-1 px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
-          ${filter === btn.value 
-            ? 'bg-gray-700 text-white' 
-            : 'text-gray-600 hover:bg-[#F0F8FF] hover:primary'}
-        `}
-      >
-        {btn.label}
-      </button>
-    ))}
-    
-  </div>
-</div>
-
-        
-     
+        </div>
+      </div>
       <CardContent>
         {showNewTaskForm && (
           <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
-             <Input
+            <Input
               value={newTask.title}
               onChange={(e) => setNewTask({...newTask, title: e.target.value})}
               placeholder="Task Title"
@@ -402,35 +377,34 @@ export default function TaskList() {
               onKeyDown={(e) => handleKeyDown(e, 2)}
               ref={(el) => {inputRefs.current[2] = el}}
             />
-          <Select
-          onValueChange={(value) => setNewTask({...newTask, projectId: parseInt(value)})}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Project" />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id.toString()}>
-                {project.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select
-          onValueChange={(value) => setNewTask({...newTask, assigneeId: parseInt(value)})}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Assignee" />
-          </SelectTrigger>
-          <SelectContent>
-            {teamMembers.map((member) => (
-              <SelectItem key={member.id} value={member.id.toString()}>
-                {member.user.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <Select
+              onValueChange={(value) => setNewTask({...newTask, projectId: parseInt(value)})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              onValueChange={(value) => setNewTask({...newTask, assigneeId: parseInt(value)})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id.toString()}>
+                    {member.user.name}
+                  </SelectItem>
+                ))}
+                            </SelectContent>
+            </Select>
             <Button type="submit">Add Task</Button>
           </form>
         )}
@@ -455,25 +429,38 @@ export default function TaskList() {
                     onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value || null})}
                     placeholder="Due Date"
                   />
-                  <Input
-                    type="number"
-                    value={editingTask.projectId || ''}
-                    onChange={(e) => setEditingTask({...editingTask, projectId: e.target.value ? parseInt(e.target.value) : null})}
-                    placeholder="Project ID"
-                  />
-                  <Input
-                    type="number"
-                    value={editingTask.teamId || ''}
-                    onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
-                    placeholder="Team ID"
-                  />
-                  
-                  <Input
-                    type="number"
-                    value={editingTask.assigneeId}
-                    onChange={(e) => setEditingTask({...editingTask, assigneeId: parseInt(e.target.value)})}
-                    placeholder="Assigne ID"
-                  />
+                  <Select
+                    value={editingTask.projectId?.toString() || ''}
+                    onValueChange={(value) => setEditingTask({...editingTask, projectId: parseInt(value) || null})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Project</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id.toString()}>
+                          {project.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={editingTask.assigneeId?.toString() || ''}
+                    onValueChange={(value) => setEditingTask({...editingTask, assigneeId: parseInt(value) || undefined})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id.toString()}>
+                          {member.user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <div className="flex justify-end space-x-2">
                     <Button onClick={() => updateTask(editingTask)}>Save</Button>
                     <Button onClick={() => setEditingTask(null)} variant="outline">Cancel</Button>
@@ -492,7 +479,10 @@ export default function TaskList() {
                         {task.title}
                       </p>
                       <p className="text-sm">
-                        Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, Creator ID: {task.creatorId}
+                        Project: {projects.find(p => p.id === task.projectId)?.title || 'N/A'}
+                      </p>
+                      <p className="text-sm">
+                        Assignee: {teamMembers.find(m => m.id === task.assigneeId)?.user.name || 'Unassigned'}
                       </p>
                       {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
                       {task.description && (
@@ -517,223 +507,10 @@ export default function TaskList() {
                   </div>
                 </>
               )}
-             </Card>
-           ))}
+            </Card>
+          ))}
         </div>
       </CardContent>
     </Card>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-//   return (
-//     <Card className="w-full bg-[#F0F8FF] rounded-2xl shadow-lg">
-//    <CardHeader className="pb-2">
-//   <div className="flex justify-between items-center">
-//     <div className="flex items-center space-x-4">
-//       <CardTitle>Tasks</CardTitle>
-//       <Select
-//         value={selectedTeamId?.toString() || ''}
-//         onValueChange={(value) => setSelectedTeamId(Number(value))}
-//       >
-//         <SelectTrigger className="w-[120px] h-[30px] rounded-3xl">
-//           <SelectValue placeholder="Select Team" />
-//         </SelectTrigger>
-//         <SelectContent>
-//           {userTeams.map((team) => (
-//             <SelectItem key={team.id} value={team.id.toString()}>
-//               {team.name}
-//             </SelectItem>
-//           ))}
-//         </SelectContent>
-//       </Select>
-//     </div>
-//     <Button 
-//       onClick={() => setShowNewTaskForm(!showNewTaskForm)}
-//       size="sm"
-//       className="bg-pink-100 text-pink-600 hover:bg-pink-200 rounded-3xl"
-//     >
-//       {showNewTaskForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-//       {showNewTaskForm ? 'Cancel' : 'Add New Task'}
-//     </Button>
-//   </div>
-// </CardHeader>
-//         <div className="px-6 pb-4 w-full">
-//   <div className="flex w-full rounded-full bg-[#D6EBFF] p-1 h-12">
-//     {filterButtons.map((btn) => (
-//       <button
-//         key={btn.value}
-//         onClick={() => setFilter(btn.value as 'all' | 'pending' | 'assigned')}
-//         className={`
-//           flex-1 rounded-full px-1 py-1 text-sm font-medium transition-all duration-300 ease-in-out
-//           ${filter === btn.value 
-//             ? 'bg-gray-700 text-white' 
-//             : 'text-gray-600 hover:bg-[#F0F8FF] hover:text-black'}
-//         `}
-//       >
-//         {btn.label}
-//       </button>
-//     ))}
-    
-//   </div>
-// </div>
-
-        
-     
-//       <CardContent>
-//         {showNewTaskForm && (
-//           <form onSubmit={handleCreateTask} className="space-y-2 mb-4">
-//              <Input
-//               value={newTask.title}
-//               onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-//               placeholder="Task Title"
-//               required
-//               onKeyDown={(e) => handleKeyDown(e, 0)}
-//               ref={(el) => {inputRefs.current[0] = el}}
-//             />
-//             <Input
-//               value={newTask.description || ''}
-//               onChange={(e) => setNewTask({...newTask, description: e.target.value })}
-//               placeholder="Description"
-//               onKeyDown={(e) => handleKeyDown(e, 1)}
-//               ref={(el) => {inputRefs.current[1] = el}}
-//             />
-//             <Input
-//               type="date"
-//               value={newTask.dueDate || ''}
-//               onChange={(e) => setNewTask({...newTask, dueDate: e.target.value || null})}
-//               placeholder="Due Date"
-//               onKeyDown={(e) => handleKeyDown(e, 2)}
-//               ref={(el) => {inputRefs.current[2] = el}}
-//             />
-//           <Select
-//           onValueChange={(value) => setNewTask({...newTask, projectId: parseInt(value)})}
-//         >
-//           <SelectTrigger>
-//             <SelectValue placeholder="Select Project" />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {projects.map((project) => (
-//               <SelectItem key={project.id} value={project.id.toString()}>
-//                 {project.title}
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-        
-//         <Select
-//           onValueChange={(value) => setNewTask({...newTask, assigneeId: parseInt(value)})}
-//         >
-//           <SelectTrigger>
-//             <SelectValue placeholder="Select Assignee" />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {teamMembers.map((member) => (
-//               <SelectItem key={member.id} value={member.id.toString()}>
-//                 {member.user.name}
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//             <Button type="submit">Add Task</Button>
-//           </form>
-//         )}
-//         <div className="h-[calc(100vh-300px)] overflow-y-auto scrollbar-hide hover:scrollbar-default focus-within:scrollbar-default pr-4">
-//           {tasks.map(task => (
-//             <Card key={task.id} className="flex flex-col bg-gray-100 p-2 rounded-2xl mb-2 border-0">
-//               {editingTask?.id === task.id ? (
-//                 <div className="flex flex-col space-y-2 w-full">
-//                   <Input
-//                     value={editingTask.title}
-//                     onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
-//                     placeholder="Task Title"
-//                   />
-//                   <Input
-//                     value={editingTask.description || ''}
-//                     onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
-//                     placeholder="Description"
-//                   />
-//                   <Input
-//                     type="date"
-//                     value={editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : ''}
-//                     onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value || null})}
-//                     placeholder="Due Date"
-//                   />
-//                   <Input
-//                     type="number"
-//                     value={editingTask.projectId || ''}
-//                     onChange={(e) => setEditingTask({...editingTask, projectId: e.target.value ? parseInt(e.target.value) : null})}
-//                     placeholder="Project ID"
-//                   />
-//                   <Input
-//                     type="number"
-//                     value={editingTask.teamId || ''}
-//                     onChange={(e) => setEditingTask({...editingTask, teamId: e.target.value ? parseInt(e.target.value) : undefined})}
-//                     placeholder="Team ID"
-//                   />
-                  
-//                   <Input
-//                     type="number"
-//                     value={editingTask.assigneeId}
-//                     onChange={(e) => setEditingTask({...editingTask, assigneeId: parseInt(e.target.value)})}
-//                     placeholder="Assigne ID"
-//                   />
-//                   <div className="flex justify-end space-x-2">
-//                     <Button onClick={() => updateTask(editingTask)}>Save</Button>
-//                     <Button onClick={() => setEditingTask(null)} variant="outline">Cancel</Button>
-//                   </div>
-//                 </div>
-//               ) : (
-//                 <>
-//                   <div className="flex items-center space-x-2">
-//                     <Checkbox
-//                       checked={task.status === 'completed'}
-//                       onCheckedChange={() => toggleTask(task.id)}
-//                       className="round-checkbox"
-//                     />
-//                     <div className="flex-grow">
-//                       <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
-//                         {task.title}
-//                       </p>
-//                       <p className="text-sm text-gray-600">
-//                         Project ID: {task.projectId || 'N/A'}, Team ID: {task.teamId || 'N/A'}, Creator ID: {task.creatorId}
-//                       </p>
-//                       {task.dueDate && <p className="text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
-//                       {task.description && (
-//                         <p className="text-sm text-gray-600">
-//                           {expandedTasks.includes(task.id) 
-//                             ? task.description 
-//                             : `${task.description.slice(0, 40)}${task.description.length > 40 ? '...' : ''}`}
-//                         </p>
-//                       )}
-//                     </div>
-//                     {task.description && task.description.length > 50 && (
-//                       <Button onClick={() => toggleDescription(task.id)} size="sm" variant="ghost">
-//                         {expandedTasks.includes(task.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-//                       </Button>
-//                     )}
-//                     <Button onClick={() => startEditing(task)} size="sm" variant="outline" className="rounded-xl ">
-//                       <FilePen className="h-4 w-4" />
-//                     </Button>
-//                     <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="destructive" className="rounded-xl bg-[#ec6058]">
-//                       <Trash className="h-4 w-4" />
-//                     </Button>
-//                   </div>
-//                 </>
-//               )}
-//              </Card>
-//            ))}
-//         </div>
-//       </CardContent>
-//     </Card>
-//   );
-// }

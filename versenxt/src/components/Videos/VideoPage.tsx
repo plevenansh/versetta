@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Progress } from "../ui/progress"
-import { Card, CardContent } from "../ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Badge } from "../ui/badge"
-import { Plus } from 'lucide-react'
+import { Button } from "../ui/button"
 import Overview from './Overview'
 import Ideation from './Ideation'
 import PreProduction from './PreProduction'
@@ -21,14 +17,6 @@ interface ProjectStage {
   stage: string;
   completed: boolean;
   order: number;
-}
-
-interface TeamMember {
-  id: number;
-  user: {
-    name: string;
-    avatarUrl?: string;
-  };
 }
 
 interface Project {
@@ -46,7 +34,7 @@ interface Project {
   completed: boolean;
   concept: string | null;
   script: string | null;
-  productionNotes: string | null;
+  productionNotes: string | null; // Change this line
   stages: ProjectStage[];
   keyPoints: Array<{ id: number; content: string; completed: boolean }>;
   references: Array<{ id: number; title: string; link?: string | null }>;
@@ -60,8 +48,8 @@ export default function VideoPage({ projectId }: { projectId: number }) {
   const [description, setDescription] = useState("")
   const [progress, setProgress] = useState(0)
 
-  const { data: project, refetch } = trpc.projectPage.getProjectDetails.useQuery(projectId)
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation()
+  const { data: project, isLoading, error, refetch } = trpc.projectPage.getProjectDetails.useQuery(projectId)
+  const updateProjectMutation = trpc.projectPage.updateProjectDetails.useMutation()
 
   useEffect(() => {
     if (project) {
@@ -74,17 +62,24 @@ export default function VideoPage({ projectId }: { projectId: number }) {
 
   const handleSave = async () => {
     if (project) {
-      await updateProject.mutateAsync({
-        id: projectId,
-        title,
-        description,
-      })
-      setIsEditing(false)
-      refetch()
+      try {
+        await updateProjectMutation.mutateAsync({
+          id: projectId,
+          title,
+          description,
+        })
+        setIsEditing(false)
+        refetch()
+      } catch (error) {
+        console.error('Error updating project:', error)
+        // Handle error (e.g., show error message to user)
+      }
     }
   }
 
-  if (!project) return <div>Loading...</div>
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+  if (!project) return <div>Project not found</div>
 
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
@@ -121,18 +116,6 @@ export default function VideoPage({ projectId }: { projectId: number }) {
         <Progress value={progress} className="w-full" />
         <span className="text-sm font-medium whitespace-nowrap">{Math.round(progress)}% Complete</span>
       </div>
-
-      {/* <div className="flex flex-wrap items-center gap-2 mb-8">
-        {project.team.members.map((member: TeamMember) => (
-          <Avatar key={member.id}>
-            <AvatarImage src={member.user.avatarUrl} alt={member.user.name} />
-            <AvatarFallback>{member.user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-        ))}
-        <Button variant="outline" size="icon">
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div> */}
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 h-auto">

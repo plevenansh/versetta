@@ -1,3 +1,4 @@
+// src/components/CreateTeamForm.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '../trpc/client'
@@ -6,6 +7,7 @@ import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
 import Script from 'next/script'
+import { TRPCClientError } from '@trpc/client'
 
 interface CreateTeamFormProps {
   onTeamCreated: () => void
@@ -15,45 +17,26 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamDescription, setNewTeamDescription] = useState('')
   const [subscriptionType, setSubscriptionType] = useState<'razorpay' | 'polar' | 'invite'>('razorpay')
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  const { data: user, isLoading: userLoading, error: userError } = trpc.users.getUser.useQuery()
   const initiateTeamCreationMutation = trpc.teams.initiateTeamCreation.useMutation()
   const completeTeamCreationMutation = trpc.teams.completeTeamCreation.useMutation()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user')
-        if (!response.ok) {
-          throw new Error('Failed to fetch user')
-        }
-        const userData = await response.json()
-        setUser(userData)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-        setError(error instanceof Error ? error.message : 'An unknown error occurred')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [])
-
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !user.workOsUserId) {
-      alert('User not authenticated. Please log in and try again.')
+    if (!user) {
+      setError('User not authenticated. Please log in and try again.')
       return
     }
+    setLoading(true)
+    setError(null)
     try {
       const result = await initiateTeamCreationMutation.mutateAsync({
         name: newTeamName,
         description: newTeamDescription,
-        workOsUserId: user.workOsUserId,
         subscriptionType,
       })
 
@@ -65,14 +48,22 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
             name: 'Versetta',
             description: 'Prime Plan',
             handler: async function (response: any) {
-              await completeTeamCreationMutation.mutateAsync({
-                teamId: result.teamId,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-              })
-              alert('Team created and subscription activated successfully!')
-              onTeamCreated()
-              router.push('/dashboard')
+              try {
+                await completeTeamCreationMutation.mutateAsync({
+                  teamId: result.teamId,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                })
+                alert('Team created and subscription activated successfully!')
+                onTeamCreated()
+                router.push('/dashboard')
+              } catch (error) {
+                if (error instanceof TRPCClientError) {
+                  setError(error.message)
+                } else {
+                  setError('An error occurred while completing team creation')
+                }
+              }
             },
             prefill: {
               name: user.name,
@@ -95,13 +86,18 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
         router.push('/dashboard')
       }
     } catch (error) {
-      console.error('Error creating team:', error)
-      alert('Failed to create team. Please try again.')
+      if (error instanceof TRPCClientError) {
+        setError(error.message)
+      } else {
+        setError('An error occurred while creating the team')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
+  if (userLoading) return <div>Loading...</div>
+  if (userError) return <div>Error: {userError.message}</div>
   if (!user) return <div>No user data available</div>
 
   return (
@@ -154,8 +150,11 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
               </select>
             </div>
           </div>
+          {error && <div className="text-red-500 mb-4">{error}</div>}
           <DialogFooter>
-            <Button type="submit">Create Team</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Team'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

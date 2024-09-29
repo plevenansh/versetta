@@ -27,8 +27,7 @@ export default function Publishing({ project }: PublishingProps) {
     isPremiere: false,
   });
 
-  const utils = trpc.useContext();
-
+  const utils = trpc.useUtils();
   const { data: currentPublishDetails, isLoading, error } = trpc.projectPage.getProjectDetails.useQuery(project.id);
 
   const updatePublishDetailsMutation = trpc.projectPage.updatePublishDetails.useMutation({

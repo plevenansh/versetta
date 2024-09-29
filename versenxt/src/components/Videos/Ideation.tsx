@@ -27,7 +27,7 @@ export default function Ideation({ project }: IdeationProps) {
   const [newReferenceLink, setNewReferenceLink] = useState('')
   const [newInspirationUrl, setNewInspirationUrl] = useState('')
 
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
     onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)

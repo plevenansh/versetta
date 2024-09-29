@@ -6,7 +6,7 @@ import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { X, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/hooks/use-toast"
 
 
 interface EditProjectModalProps {

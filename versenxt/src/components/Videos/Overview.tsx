@@ -53,7 +53,7 @@ interface OverviewProps {
 }
 
 export default function Overview({ project }: OverviewProps) {
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const addTask = trpc.projectPage.addTask.useMutation({
     onSuccess: () => {

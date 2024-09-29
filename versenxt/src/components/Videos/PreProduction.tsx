@@ -49,7 +49,7 @@ export default function PreProduction({ project }: PreProductionProps) {
   const [newEquipment, setNewEquipment] = useState('')
   const [script, setScript] = useState(project.script || '')
 
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
     onSuccess: () => {

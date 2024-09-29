@@ -103,7 +103,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({ projectId }) => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-1">
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>{project.title}</CardTitle>

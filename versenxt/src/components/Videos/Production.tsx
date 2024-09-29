@@ -53,7 +53,7 @@ export default function Production({ project }: { project: Project }) {
   const [newShot, setNewShot] = useState('')
   const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
 
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
     onSuccess: () => {

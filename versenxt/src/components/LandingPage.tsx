@@ -52,14 +52,14 @@ export default function LandingPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={handleSignIn}
-            className="hidden sm:inline-block text-white border border-blue-700 px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-blue-700 transition-colors"
+            className="hidden sm:inline-block text-white border border-blue-700 px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-[#0057ff] transition-colors"
             disabled={isLoading}
           >
             {isLoading ? 'Loading...' : 'Dashboard'}
           </button>
           <button
             onClick={handleSignUp}
-            className="bg-blue-700 text-white px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
+            className="bg-[#0057ff] text-white px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
             disabled={isLoading}
           >
             {isLoading ? 'Loading...' : 'Create Your Team'}
@@ -80,7 +80,7 @@ export default function LandingPage() {
             </p>
             <button
             onClick={handleSignUp}
-              className="inline-flex items-center bg-blue-700 text-white  px-8 py-4 font-semibold text-xl hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center bg-[#0057ff] text-white  px-8 py-4 font-semibold text-xl hover:bg-blue-600 transition-colors"
             >
               Create Your Team <ArrowRight className="ml-2" size={24} />
               {/* {isLoading ? 'Loading...' : 'Create Your Team'} */}
@@ -227,11 +227,11 @@ export default function LandingPage() {
         description: "Gain deep insights into your content's performance with detailed analytics and reports."
       },
     ].map((feature, index) => (
-      <div key={index} className="bg-gray-800 p-6 border border-blue-700 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
+      <div key={index} className="bg-gray-800 p-6 border border-[#0057ff] rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
         <h3 className="text-xl font-semibold mb-3 text-blue-400">{feature.title}</h3>
         <p className="text-gray-300">{feature.description}</p>
         <div className="mt-4">
-          <span className="inline-block bg-blue-700 text-white text-xs px-2 py-1 rounded">Coming Soon</span>
+          <span className="inline-block bg-[#0057ff] text-white text-xs px-2 py-1 rounded">Coming Soon</span>
         </div>
       </div>
     ))}
@@ -246,7 +246,7 @@ export default function LandingPage() {
         </p>
         <button
             onClick={handleSignUp}
-          className="inline-flex items-center bg-blue-700 text-white px-12 py-4 font-semibold text-xl hover:bg-blue-600 transition-colors"
+          className="inline-flex items-center bg-[#0057ff] text-white px-12 py-4 font-semibold text-xl hover:bg-blue-600 transition-colors"
         >
           Create Your Team
         </button>

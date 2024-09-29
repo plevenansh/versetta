@@ -44,7 +44,7 @@ export default function PostProduction({ project }: { project: Project }) {
   const [newThumbnail, setNewThumbnail] = useState<NewThumbnail>({ imageUrl: '' })
   const [feedback, setFeedback] = useState(project.productionNotes || '')
 
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const addVideoAsset = trpc.projectPage.addVideoAsset.useMutation({
     onSuccess: () => {
@@ -210,14 +210,14 @@ export default function PostProduction({ project }: { project: Project }) {
           <div className="grid grid-cols-3 gap-4 mb-4">
             {project.thumbnails.map((thumbnail) => (
               <div key={thumbnail.id} className="relative">
-                <Image 
+                {/* <Image 
                   src={thumbnail.imageUrl} 
                   alt="Thumbnail" 
                   width={200} 
                   height={150} 
                   layout="responsive"
                   className="rounded"
-                />
+                /> */}
                 <div className="absolute top-2 right-2 space-x-2">
                   <Checkbox 
                     checked={thumbnail.selected}

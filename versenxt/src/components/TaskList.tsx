@@ -201,6 +201,7 @@ export default function TaskList() {
     }
   };
 
+  
   const toggleTask = async (id: number) => {
     const taskToUpdate = tasks.find(task => task.id === id);
     if (taskToUpdate) {

@@ -38,34 +38,40 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
-      <nav className="flex justify-between items-center py-3 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/ver.png"
-            alt="Versetta Logo"
-            width={24}
-            height={24}
-            className="mr-2 sm:w-[31px] sm:h-[32px]"
-          />
-          <span className="text-lg sm:text-xl lg:text-2xl font-bold">Versetta</span>
-        </Link>
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={handleSignIn}
-            className="hidden sm:inline-block text-white border border-blue-700 px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-[#0057ff] transition-colors"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Dashboard'}
-          </button>
-          <button
-            onClick={handleSignUp}
-            className="bg-[#0057ff] text-white px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Create Your Team'}
-          </button>
-        </div>
-      </nav>
+      <nav className="flex justify-between items-center py-4 px-4 sm:px-6 lg:px-8">
+  <Link href="/" className="flex items-center">
+    <Image
+      src="/ver.png"
+      alt="Versetta Icon"
+      width={24}
+      height={24}
+      className="mr-2 sm:w-[31px] sm:h-[32px]"
+    />
+    <Image
+      src="/verlongw.png"
+      alt="Versetta Logo"
+      width={160}
+      height={28}
+      className="hidden sm:block"
+    />
+  </Link>
+  <div className="flex items-center space-x-2 sm:space-x-4">
+    <button
+      onClick={handleSignIn}
+      className="hidden sm:inline-block text-white border border-blue-700 px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-[#0057ff] transition-colors"
+      disabled={isLoading}
+    >
+      {isLoading ? 'Loading...' : 'Dashboard'}
+    </button>
+    <button
+      onClick={handleSignUp}
+      className="bg-[#0057ff] text-white px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
+      disabled={isLoading}
+    >
+      {isLoading ? 'Loading...' : 'Create Your Team'}
+    </button>
+  </div>
+</nav>
 
       {/* Hero Section */}
       <section className="w-full bg-black">

@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
-import { Edit3, Video, Users, Activity, Plus } from 'lucide-react'
+import { Edit3, Video, Users, Activity, Plus, X } from 'lucide-react'
 import { Avatar, AvatarFallback } from "../ui/avatar"
 import { trpc } from '../../trpc/client'
 import { Progress } from "../ui/progress"
+import { Input } from "../ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 
 interface ProjectStage {
   id: number;
@@ -21,9 +23,19 @@ interface Task {
   title: string;
   status: string;
   assignee?: {
+    id: number;
     user: {
       name: string;
     };
+  };
+  dueDate: string | null;
+  description: string | null;
+}
+
+interface TeamMember {
+  id: number;
+  user: {
+    name: string;
   };
 }
 
@@ -53,45 +65,110 @@ interface OverviewProps {
 }
 
 export default function Overview({ project }: OverviewProps) {
+  const [newStage, setNewStage] = useState('')
+  const [newTask, setNewTask] = useState({ title: '', assigneeId: '' })
+  const [expandedTasks, setExpandedTasks] = useState<number[]>([])
   const utils = trpc.useUtils();
 
-  const addTask = trpc.projectPage.addTask.useMutation({
+  const { data: teamMembers } = trpc.teams.listTeamMembers.useQuery(project.teamId);
+
+  const addTask = trpc.tasks.create.useMutation({
     onSuccess: () => {
       utils.projectPage.getProjectDetails.invalidate(project.id);
     },
   });
 
-  // const updateTask = trpc.projectPage.updateTask.useMutation({
-  //   onSuccess: () => {
-  //     utils.projectPage.getProjectDetails.invalidate(project.id);
-  //   },
-  // });
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    },
+  });
+
+  const deleteTask = trpc.tasks.delete.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    },
+  });
+
+  const addStage = trpc.projects.updateProjectStage.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    },
+  });
+
+  const updateStage = trpc.projects.updateProjectStage.useMutation({
+    onSuccess: () => {
+      utils.projectPage.getProjectDetails.invalidate(project.id);
+    },
+  });
 
   const handleAddTask = async () => {
-    try {
-      await addTask.mutateAsync({
-        projectId: project.id,
-        teamId: project.teamId,
-        title: "New Task",
-        description: "Task description",
-      });
-    } catch (error) {
-      console.error('Error adding task:', error);
-      // Handle error (e.g., show error message to user)
+    if (newTask.title.trim()) {
+      try {
+        await addTask.mutateAsync({
+          title: newTask.title,
+          projectId: project.id,
+          teamId: project.teamId,
+          assigneeId: newTask.assigneeId ? parseInt(newTask.assigneeId) : undefined,
+        });
+        setNewTask({ title: '', assigneeId: '' });
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
     }
   }
 
-  // const handleUpdateTask = async (taskId: number, completed: boolean) => {
-  //   try {
-  //     await updateTask.mutateAsync({
-  //       id: taskId,
-  //       status: completed ? "completed" : "pending",
-  //     });
-  //   } catch (error) {
-  //     console.error('Error updating task:', error);
-  //     // Handle error (e.g., show error message to user)
-  //   }
-  // }
+  const handleUpdateTask = async (taskId: number, completed: boolean) => {
+    try {
+      await updateTask.mutateAsync({
+        id: taskId,
+        status: completed ? "completed" : "pending",
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  }
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask.mutateAsync(taskId);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  }
+
+  const handleAddStage = async () => {
+    if (newStage.trim()) {
+      try {
+        await addStage.mutateAsync({
+          projectId: project.id,
+          stage: newStage,
+          completed: false,
+        });
+        setNewStage('');
+      } catch (error) {
+        console.error('Error adding stage:', error);
+      }
+    }
+  }
+
+  const handleUpdateStage = async (stageId: number, completed: boolean) => {
+    try {
+      await updateStage.mutateAsync({
+        projectId: project.id,
+        stage: project.stages.find(s => s.id === stageId)?.stage || '',
+        completed: completed,
+      });
+    } catch (error) {
+      console.error('Error updating stage:', error);
+    }
+  }
+
+  const toggleTaskDescription = (taskId: number) => {
+    setExpandedTasks(prev => 
+      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -148,24 +225,33 @@ export default function Overview({ project }: OverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {project.stages.map((stage: ProjectStage, index: number) => (
-              <div key={index} className="flex items-center space-x-4">
+            {project.stages.map((stage: ProjectStage) => (
+              <div key={stage.id} className="flex items-center space-x-4">
                 <div className="w-24 text-sm font-medium">{stage.stage}</div>
                 <div className="flex-1">
                   <Progress value={stage.completed ? 100 : 0} className="h-2" />
                 </div>
                 <div className="w-16 text-sm text-right">
-                  {stage.completed ? (
-                    <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
-                  ) : (
-                    '0%'
-                  )}
+                  <Checkbox
+                    checked={stage.completed}
+                    onCheckedChange={(checked) => handleUpdateStage(stage.id, checked as boolean)}
+                  />
                 </div>
               </div>
             ))}
           </div>
+          <div className="flex mt-4">
+            <Input
+              placeholder="New stage"
+              value={newStage}
+              onChange={(e) => setNewStage(e.target.value)}
+              className="mr-2"
+            />
+            <Button onClick={handleAddStage}>Add Stage</Button>
+          </div>
         </CardContent>
       </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Task Management</CardTitle>
@@ -176,29 +262,54 @@ export default function Overview({ project }: OverviewProps) {
               {project.tasks.map((task: Task) => (
                 <div key={task.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    {/* <Checkbox 
+                  <Checkbox 
                       id={`task-${task.id}`} 
                       checked={task.status === "completed"}
                       onCheckedChange={(checked) => handleUpdateTask(task.id, checked as boolean)}
-                    /> */}
+                  />
                     <label htmlFor={`task-${task.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {task.title}
                     </label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline">{task.status}</Badge>
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback>{task.assignee?.user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
+                    {task.assignee && (
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback>{task.assignee.user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => toggleTaskDescription(task.id)}>
+                      {expandedTasks.includes(task.id) ? 'Less' : 'More'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteTask(task.id)}>
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           </ScrollArea>
-          <Button className="w-full mt-4" onClick={handleAddTask}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Task
-          </Button>
+          <div className="flex mt-4">
+            <Input
+              placeholder="New task"
+              value={newTask.title}
+              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              className="mr-2"
+            />
+            <Select onValueChange={(value) => setNewTask({ ...newTask, assigneeId: value })}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Assign to" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers?.map((member: TeamMember) => (
+                  <SelectItem key={member.id} value={member.id.toString()}>
+                    {member.user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleAddTask} className="ml-2">Add Task</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

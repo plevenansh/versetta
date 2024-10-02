@@ -78,8 +78,8 @@ export default function ClientDashboard() {
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Views on Last Video</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">54,231</div>
-            <p className="text-sm text-gray-500">+20% from last video</p>
+            <div className="text-3xl font-bold">Add videos</div>
+            <p className="text-sm text-gray-500">+x% from last video</p>
           </CardContent>
         </Card>
         <Card>

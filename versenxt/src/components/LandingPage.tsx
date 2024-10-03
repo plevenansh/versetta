@@ -273,7 +273,7 @@ export default function LandingPage() {
             <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/refunds" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/cancellation" className="text-gray-400 hover:text-white transition-colors">
               Refunds Policy
             </Link>
           </div>

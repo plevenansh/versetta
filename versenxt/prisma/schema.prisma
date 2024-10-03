@@ -127,15 +127,16 @@ model ProjectStage {
 }
 
 model CommentAnalysis {
-  id        String   @id @default(cuid())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  youtubeUrl String
-  prompt    String
-  general   String
-  topComments Json
-  contentIdeas Json
-  createdAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  youtubeUrl      String
+  prompt          String
+  generalAnalysis String   @db.Text
+  topComments     Json
+  contentIdeas    Json
+  metrics         Json
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
 
   @@index([userId])
 }

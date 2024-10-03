@@ -19,7 +19,8 @@ model User {
   teamMemberships TeamMember[]
   createdTeams    Team[]        @relation("TeamCreator")
   subscriptions   Subscription[] // New field to establish the reverse relation
-  
+  commentAnalyses CommentAnalysis[]
+
   @@map("users")
 }
 
@@ -123,6 +124,20 @@ model ProjectStage {
 
   @@unique([projectId, stage])
   @@index([projectId])
+}
+
+model CommentAnalysis {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  youtubeUrl String
+  prompt    String
+  general   String
+  topComments Json
+  contentIdeas Json
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Task {

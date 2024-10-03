@@ -258,12 +258,28 @@ export default function LandingPage() {
         </button>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p>&copy; {new Date().getFullYear()} Versetta. All rights reserved.</p>
+      
+     {/* Footer */}
+    <footer className="bg-gray-900  py-28">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-4 md:mb-0">
+            <p>&copy; {new Date().getFullYear()} Versetta. All rights reserved.</p>
+          </div>
+          <div className="flex flex-wrap justify-center md:justify-end space-x-4">
+            <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+              Terms and Conditions
+            </Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/refunds" className="text-gray-400 hover:text-white transition-colors">
+              Refunds Policy
+            </Link>
+          </div>
         </div>
-      </footer>
+      </div>
+    </footer>
     </div>
   )
 }

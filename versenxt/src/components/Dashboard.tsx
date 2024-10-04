@@ -13,7 +13,7 @@ import CalendarComponent from './Calendar';
 export default function ClientDashboard() {
   const router = useRouter();
 
-  const { data: user, isLoading: userLoading, error: userError } = trpc.users.getOrCreateUser.useQuery();
+ const { data: user, isLoading: userLoading, error: userError } = trpc.users.getOrCreateUser.useQuery();
   const { data: userTeams, isLoading: teamsLoading } = trpc.teams.getUserTeams.useQuery(undefined, {
     enabled: !!user
   });
@@ -53,8 +53,8 @@ export default function ClientDashboard() {
       {showTeamPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4">Create Your First Team</h2>
-            <p className="mb-4">You don&#39;t have any teams yet. Create one to get started!</p>
+            <h2 className="text-xl text-black font-bold mb-4">Create Your First Team</h2>
+            <p className="mb-4 text-gray-700">You don&#39;t have any teams yet. Create one to get started!</p>
             <div className="flex justify-between">
               <Button onClick={handleCreateTeam}>Create a Team</Button>
               <Button variant="outline" onClick={() => router.push('/')}>Maybe Later</Button>

@@ -3,7 +3,7 @@ import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
 import { TRPCError } from '@trpc/server';
-
+import { getUser } from '@workos-inc/authkit-nextjs';
 export const userRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     try {
@@ -73,11 +73,44 @@ export const userRouter = router({
       }
     }),
 
-    getOrCreateUser: protectedProcedure
-    .query(async ({ ctx }) => {
+    // getOrCreateUser: protectedProcedure
+    // .query(async ({ ctx }) => {
+    //   try {
+    //     let user = await prisma.user.findUnique({
+    //       where: { id: ctx.user.id },
+    //       include: {
+    //         teamMemberships: {
+    //           include: {
+    //             team: true
+    //           }
+    //         }
+    //       }
+    //     });
+  
+    //     if (!user) {
+    //       throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+    //     }
+  
+    //     return user;
+    //   } catch (error) {
+    //     console.error('Error fetching or creating user:', error);
+    //     if (error instanceof TRPCError) throw error;
+    //     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch or create user' });
+    //   }
+    // }),
+
+    getOrCreateUser: publicProcedure
+    .query(async () => {
       try {
+        const workOsData = await getUser();
+        if (!workOsData || !workOsData.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+        }
+
+        const workOsUser = workOsData.user;
+
         let user = await prisma.user.findUnique({
-          where: { id: ctx.user.id },
+          where: { workOsUserId: workOsUser.id },
           include: {
             teamMemberships: {
               include: {
@@ -86,11 +119,25 @@ export const userRouter = router({
             }
           }
         });
-  
+
         if (!user) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+          // Create a new user if not found
+          user = await prisma.user.create({
+            data: {
+              workOsUserId: workOsUser.id,
+              email: workOsUser.email || '',
+              name: `${workOsUser.firstName || ''} ${workOsUser.lastName || ''}`.trim() || 'Unknown',
+            },
+            include: {
+              teamMemberships: {
+                include: {
+                  team: true
+                }
+              }
+            }
+          });
         }
-  
+
         return user;
       } catch (error) {
         console.error('Error fetching or creating user:', error);
@@ -98,7 +145,6 @@ export const userRouter = router({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch or create user' });
       }
     }),
-
   create: protectedProcedure
     .input(z.object({
       email: z.string().email(),

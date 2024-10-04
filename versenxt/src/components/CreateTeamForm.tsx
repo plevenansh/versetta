@@ -8,7 +8,7 @@ import { Label } from "./ui/label"
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
 import Script from 'next/script'
 import { TRPCClientError } from '@trpc/client'
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 interface CreateTeamFormProps {
   onTeamCreated: () => void
 }
@@ -135,20 +135,23 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="subscriptionType" className="text-right">
-                Subscription Type
-              </Label>
-              <select
-                id="subscriptionType"
-                value={subscriptionType}
-                onChange={(e) => setSubscriptionType(e.target.value as 'razorpay' | 'polar' | 'invite')}
-                className="col-span-3 border rounded px-2 py-1"
-              >
-                <option value="razorpay">Razorpay (India)</option>
-                <option value="polar">Polar (International)</option>
-                <option value="invite">Invite (Free Access)</option>
-              </select>
-            </div>
+                  <Label htmlFor="subscriptionType" className="text-right">
+                    Subscription Type
+                  </Label>
+                  <Select
+                    value={subscriptionType}
+                    onValueChange={(value) => setSubscriptionType(value as 'razorpay' | 'polar' | 'invite')}
+                  >
+                    <SelectTrigger className="w-full col-span-3">
+                      <SelectValue placeholder="Select Subscription Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="razorpay">Razorpay (INR)</SelectItem>
+                      <SelectItem value="polar">Stripe(All Currencies)</SelectItem>
+                      <SelectItem value="invite">Invite (Free Access)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
           </div>
           {error && <div className="text-red-500 mb-4">{error}</div>}
           <DialogFooter>

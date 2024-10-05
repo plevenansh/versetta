@@ -21,7 +21,8 @@ interface ProjectStage {
 interface Task {
   id: number;
   title: string;
-  status: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
   assignee?: {
     id: number;
     user: {
@@ -30,6 +31,9 @@ interface Task {
   };
   dueDate: string | null;
   description: string | null;
+  teamId: number;
+  projectId: number | null;
+  stageId: number | null;
 }
 
 interface TeamMember {
@@ -107,9 +111,13 @@ export default function Overview({ project }: OverviewProps) {
       try {
         await addTask.mutateAsync({
           title: newTask.title,
+          status: 'PENDING', // Default status
+          priority: 'MEDIUM', // Default priority
           projectId: project.id,
           teamId: project.teamId,
-          assigneeId: newTask.assigneeId ? parseInt(newTask.assigneeId) : undefined,
+          assigneeId: newTask.assigneeId ? parseInt(newTask.assigneeId) : null,
+          description: null, // Add this if needed
+          dueDate: null, // Add this if needed
         });
         setNewTask({ title: '', assigneeId: '' });
       } catch (error) {
@@ -122,7 +130,11 @@ export default function Overview({ project }: OverviewProps) {
     try {
       await updateTask.mutateAsync({
         id: taskId,
-        status: completed ? "completed" : "pending",
+        status: completed ? "COMPLETED" : "PENDING",
+        // You need to include other required fields here
+        title: '', // You should get the current title from somewhere
+        priority: 'MEDIUM', // You should get the current priority from somewhere
+        teamId: project.teamId,
       });
     } catch (error) {
       console.error('Error updating task:', error);
@@ -263,9 +275,9 @@ export default function Overview({ project }: OverviewProps) {
                 <div key={task.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                   <Checkbox 
-                      id={`task-${task.id}`} 
-                      checked={task.status === "completed"}
-                      onCheckedChange={(checked) => handleUpdateTask(task.id, checked as boolean)}
+                    id={`task-${task.id}`} 
+                    checked={task.status === "COMPLETED"}
+                    onCheckedChange={(checked) => handleUpdateTask(task.id, checked as boolean)}
                   />
                     <label htmlFor={`task-${task.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {task.title}

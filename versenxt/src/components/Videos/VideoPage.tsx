@@ -82,7 +82,7 @@ export default function VideoPage({ projectId }: { projectId: number }) {
   if (!project) return <div>Project not found</div>
 
   return (
-    <div className="container mx-auto p-6 space-y-8 max-w-7xl">
+    <div className="w-full max-w-full p-2 sm:p-4 md:p-6 space-y-6">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
         <div className="space-y-2 flex-1">
           {isEditing ? (

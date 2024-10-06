@@ -21,7 +21,7 @@ export default async function CommentsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">YouTube Comment Analyzer</h1>
+      <h1 className="text-2xl font-bold mb-4"></h1>
       
       {user ? (
         <YouTubeCommentAnalyzer />

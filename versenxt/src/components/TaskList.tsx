@@ -8,6 +8,8 @@ import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Trash, FilePen, Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Textarea } from "./ui/textarea";
+import { Badge } from "./ui/badge";
+import { CalendarIcon, UserIcon } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -298,41 +300,63 @@ export default function TaskList() {
             </Card>
           )}
           {tasks.map((task) => (
-            <Card key={task.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={task.status === 'COMPLETED'}
-                    onCheckedChange={(checked) => 
-                      handleUpdateTask({ ...task, status: checked ? 'COMPLETED' : 'PENDING' })
-                    }
-                  />
-                  <span className={task.status === 'COMPLETED' ? 'line-through' : ''}>{task.title}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" onClick={() => toggleDescription(task.id)}>
-                    {expandedTasks.includes(task.id) ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                  <Button variant="ghost" onClick={() => setEditingTask(task)}>
-                    <FilePen className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" onClick={() => handleDeleteTask(task.id)}>
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              {expandedTasks.includes(task.id) && (
-                <div className="mt-2 space-y-2">
-                  <p>{task.description}</p>
-                  <p>Status: {task.status}</p>
-                  <p>Priority: {task.priority}</p>
-                  <p>Due Date: {formatDate(task.dueDate)}</p>
-                  <p>Project: {task.project?.title || 'None'}</p>
-                  <p>Stage: {task.stage?.stage || 'None'}</p>
-                  <p>Assignee: {task.assignee?.user.name || 'Unassigned'}</p>
-                  <p>Creator: {task.creator.user.name}</p>
-                </div>
-              )}
+  <Card key={task.id} className="p-4 mb-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-2 flex-grow">
+        <Checkbox
+          checked={task.status === 'COMPLETED'}
+          onCheckedChange={(checked) => 
+            handleUpdateTask({ ...task, status: checked ? 'COMPLETED' : 'PENDING' })
+          }
+        />
+        <div className="flex flex-col">
+          <span className={`font-medium ${task.status === 'COMPLETED' ? 'line-through text-gray-500' : ''}`}>
+            {task.title}
+          </span>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            {task.assignee && (
+              <span className="flex items-center">
+                <UserIcon className="h-4 w-4 mr-1" />
+                {task.assignee.user.name}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className="flex items-center">
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                {formatDate(task.dueDate)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Badge variant={
+          task.priority === 'HIGH' ? 'destructive' :
+          task.priority === 'MEDIUM' ? 'warning' :
+          'secondary'
+        }>
+          {task.priority}
+        </Badge>
+        <Button variant="ghost" onClick={() => toggleDescription(task.id)}>
+          {expandedTasks.includes(task.id) ? <ChevronUp /> : <ChevronDown />}
+        </Button>
+        <Button variant="ghost" onClick={() => setEditingTask(task)}>
+          <FilePen className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" onClick={() => handleDeleteTask(task.id)}>
+          <Trash className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+    {expandedTasks.includes(task.id) && (
+      <div className="mt-2 space-y-2 text-sm text-gray-600">
+        <p>{task.description}</p>
+        <p>Status: {task.status}</p>
+        <p>Project: {task.project?.title || 'None'}</p>
+        <p>Stage: {task.stage?.stage || 'None'}</p>
+        <p>Creator: {task.creator.user.name}</p>
+      </div>
+    )}
             {editingTask?.id === task.id && (
                 <Card className="mt-4 p-4 space-y-4">
                   <Input

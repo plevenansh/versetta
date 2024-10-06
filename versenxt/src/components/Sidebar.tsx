@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, SquareCheck, Video, CalendarDays, Film, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose, Lock } from 'lucide-react';
+import { Home, SquareCheck,CircleCheckBig, Video,ChartSpline, Brush,PenTool,CalendarDays, Film,MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose, Lock } from 'lucide-react';
 import { Button } from "./ui/button"
 import Image from 'next/image'
 
@@ -24,18 +24,20 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const menuItems: MenuItem[] = [
     { href: '/dashboard', icon: Home, label: 'Home' },
     { href: '/projects', icon: Folder, label: 'Videos' },
-    { href: '/tasks', icon: SquareCheck, label: 'Tasks' },
-    { href: '/comments', icon: MessageSquare, label: 'Comments' },
-    { href: '/storage', icon: Database, label: 'Storage', locked: true },
-    { href: '/production', icon: Clapperboard, label: 'Production' },
-    { href: '/analyzer', icon: BarChart2, label: 'Analyzer', locked: true },
-    { href: '/storage', icon: NotepadTextDashed, label: 'Script', locked: true },
-    { href: '/production', icon: GalleryThumbnails, label: 'Thumbnail', locked: true },
+    { href: '/tasks', icon: CircleCheckBig, label: 'Tasks' },
+    { href: '/comments', icon: MessageSquare, label: 'Comments Analyser' },
+    { href: '/storage', icon: Database, label: 'Storage'},
+    { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
+    { href: '/chat', icon: MessageCircleMore, label: 'Chat' , locked: true},
+    { href: '/notes', icon: NotebookPen, label: 'Notes' , locked: true},
+    { href: '/thumbnail', icon: GalleryThumbnails, label: 'Thumbnail Lab',locked: true},
+    { href: '/analyzer', icon: ChartSpline, label: 'Analytics', locked: true },
+    { href: '/canvas', icon: Brush, label: 'Canvas', locked: true },
+    { href: '/script', icon: NotepadTextDashed, label: 'Script', locked: true },
+    { href: '/production', icon: Clapperboard, label: 'AI  Production', locked: true },
     { href: '/platform', icon: Tv, label: 'Platforms' , locked: true},
-    { href: '/storage', icon: CalendarDays, label: 'Calendar' },
-    { href: '/analyzer', icon: Film, label: 'Editing', locked: true },
-    { href: '/production', icon: NotebookPen, label: 'Production Notes' , locked: true},
-    { href: '/videos', icon: Video, label: 'Shooting' , locked: true},
+    { href: '/editing', icon: Film, label: 'Editing', locked: true },
+   
   ];
 
   return (
@@ -46,11 +48,17 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Image
               src="/ver.png"
               alt="Versetta Logo"
-              width={28}
-              height={28}
+              width={24}
+              height={24}
               className="mr-1"
             />
-            {!collapsed && <h1 className="text-2xl font-bold cursor-pointer">Versetta</h1>}
+            {!collapsed && <Image
+      src="/verlongb.png"
+      alt="Versetta Logo"
+      width={130}
+      height={24}
+      className="hidden sm:block"
+    />}
           </Link>
         </div>
         {!collapsed && (

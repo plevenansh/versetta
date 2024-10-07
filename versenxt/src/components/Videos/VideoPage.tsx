@@ -11,7 +11,8 @@ import PostProduction from './PostProduction'
 import Publishing from './Publishing'
 import Analytics from './Analytics'
 import { trpc } from '../../trpc/client'
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Plus,User } from "lucide-react"
 interface ProjectStage {
   id: number;
   stage: string;
@@ -111,6 +112,21 @@ export default function VideoPage({ projectId }: { projectId: number }) {
           <Button variant="default">Publish</Button>
         </div>
       </header>
+
+      <div className="flex flex-wrap items-center gap-2 mb-8">
+        <Avatar>
+          {/* <AvatarImage src="/placeholder-avatar.jpg" alt="@johndoe" /> */}
+         
+          <AvatarFallback> <User className="h-6 w-6" /></AvatarFallback>
+        </Avatar>
+        <Avatar>
+          {/* <AvatarImage src="/placeholder-avatar-2.jpg" alt="@janedoe" /> */}
+          <AvatarFallback> <User className="h-6 w-6" /></AvatarFallback>
+        </Avatar>
+        <Button variant="outline" size="icon">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
 
       <div className="flex items-center space-x-4 mb-6">
         <Progress value={progress} className="w-full" />

@@ -13,8 +13,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { trpc } from "@/trpc/client"
 import { useRouter } from 'next/navigation'
 import CalendarComponent from '@/components/Calendar'
-import { PlusCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
+import { PlusCircle, ChevronLeft,Star,AlertTriangle, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
 import { format } from "date-fns"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function CalendarPage() {
   const router = useRouter()
@@ -63,6 +64,9 @@ export default function CalendarPage() {
 
   return (
     <div className="w-full max-w-full p-2 sm:p-4 md:p-6 space-y-6">
+
+  
+
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-[#2f66dd]">Content Calendar</h1>
         <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
@@ -78,8 +82,16 @@ export default function CalendarPage() {
           </SelectContent>
         </Select>
       </div>
+      <Alert variant="default" className="mb-6">
+        <Star className="h-4 w-4" />
+        <AlertTitle>Gantt Chart: Coming Soon</AlertTitle>
+        <AlertDescription>
+          We are working on a Gantt Chart feature to help you visualize your project timelines and more. Stay tuned!
+        </AlertDescription>
+      </Alert>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
         <div className="md:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

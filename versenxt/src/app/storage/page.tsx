@@ -73,21 +73,21 @@ export default function StoragePage() {
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Used Space</span>
-                <span>75.5 GB / 100 GB</span>
+                <span>755 GB / 1 TB</span>
               </div>
               <Progress value={75.5} className="h-2" />
               <div className="grid grid-cols-3 gap-4 text-center text-sm">
                 <div>
                   <div className="font-semibold">Videos</div>
-                  <div className="text-muted-foreground">50 GB</div>
+                  <div className="text-muted-foreground">523 GB</div>
                 </div>
                 <div>
                   <div className="font-semibold">Images</div>
-                  <div className="text-muted-foreground">15 GB</div>
+                  <div className="text-muted-foreground">130 GB</div>
                 </div>
                 <div>
                   <div className="font-semibold">Other</div>
-                  <div className="text-muted-foreground">10.5 GB</div>
+                  <div className="text-muted-foreground">108 GB</div>
                 </div>
               </div>
               <div className="flex space-x-4">

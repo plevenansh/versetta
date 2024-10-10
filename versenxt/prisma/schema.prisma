@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+ // directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -18,46 +18,55 @@ model User {
   updatedAt       DateTime      @updatedAt
   teamMemberships TeamMember[]
   createdTeams    Team[]        @relation("TeamCreator")
-  subscriptions   Subscription[] // New field to establish the reverse relation
+  subscriptions   Subscription[]
   commentAnalyses CommentAnalysis[]
 
   @@map("users")
 }
 
 model Team {
-  id          Int          @id @default(autoincrement())
-  name        String
-  description String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              Int          @id @default(autoincrement())
+  name            String
+  description     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   workOsOrgId     String       @unique
-  creatorId   Int
-  projects    Project[]
-  tasks       Task[]
-  members     TeamMember[]
-  creator     User         @relation("TeamCreator", fields: [creatorId], references: [id])
+  creatorId       Int
+  subActive       Boolean      @default(false)
+  projects        Project[]
+  tasks           Task[]
+  members         TeamMember[]
+  creator         User         @relation("TeamCreator", fields: [creatorId], references: [id])
   subscription    Subscription?
-  
+  storage         Storage[]
+
   @@index([creatorId])
   @@map("teams")
 }
 
 model TeamMember {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  teamId          Int
-  role            String
-  joinedAt        DateTime  @default(now())
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  teamId             Int
+  role               String
+  access             AccessLevel
+  joinedAt           DateTime  @default(now())
   workOsMembershipId String?   @unique
-  createdProjects Project[] @relation("ProjectCreator")
-  assignedTasks   Task[]    @relation("TaskAssignee")
-  createdTasks    Task[]    @relation("TaskCreator")
-  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user            User      @relation(fields: [userId], references: [id])
+  createdProjects    Project[] @relation("ProjectCreator")
+  assignedTasks      Task[]    @relation("TaskAssignee")
+  createdTasks       Task[]    @relation("TaskCreator")
+  team               Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user               User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, teamId])
   @@index([userId])
   @@index([teamId])
+}
+
+enum AccessLevel {
+  ADMIN
+  MANAGER
+  MEMBER
 }
 
 model Subscription {
@@ -65,11 +74,11 @@ model Subscription {
   teamId        Int      @unique
   team          Team     @relation(fields: [teamId], references: [id])
   teamName      String
-  status        String   // 'active', 'inactive', 'pending'
-  type          String   // 'paid', 'invite'
-  provider      String?  // 'razorpay', 'polar', or null for invite
-  providerId    String?  // ID from the payment provider
-  subActive     Boolean  @default(false)
+  status        String
+  type          String
+  provider      String?
+  providerId    String?
+  plan          String
   creatorId     Int
   creator       User     @relation(fields: [creatorId], references: [id])
   createdAt     DateTime @default(now())
@@ -77,95 +86,159 @@ model Subscription {
 }
 
 model Project {
-  id            Int            @id @default(autoincrement())
-  title         String
-  description   String?
-  status        String         @default("active")
-  startDate     DateTime?
-  endDate       DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  teamId        Int
-  creatorId     Int
-  creationOrder Int            @default(autoincrement())
-  completed     Boolean        @default(false)
-  creator       TeamMember     @relation("ProjectCreator", fields: [creatorId], references: [id])
-  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  stages        ProjectStage[]
-  tasks         Task[]
-  concept       String?
-  keyPoints     KeyPoint[]
-  references    Reference[]
-  inspirations  Inspiration[]
-  script        String?
-  keywords      Keyword[]
-  equipment     Equipment[]
-  storyboard    StoryboardFrame[]
-  filmingSchedule FilmingSession[]
-  bRollIdeas    BRollIdea[]
-  shotList      Shot[]
-  productionNotes String?
-  videoAssets   VideoAsset[]
-  thumbnails    Thumbnail[]
-  publishDetails PublishDetails?
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String?
+  status          String         @default("active")
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  teamId          Int
+  creatorId       Int
+  creationOrder   Int            @default(autoincrement())
+  completed       Boolean        @default(false)
+  creator         TeamMember     @relation("ProjectCreator", fields: [creatorId], references: [id])
+  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  mainStages      MainStage[]
+  subStages       SubStage[]
+  customSubStages CustomSubStage[]
+  tasks           Task[]
+  storage         Storage[]
+  publishDetails  PublishDetails?
 
   @@index([teamId])
   @@index([creatorId])
 }
 
-
-model ProjectStage {
-  id        Int     @id @default(autoincrement())
+model MainStage {
+  id        Int       @id @default(autoincrement())
+  name      MainStageName
   projectId Int
-  stage     String
-  completed Boolean @default(false)
-  order     Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks Task[]
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subStages SubStage[]
+  customSubStage CustomSubStage[]
+  tasks     Task[]
 
-  @@unique([projectId, stage])
+  @@unique([projectId, name])
   @@index([projectId])
 }
 
-model CommentAnalysis {
-  id              Int      @id @default(autoincrement())
-  youtubeUrl      String
-  prompt          String
-  generalAnalysis String   @db.Text
-  topComments     Json
-  contentIdeas    Json
-  metrics         Json
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id])
-  createdAt       DateTime @default(now())
-
-  @@index([userId])
+enum MainStageName {
+  IDEATION
+  PRE_PRODUCTION
+  PRODUCTION
+  POST_PRODUCTION
+  PUBLISHING
+  ANALYTICS
 }
 
+model CustomSubStage {
+  id          Int       @id @default(autoincrement())
+  name        String
+  enabled     Boolean   @default(true)
+  starred     Boolean   @default(false)
+  projectId   Int
+  mainStageId Int
+  task        Task[]
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  mainStage   MainStage @relation(fields: [mainStageId], references: [id])
+ 
+  content     Json?
+
+  @@index([projectId])
+  @@index([mainStageId])
+}
+
+model SubStage {
+  id          Int       @id @default(autoincrement())
+  name        SubStageName
+  enabled     Boolean   @default(true)
+  starred     Boolean   @default(false)
+  mainStageId Int
+  projectId   Int
+  task        Task[]
+  mainStage   MainStage @relation(fields: [mainStageId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Fields for different types of substages
+  content     String?   // For KeyPoint
+  completed   Boolean?  // For KeyPoint, Equipment, Shot
+  link        String?   // For Reference
+  imageUrl    String?   // For Inspiration, StoryboardFrame, Thumbnail
+  word        String?   // For Keyword
+  volume      String?   // For Keyword
+  scene       Int?      // For StoryboardFrame
+  time        String?   // For FilmingSession
+  location    String?   // For FilmingSession
+  idea        String?   // For BRollIdea
+  description String?   // For Shot
+  title       String?   // For VideoAsset
+  url         String?   // For VideoAsset
+  assetType   String?   // For VideoAsset (e.g., "raw", "edited", "final")
+  selected    Boolean?  // For Thumbnail
+  publishDate DateTime? // For PublishDetails
+  platform    String?   // For PublishDetails
+  status      String?   // For PublishDetails
+
+  @@index([mainStageId])
+  @@index([projectId])
+}
+
+enum SubStageName {
+  KEY_POINT
+  REFERENCE
+  INSPIRATION
+  KEYWORD
+  EQUIPMENT
+  STORYBOARD_FRAME
+  FILMING_SESSION
+  B_ROLL_IDEA
+  SHOT
+  VIDEO_ASSET
+  THUMBNAIL
+  PUBLISH_DETAILS
+  EDITING_PROGRESS
+  SUBTITLES
+  FEEDBACK_REVISION
+  EXPORT_SETTINGS
+  VIDEO_DETAILS
+  PUBLISHING_SCHEDULE
+  CROSS_PLATFORM_SHARING
+  MONETIZATION
+}
+
+
+
 model Task {
-  id            Int         @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   title         String
   description   String?
-  status        TaskStatus  @default(PENDING)
-  priority      TaskPriority @default(MEDIUM)
+  status        TaskStatus    @default(PENDING)
+  priority      TaskPriority  @default(MEDIUM)
   dueDate       DateTime?
   projectId     Int?
-  stageId       Int?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  mainStageId   Int?
+  subStageId    Int?
+  customSubStageId Int?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   teamId        Int
   assigneeId    Int?
   creatorId     Int
-  creationOrder Int         @default(autoincrement())
-  assignee      TeamMember? @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  creator       TeamMember  @relation("TaskCreator", fields: [creatorId], references: [id])
-  project       Project?    @relation(fields: [projectId], references: [id])
-  stage         ProjectStage? @relation(fields: [stageId], references: [id])
-  team          Team        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  creationOrder Int           @default(autoincrement())
+  assignee      TeamMember?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator       TeamMember    @relation("TaskCreator", fields: [creatorId], references: [id])
+  project       Project?      @relation(fields: [projectId], references: [id])
+  mainStage     MainStage?    @relation(fields: [mainStageId], references: [id])
+  subStage      SubStage?     @relation(fields: [subStageId], references: [id])
+  customSubStage CustomSubStage? @relation(fields: [customSubStageId], references: [id])
+  team          Team          @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@index([teamId])
   @@index([projectId])
-  @@index([stageId])
+  @@index([mainStageId])
+  @@index([subStageId])
   @@index([creatorId])
   @@index([assigneeId])
 }
@@ -182,121 +255,49 @@ enum TaskPriority {
   HIGH
 }
 
-model KeyPoint {
-  id        Int     @id @default(autoincrement())
-  content   String
-  completed Boolean @default(false)
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model Reference {
-  id        Int     @id @default(autoincrement())
-  title     String
-  link      String?
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model Inspiration {
-  id        Int     @id @default(autoincrement())
-  imageUrl  String
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model Keyword {
-  id        Int     @id @default(autoincrement())
-  word      String
-  volume    String?
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model Equipment {
-  id        Int     @id @default(autoincrement())
+model Storage {
+  id        Int       @id @default(autoincrement())
   name      String
-  checked   Boolean @default(false)
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model StoryboardFrame {
-  id        Int     @id @default(autoincrement())
-  imageUrl  String
-  scene     Int
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model FilmingSession {
-  id        Int      @id @default(autoincrement())
-  scene     String
-  time      String
-  location  String
-  projectId Int
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model BRollIdea {
-  id        Int     @id @default(autoincrement())
-  idea      String
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model Shot {
-  id        Int     @id @default(autoincrement())
-  description String
-  completed Boolean @default(false)
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-}
-
-model VideoAsset {
-  id        Int     @id @default(autoincrement())
-  title     String
+  type      StorageType
   url       String
-  type      String  // e.g., "raw", "edited", "final"
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamId    Int
+  projectId Int?
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  @@index([teamId])
   @@index([projectId])
 }
 
-model Thumbnail {
-  id        Int     @id @default(autoincrement())
-  imageUrl  String
-  selected  Boolean @default(false)
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
+enum StorageType {
+  TEAM_ASSET
+  PROJECT_ASSET
+  STOCK_FOOTAGE
+  FINISHED_VIDEO
+  THUMBNAIL
+  OTHER
 }
 
 model PublishDetails {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   publishDate   DateTime?
   platform      String?
-  status        String   @default("draft") // "draft", "scheduled", "published"
-  projectId     Int      @unique
-  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status        String    @default("draft")
+  projectId     Int       @unique
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model CommentAnalysis {
+  id              Int      @id @default(autoincrement())
+  youtubeUrl      String
+  prompt          String
+  generalAnalysis String   @db.Text
+  topComments     Json
+  contentIdeas    Json
+  metrics         Json
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }

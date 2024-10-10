@@ -1,4 +1,4 @@
-// src/components/ClientDashboard.tsx
+// src/components/Dashboard.tsx
 "use client"
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";

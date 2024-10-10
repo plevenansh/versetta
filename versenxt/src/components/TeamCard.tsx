@@ -1,7 +1,6 @@
 
 
-
-
+//components/TeamCard.tsx
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
@@ -11,10 +10,25 @@ import { Badge } from "./ui/badge"
 import { CreditCard, ChevronRight, Trash2 } from 'lucide-react'
 import TeamMemberList from './TeamMemberList'
 
+interface Team {
+  id: number;
+  name: string;
+  description: string | null;
+  subActive: boolean;
+  subscription?: {
+    status: string;
+    type: string;
+    provider?: string;
+  };
+  creator: {
+    id: number;
+  };
+}
+
 interface TeamCardProps {
-  team: any
-  onDeleteTeam: (teamId: number) => void
-  onTeamUpdated: () => void
+  team: Team;
+  onDeleteTeam: (teamId: number) => void;
+  onTeamUpdated: () => void;
 }
 
 export default function TeamCard({ team, onDeleteTeam, onTeamUpdated }: TeamCardProps) {
@@ -42,8 +56,10 @@ export default function TeamCard({ team, onDeleteTeam, onTeamUpdated }: TeamCard
           <TabsContent value="billing">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Subscription Details</h3>
+              <p>Subscription Active: <Badge variant={team.subActive ? "secondary" : "destructive"}>{team.subActive ? 'Yes' : 'No'}</Badge></p>
               <p>Current Plan: <Badge variant="secondary">{team.subscription?.status || 'No active subscription'}</Badge></p>
-              <p>Next billing date: {team.subscription?.nextBillingDate || 'N/A'}</p>
+              <p>Subscription Type: {team.subscription?.type || 'N/A'}</p>
+              <p>Provider: {team.subscription?.provider || 'N/A'}</p>
               <Button>
                 <CreditCard className="mr-2 h-4 w-4" />
                 Manage Subscription
@@ -84,3 +100,8 @@ export default function TeamCard({ team, onDeleteTeam, onTeamUpdated }: TeamCard
     </Card>
   )
 }
+
+
+
+
+

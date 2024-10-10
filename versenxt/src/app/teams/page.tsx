@@ -14,9 +14,7 @@ export default function TeamsPage() {
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false)
   const router = useRouter()
 
-  const { data: userTeams, isLoading, error, refetch } = trpc.teams.getUserTeams.useQuery(undefined, {
-    retry: false,
-  })
+  const { data: userTeams, isLoading, error, refetch } = trpc.teams.getUserTeams.useQuery()
 
   if (error) {
     if (error.data?.code === 'UNAUTHORIZED') {
@@ -92,3 +90,4 @@ export default function TeamsPage() {
     </div>
   )
 }
+

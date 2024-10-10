@@ -1,3 +1,5 @@
+
+
 // src/components/CreateTeamForm.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,6 +11,7 @@ import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTit
 import Script from 'next/script'
 import { TRPCClientError } from '@trpc/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+
 interface CreateTeamFormProps {
   onTeamCreated: () => void
 }
@@ -17,6 +20,7 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamDescription, setNewTeamDescription] = useState('')
   const [subscriptionType, setSubscriptionType] = useState<'razorpay' | 'polar' | 'invite'>('razorpay')
+  const [access, setAccess] = useState<'ADMIN' | 'MANAGER' | 'MEMBER'>('ADMIN')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -38,6 +42,7 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
         name: newTeamName,
         description: newTeamDescription,
         subscriptionType,
+       
       })
 
       if (subscriptionType === 'razorpay') {
@@ -78,7 +83,7 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
         }
       } else if (subscriptionType === 'polar') {
         // Implement Polar payment flow
-        alert('Polar payment not implemented yet')
+        alert('Stripe not implemented yet')
       } else {
         // Invite method
         alert('Team created successfully with invite access!')
@@ -135,23 +140,24 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="subscriptionType" className="text-right">
-                    Subscription Type
-                  </Label>
-                  <Select
-                    value={subscriptionType}
-                    onValueChange={(value) => setSubscriptionType(value as 'razorpay' | 'polar' | 'invite')}
-                  >
-                    <SelectTrigger className="w-full col-span-3">
-                      <SelectValue placeholder="Select Subscription Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="razorpay">Razorpay (INR)</SelectItem>
-                      <SelectItem value="polar">Stripe(All Currencies)</SelectItem>
-                      <SelectItem value="invite">Invite (Free Access)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Label htmlFor="subscriptionType" className="text-right">
+                Subscription Type
+              </Label>
+              <Select
+                value={subscriptionType}
+                onValueChange={(value) => setSubscriptionType(value as 'razorpay' | 'polar' | 'invite')}
+              >
+                <SelectTrigger className="w-full col-span-3">
+                  <SelectValue placeholder="Select Subscription Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="razorpay">Razorpay (INR)</SelectItem>
+                  <SelectItem value="polar">Stripe(All Currencies)</SelectItem>
+                  <SelectItem value="invite">Invite (Free Access)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+           
           </div>
           {error && <div className="text-red-500 mb-4">{error}</div>}
           <DialogFooter>
@@ -164,3 +170,6 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
     </>
   )
 }
+
+
+

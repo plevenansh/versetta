@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { trpc } from '../trpc/client';
 import { TRPCClientError } from '@trpc/client';
+import { AccessLevel } from '@prisma/client';
 
 interface AddTeamMemberFormProps {
   teamId: number;
@@ -9,13 +10,15 @@ interface AddTeamMemberFormProps {
 
 const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId, onMemberAdded }) => {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('member');
+  const [role, setRole] = useState('');
+  const [access, setAccess] = useState<AccessLevel>(AccessLevel.MEMBER);
   const [error, setError] = useState<string | null>(null);
 
   const addMemberMutation = trpc.teams.addTeamMember.useMutation({
     onSuccess: () => {
       setEmail('');
-      setRole('member');
+      setRole('');
+      setAccess(AccessLevel.MEMBER);
       setError(null);
       alert('Team member added successfully!');
       onMemberAdded();
@@ -44,6 +47,7 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId, onMemberA
       teamId: teamId,
       email: email,
       role: role,
+      access: access,
     });
   };
 
@@ -74,15 +78,30 @@ const AddTeamMemberForm: React.FC<AddTeamMemberFormProps> = ({ teamId, onMemberA
         <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
           Role:
         </label>
-        <select
+        <input
+          type="text"
           id="role"
           value={role}
           onChange={(e) => setRole(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={addMemberMutation.isPending}
+        />
+      </div>
+      <div>
+        <label htmlFor="access" className="block text-sm font-medium text-gray-700 mb-1">
+          Access Level:
+        </label>
+        <select
+          id="access"
+          value={access}
+          onChange={(e) => setAccess(e.target.value as AccessLevel)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={addMemberMutation.isPending}
         >
-          <option value="admin">Admin</option>
-          <option value="member">Member</option>
+          <option value={AccessLevel.ADMIN}>Admin</option>
+          <option value={AccessLevel.MANAGER}>Manager</option>
+          <option value={AccessLevel.MEMBER}>Member</option>
         </select>
       </div>
       <button 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { trpc } from '../trpc/client';
+import { trpc } from '../utils/trpc';
 import { TRPCClientError } from '@trpc/client';
 import { AccessLevel } from '@prisma/client';
 

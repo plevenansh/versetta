@@ -10,7 +10,7 @@ import Production from './Production'
 import PostProduction from './PostProduction'
 import Publishing from './Publishing'
 import Analytics from './Analytics'
-import { trpc } from '../../trpc/client'
+import { trpc } from '../../utils/trpc'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus,User } from "lucide-react"
 interface ProjectStage {

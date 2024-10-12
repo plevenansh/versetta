@@ -3,7 +3,7 @@
 //components/TeamMemberList.tsx
 
 import { useState } from 'react'
-import { trpc } from '../trpc/client'
+import { trpc } from '../utils/trpc'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Button } from "./ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog"

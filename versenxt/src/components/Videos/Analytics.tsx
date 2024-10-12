@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { Textarea } from "../ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { trpc } from '../../trpc/client'
+import { trpc } from '../../utils/trpc'
 
 interface AnalysisData {
   general: string;

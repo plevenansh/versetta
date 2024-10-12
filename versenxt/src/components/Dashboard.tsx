@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import ProjectSection from './ProjectSection';
 import TaskList from './TaskList';
-import { trpc } from '../trpc/client';
+import { trpc } from '../utils/trpc';
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
 import CalendarComponent from './Calendar';

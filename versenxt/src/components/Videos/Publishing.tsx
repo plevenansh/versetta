@@ -4,7 +4,7 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
 import { Switch } from "../ui/switch"
-import { trpc } from '../../trpc/client';
+import { trpc } from '../../utils/trpc';
 
 interface PublishingProps {
   project: {

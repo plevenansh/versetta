@@ -1,178 +1,165 @@
-// src/components/EditProjectModal.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import { trpc } from '../trpc/client';
+// components/EditProjectModal.tsx
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { X, Plus } from 'lucide-react';
+import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useToast } from "@/components/hooks/use-toast"
-
+import { Plus, X } from 'lucide-react';
 
 interface EditProjectModalProps {
-  project: {
-    id: number;
-    title: string;
-    description: string | null;
-    status: 'active' | 'completed';
-    startDate: string | null;
-    endDate: string | null;
-    teamId: number;
-    stages: { id: number; stage: string; completed: boolean; order?: number }[];
-  };
+  project: Project;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: () => void;
+  onUpdate: (updatedProject: Project) => void;
 }
 
 export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditProjectModalProps) {
-  const [title, setTitle] = useState(project.title);
-  const [description, setDescription] = useState(project.description || '');
-  const [status, setStatus] = useState(project.status);
-  const [startDate, setStartDate] = useState(project.startDate || '');
-  const [endDate, setEndDate] = useState(project.endDate || '');
-  const [teamId, setTeamId] = useState(project.teamId);
-  const [stages, setStages] = useState(project.stages);
-  const [newStage, setNewStage] = useState('');
+  const [editedProject, setEditedProject] = useState(project);
 
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { toast } = useToast();
-
-  const updateProjectMutation = trpc.projects.update.useMutation();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await updateProjectMutation.mutateAsync({
-        id: project.id,
-        title,
-        description,
-        status,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        teamId,
-        stages: stages.map((s, index) => ({
-          id: s.id,
-          stage: s.stage,
-          completed: s.completed,
-          order: s.order !== undefined ? s.order : index
-        }))
-      });
-      onUpdate();
-      onClose();
-      toast({
-        title: "Project updated",
-        description: "Your project has been successfully updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update project. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const nextIndex = index + 1;
-      if (nextIndex < inputRefs.current.length) {
-        inputRefs.current[nextIndex]?.focus();
-      } else {
-        handleSubmit(e);
-      }
-    } else if (e.ctrlKey && e.key === 'Enter') {
-      handleSubmit(e);
-    }
-  };
-
-  const handleAddStage = () => {
-    if (newStage.trim()) {
-      setStages([...stages, {
-        id: Date.now(),
-        stage: newStage.trim(),
-        completed: false,
-        order: stages.length
-      }]);
-      setNewStage('');
-    }
-  };
-
-  const handleRemoveStage = (stageId: number) => {
-    setStages(stages.filter(s => s.id !== stageId));
+  const handleSave = () => {
+    onUpdate(editedProject);
+    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-4xl w-full h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit Project</DialogTitle>
+          <DialogTitle>Edit Project: {project.title}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Project Title"
-            required
-            onKeyDown={(e) => handleKeyDown(e, 0)}
-            ref={(el) => { inputRefs.current[0] = el; }}
-          />
-          <Input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-            onKeyDown={(e) => handleKeyDown(e, 1)}
-            ref={(el) => {inputRefs.current[1] = el;}}
-          />
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            placeholder="Start Date"
-            onKeyDown={(e) => handleKeyDown(e, 2)}
-            ref={(el) => {inputRefs.current[2] = el;}}
-          />
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            placeholder="End Date"
-            onKeyDown={(e) => handleKeyDown(e, 3)}
-            ref={(el) => {inputRefs.current[3] = el;}}
-          />
-          <div>
-            <h3 className="text-sm font-medium mb-2">Stages:</h3>
-            <div className="space-y-2">
-              {stages.map((stage) => (
-                <div key={stage.id} className="flex items-center space-x-2">
-                  <span>{stage.stage}</span>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+        <div className="flex-grow overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="space-y-4">
+              <Input
+                placeholder="Project Title"
+                value={editedProject.title}
+                onChange={(e) => setEditedProject({ ...editedProject, title: e.target.value })}
+              />
+              <Textarea
+                placeholder="Project Description"
+                value={editedProject.description || ''}
+                onChange={(e) => setEditedProject({ ...editedProject, description: e.target.value })}
+              />
+              <Input
+                type="date"
+                placeholder="Start Date"
+                value={editedProject.startDate ? new Date(editedProject.startDate).toISOString().split('T')[0] : ''}
+                onChange={(e) => setEditedProject({ ...editedProject, startDate: e.target.value })}
+              />
+              <Input
+                type="date"
+                placeholder="End Date"
+                value={editedProject.endDate ? new Date(editedProject.endDate).toISOString().split('T')[0] : ''}
+                onChange={(e) => setEditedProject({ ...editedProject, endDate: e.target.value })}
+              />
+              <Input
+                placeholder="Duration"
+                value={editedProject.duration}
+                onChange={(e) => setEditedProject({ ...editedProject, duration: e.target.value })}
+              />
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Main Stages</h3>
+              {editedProject.mainStages.map((stage, index) => (
+                <div key={stage.id} className="border p-2 rounded">
+                  <Input
+                    placeholder="Main Stage Name"
+                    value={stage.name}
+                    onChange={(e) => {
+                      const updatedStages = [...editedProject.mainStages];
+                      updatedStages[index].name = e.target.value;
+                      setEditedProject({ ...editedProject, mainStages: updatedStages });
+                    }}
+                  />
+                  <h4 className="mt-2">Sub Stages</h4>
+                  {stage.subStages.map((subStage, subIndex) => (
+                    <div key={subStage.id} className="flex items-center space-x-2 mt-1">
+                      <Input
+                        placeholder="Sub Stage Name"
+                        value={subStage.name}
+                        onChange={(e) => {
+                          const updatedStages = [...editedProject.mainStages];
+                          updatedStages[index].subStages[subIndex].name = e.target.value;
+                          setEditedProject({ ...editedProject, mainStages: updatedStages });
+                        }}
+                      />
+                      <Select
+                        value={subStage.enabled ? 'enabled' : 'disabled'}
+                        onValueChange={(value) => {
+                          const updatedStages = [...editedProject.mainStages];
+                          updatedStages[index].subStages[subIndex].enabled = value === 'enabled';
+                          setEditedProject({ ...editedProject, mainStages: updatedStages });
+                        }}
+                      >
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="enabled">Enabled</SelectItem>
+                          <SelectItem value="disabled">Disabled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const updatedStages = [...editedProject.mainStages];
+                          updatedStages[index].subStages = updatedStages[index].subStages.filter(s => s.id !== subStage.id);
+                          setEditedProject({ ...editedProject, mainStages: updatedStages });
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleRemoveStage(stage.id)}
+                    className="mt-2"
+                    onClick={() => {
+                      const updatedStages = [...editedProject.mainStages];
+                      updatedStages[index].subStages.push({
+                        id: Date.now(),
+                        name: '',
+                        enabled: true,
+                        starred: false,
+                        content: null,
+                        mainStageId: stage.id,
+                        projectId: project.id
+                      });
+                      setEditedProject({ ...editedProject, mainStages: updatedStages });
+                    }}
                   >
-                    <X className="h-4 w-4" />
+                    <Plus className="h-4 w-4 mr-2" /> Add Sub Stage
                   </Button>
                 </div>
               ))}
-            </div>
-            <div className="flex items-center space-x-2 mt-2">
-              <Input
-                value={newStage}
-                onChange={(e) => setNewStage(e.target.value)}
-                placeholder="New Stage"
-              />
-              <Button type="button" onClick={handleAddStage}>
-                <Plus className="h-4 w-4" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const updatedStages = [...editedProject.mainStages];
+                  updatedStages.push({
+                    id: Date.now(),
+                    name: '',
+                    projectId: project.id,
+                    starred: false,
+                    subStages: []
+                  });
+                  setEditedProject({ ...editedProject, mainStages: updatedStages });
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Main Stage
               </Button>
             </div>
           </div>
-          <Button type="submit" disabled={updateProjectMutation.isPending}>
-            {updateProjectMutation.isPending ? 'Updating...' : 'Update Project'}
-          </Button>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleSave}>Save Changes</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -86,7 +86,7 @@ model Subscription {
 }
 
 model Project {
-  id              Int            @id @default(autoincrement())
+  id              Int        @id @default(autoincrement())
   title           String
   description     String?
   status          String         @default("active")
@@ -96,119 +96,48 @@ model Project {
   updatedAt       DateTime       @updatedAt
   teamId          Int
   creatorId       Int
-  creationOrder   Int            @default(autoincrement())
+
+  duration        String
   completed       Boolean        @default(false)
   creator         TeamMember     @relation("ProjectCreator", fields: [creatorId], references: [id])
   team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   mainStages      MainStage[]
   subStages       SubStage[]
-  customSubStages CustomSubStage[]
   tasks           Task[]
   storage         Storage[]
-  publishDetails  PublishDetails?
 
   @@index([teamId])
   @@index([creatorId])
 }
 
 model MainStage {
-  id        Int       @id @default(autoincrement())
-  name      MainStageName
-  projectId Int
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  subStages SubStage[]
-  customSubStage CustomSubStage[]
-  tasks     Task[]
+  id          Int        @id @default(autoincrement())
+  name        String
+  projectId   Int
+  starred     Boolean   @default(false)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subStages   SubStage[]
+  tasks       Task[]
 
   @@unique([projectId, name])
   @@index([projectId])
 }
 
-enum MainStageName {
-  IDEATION
-  PRE_PRODUCTION
-  PRODUCTION
-  POST_PRODUCTION
-  PUBLISHING
-  ANALYTICS
-}
-
-model CustomSubStage {
-  id          Int       @id @default(autoincrement())
+model SubStage {
+  id           Int        @id @default(autoincrement())
   name        String
   enabled     Boolean   @default(true)
   starred     Boolean   @default(false)
-  projectId   Int
   mainStageId Int
-  task        Task[]
-  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  mainStage   MainStage @relation(fields: [mainStageId], references: [id])
- 
+  projectId   Int       // Add this line
   content     Json?
-
-  @@index([projectId])
-  @@index([mainStageId])
-}
-
-model SubStage {
-  id          Int       @id @default(autoincrement())
-  name        SubStageName
-  enabled     Boolean   @default(true)
-  starred     Boolean   @default(false)
-  mainStageId Int
-  projectId   Int
-  task        Task[]
   mainStage   MainStage @relation(fields: [mainStageId], references: [id])
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  // Fields for different types of substages
-  content     String?   // For KeyPoint
-  completed   Boolean?  // For KeyPoint, Equipment, Shot
-  link        String?   // For Reference
-  imageUrl    String?   // For Inspiration, StoryboardFrame, Thumbnail
-  word        String?   // For Keyword
-  volume      String?   // For Keyword
-  scene       Int?      // For StoryboardFrame
-  time        String?   // For FilmingSession
-  location    String?   // For FilmingSession
-  idea        String?   // For BRollIdea
-  description String?   // For Shot
-  title       String?   // For VideoAsset
-  url         String?   // For VideoAsset
-  assetType   String?   // For VideoAsset (e.g., "raw", "edited", "final")
-  selected    Boolean?  // For Thumbnail
-  publishDate DateTime? // For PublishDetails
-  platform    String?   // For PublishDetails
-  status      String?   // For PublishDetails
+  tasks       Task[]
 
   @@index([mainStageId])
-  @@index([projectId])
+  @@index([projectId]) // Add this line
 }
-
-enum SubStageName {
-  KEY_POINT
-  REFERENCE
-  INSPIRATION
-  KEYWORD
-  EQUIPMENT
-  STORYBOARD_FRAME
-  FILMING_SESSION
-  B_ROLL_IDEA
-  SHOT
-  VIDEO_ASSET
-  THUMBNAIL
-  PUBLISH_DETAILS
-  EDITING_PROGRESS
-  SUBTITLES
-  FEEDBACK_REVISION
-  EXPORT_SETTINGS
-  VIDEO_DETAILS
-  PUBLISHING_SCHEDULE
-  CROSS_PLATFORM_SHARING
-  MONETIZATION
-}
-
-
 
 model Task {
   id            Int           @id @default(autoincrement())
@@ -217,10 +146,9 @@ model Task {
   status        TaskStatus    @default(PENDING)
   priority      TaskPriority  @default(MEDIUM)
   dueDate       DateTime?
-  projectId     Int?
+  projectId     Int
   mainStageId   Int?
   subStageId    Int?
-  customSubStageId Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   teamId        Int
@@ -229,10 +157,9 @@ model Task {
   creationOrder Int           @default(autoincrement())
   assignee      TeamMember?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
   creator       TeamMember    @relation("TaskCreator", fields: [creatorId], references: [id])
-  project       Project?      @relation(fields: [projectId], references: [id])
+  project       Project       @relation(fields: [projectId], references: [id])
   mainStage     MainStage?    @relation(fields: [mainStageId], references: [id])
   subStage      SubStage?     @relation(fields: [subStageId], references: [id])
-  customSubStage CustomSubStage? @relation(fields: [customSubStageId], references: [id])
   team          Team          @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@index([teamId])
@@ -276,15 +203,6 @@ enum StorageType {
   FINISHED_VIDEO
   THUMBNAIL
   OTHER
-}
-
-model PublishDetails {
-  id            Int       @id @default(autoincrement())
-  publishDate   DateTime?
-  platform      String?
-  status        String    @default("draft")
-  projectId     Int       @unique
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model CommentAnalysis {

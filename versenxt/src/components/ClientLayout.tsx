@@ -1,7 +1,7 @@
 // app/ClientLayout.tsx
 "use client"
 import { ReactNode } from 'react';
-import { trpc } from '../trpc/client';
+import { trpc } from '../utils/trpc';
 
 interface ClientLayoutProps {
   children: ReactNode;

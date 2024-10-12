@@ -6,7 +6,7 @@ import { Textarea } from "../ui/textarea"
 import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
 import { Upload, X } from 'lucide-react'
-import { trpc } from '../../trpc/client'
+import { trpc } from '../../utils/trpc'
 import Image from 'next/image'
 
 interface Project {

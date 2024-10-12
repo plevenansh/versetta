@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { trpc } from "@/trpc/client"
+import { trpc } from "@/utils/trpc"
 import { useRouter } from 'next/navigation'
 import CalendarComponent from '@/components/Calendar'
 import { PlusCircle, ChevronLeft,Star,AlertTriangle, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'

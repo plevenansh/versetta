@@ -6,7 +6,7 @@ import { ScrollArea } from "../ui/scroll-area"
 import { Checkbox } from "../ui/checkbox"
 import { Edit3, Video, Users, Activity, Plus, X } from 'lucide-react'
 import { Avatar, AvatarFallback } from "../ui/avatar"
-import { trpc } from '../../trpc/client'
+import { trpc } from '../../utils/trpc'
 import { Progress } from "../ui/progress"
 import { Input } from "../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
@@ -225,7 +225,7 @@ export default function Overview({ project }: OverviewProps) {
             </Button>
             <Button variant="outline" className="w-full">
               <Activity className="w-4 h-4 mr-2" />
-              View Analytics
+              Edit Projects
             </Button>
           </CardContent>
         </Card>

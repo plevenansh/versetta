@@ -73,31 +73,7 @@ export const userRouter = router({
       }
     }),
 
-    // getOrCreateUser: protectedProcedure
-    // .query(async ({ ctx }) => {
-    //   try {
-    //     let user = await prisma.user.findUnique({
-    //       where: { id: ctx.user.id },
-    //       include: {
-    //         teamMemberships: {
-    //           include: {
-    //             team: true
-    //           }
-    //         }
-    //       }
-    //     });
-  
-    //     if (!user) {
-    //       throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
-    //     }
-  
-    //     return user;
-    //   } catch (error) {
-    //     console.error('Error fetching or creating user:', error);
-    //     if (error instanceof TRPCError) throw error;
-    //     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch or create user' });
-    //   }
-    // }),
+ 
 
     getOrCreateUser: publicProcedure
     .query(async () => {

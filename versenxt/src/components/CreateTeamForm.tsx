@@ -3,7 +3,7 @@
 // src/components/CreateTeamForm.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { trpc } from '../trpc/client'
+import { trpc } from '../utils/trpc'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"

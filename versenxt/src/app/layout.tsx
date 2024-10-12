@@ -1,6 +1,6 @@
 "use client"
 import { ReactNode } from 'react';
-import { trpc } from '../trpc/client';
+import { trpc } from '../utils/trpc';
 import '../styles/globals.css';
 import RootLayoutServer from './root-layout';
 import Layout from '../components/Layout';

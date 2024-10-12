@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { trpc } from '../../trpc/client'
+import { trpc } from '../../utils/trpc'
 import { Button } from "../../components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import { Dialog, DialogTrigger } from "../../components/ui/dialog"

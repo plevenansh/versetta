@@ -16,7 +16,7 @@ import { Plus,Trash2, Minus } from 'lucide-react';
 interface Project {
   id: number;
   title: string;
-  description: string | null;
+  description?: string | null;
   status: string;
   startDate: string | null;
   endDate: string | null;
@@ -66,64 +66,71 @@ interface NewProject {
   endDate: string;
   teamId: number;
   duration: string;
-  mainStages: {
-    name: string;
-    subStages: {
-      name: string;
-      enabled: boolean;
-      starred: boolean;
-      content?: any;
-    }[];
-  }[];
+  mainStages: MainStage[];
 }
 
-const defaultMainStages = [
+const defaultMainStages: MainStage[] = [
   {
+    id: 0,
+    projectId: 0,
     name: 'Ideation',
+    starred: false,
     subStages: [
-      { name: 'Concept', enabled: true, starred: false },
-      { name: 'Key Points', enabled: true, starred: false },
-      { name: 'Research & Reference', enabled: true, starred: false },
-      { name: 'Inspiration Board', enabled: true, starred: false },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Concept', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Key Points', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Research & Reference', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Inspiration Board', enabled: true, starred: false, content: null },
     ]
   },
   {
+    id: 0,
+    projectId: 0,
     name: 'Pre-Production',
+    starred: false,
     subStages: [
-      { name: 'Script', enabled: true, starred: false },
-      { name: 'Keyword Research', enabled: true, starred: false },
-      { name: 'Equipment Checklist', enabled: true, starred: false },
-      { name: 'Storyboard', enabled: true, starred: false },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Script', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Keyword Research', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Equipment Checklist', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Storyboard', enabled: true, starred: false, content: null },
     ]
   },
   {
+    id: 0,
+    projectId: 0,
     name: 'Production',
+    starred: false,
     subStages: [
-      { name: 'Filming Schedule', enabled: true, starred: false },
-      { name: 'B-roll Ideas', enabled: true, starred: false },
-      { name: 'Shot List', enabled: true, starred: false },
-      { name: 'Production Notes', enabled: true, starred: false },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Filming Schedule', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'B-roll Ideas', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Shot List', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Production Notes', enabled: true, starred: false, content: null },
     ]
   },
   {
+    id: 0,
+    projectId: 0,
     name: 'Post-Production',
+    starred: false,
     subStages: [
-      { name: 'Editing Progress', enabled: true, starred: false },
-      { name: 'Thumbnail Creator', enabled: true, starred: false },
-      { name: 'Subtitles', enabled: true, starred: false },
-      { name: 'Feedback and Revisions', enabled: true, starred: false },
-      { name: 'Export Settings', enabled: true, starred: false },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Editing Progress', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Thumbnail Creator', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Subtitles', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Feedback and Revisions', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Export Settings', enabled: true, starred: false, content: null },
     ]
   },
   {
+    id: 0,
+    projectId: 0,
     name: 'Publishing',
+    starred: false,
     subStages: [
-      { name: 'Video Details', enabled: true, starred: false },
-      { name: 'Thumbnails', enabled: true, starred: false },
-      { name: 'Publishing Schedule', enabled: true, starred: false },
-      { name: 'Subtitles', enabled: true, starred: false },
-      { name: 'Cross-Platform Sharing', enabled: true, starred: false },
-      { name: 'Monetization', enabled: true, starred: false },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Video Details', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Thumbnails', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Publishing Schedule', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Subtitles', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Cross-Platform Sharing', enabled: true, starred: false, content: null },
+      { id: 0, mainStageId: 0, projectId: 0, name: 'Monetization', enabled: true, starred: false, content: null },
     ]
   }
 ];
@@ -164,24 +171,24 @@ export default function ProjectSection() {
     }
   }, [userTeams]);
 
-  useEffect(() => {
-    if (fetchedProjects) {
-      const sortedProjects = [...fetchedProjects].sort((a, b) => {
-        if (a.completed && !b.completed) return 1;
-        if (!a.completed && b.completed) return -1;
-        if (a.endDate && b.endDate) {
-          return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
-        } else if (a.endDate) {
-          return -1;
-        } else if (b.endDate) {
-          return 1;
-        } else {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }
-      });
-      setProjects(sortedProjects);
-    }
-  }, [fetchedProjects]);
+  // useEffect(() => {
+  //   if (fetchedProjects) {
+  //     const sortedProjects = [...fetchedProjects].sort((a, b) => {
+  //       if (a.completed && !b.completed) return 1;
+  //       if (!a.completed && b.completed) return -1;
+  //       if (a.endDate && b.endDate) {
+  //         return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+  //       } else if (a.endDate) {
+  //         return -1;
+  //       } else if (b.endDate) {
+  //         return 1;
+  //       } else {
+  //         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  //       }
+  //     });
+  //     setProjects(sortedProjects);
+  //   }
+  // }, [fetchedProjects]);
 
   const handleAddProject = () => {
     setIsAddModalOpen(true);

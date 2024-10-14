@@ -7,18 +7,61 @@ import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Plus, X } from 'lucide-react';
 
+
+interface SubStage {
+  id: number;
+  name: string;
+  enabled: boolean;
+  starred: boolean;
+  content: any;
+  mainStageId: number;
+  projectId: number;
+}
+
+interface MainStage {
+  id: number;
+  name: string;
+  projectId: number;
+  starred: boolean;
+  subStages: SubStage[];
+}
+
+interface Project {
+  id: number;
+  title: string;
+  description?: string | null;
+  status: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  duration: string;
+  teamId: number;
+  mainStages: MainStage[];
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface EditProjectModalProps {
   project: Project;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (updatedProject: Project) => void;
+  onUpdate: (updatedProject: Partial<Project>) => void;
 }
 
 export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditProjectModalProps) {
   const [editedProject, setEditedProject] = useState(project);
 
   const handleSave = () => {
-    onUpdate(editedProject);
+    const updatedProject: Partial<Project> = {
+      title: editedProject.title,
+      description: editedProject.description,
+      status: editedProject.status,
+      startDate: editedProject.startDate,
+      endDate: editedProject.endDate,
+      duration: editedProject.duration,
+      mainStages: editedProject.mainStages,
+    };
+    onUpdate(updatedProject);
     onClose();
   };
 

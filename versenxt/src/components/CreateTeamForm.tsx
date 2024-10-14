@@ -1,6 +1,4 @@
-
-
-// src/components/CreateTeamForm.tsx
+ // src/components/CreateTeamForm.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '../utils/trpc'
@@ -11,6 +9,11 @@ import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTit
 import Script from 'next/script'
 import { TRPCClientError } from '@trpc/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { loadStripe } from '@stripe/stripe-js';
+import { EmbeddedCheckoutProvider,EmbeddedCheckout} from '@stripe/react-stripe-js';
+import React, { useCallback } from 'react';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CreateTeamFormProps {
   onTeamCreated: () => void
@@ -19,16 +22,40 @@ interface CreateTeamFormProps {
 export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamDescription, setNewTeamDescription] = useState('')
-  const [subscriptionType, setSubscriptionType] = useState<'razorpay' | 'polar' | 'invite'>('razorpay')
+  const [subscriptionType, setSubscriptionType] = useState<'razorpay' | 'stripe' | 'invite'>('razorpay')
   const [access, setAccess] = useState<'ADMIN' | 'MANAGER' | 'MEMBER'>('ADMIN')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
   const { data: user, isLoading: userLoading, error: userError } = trpc.users.getUser.useQuery()
   const initiateTeamCreationMutation = trpc.teams.initiateTeamCreation.useMutation()
   const completeTeamCreationMutation = trpc.teams.completeTeamCreation.useMutation()
 
+
+
+  const resetForm = () => {
+    setStripeClientSecret(null);
+    setNewTeamName('');
+    setNewTeamDescription('');
+    setSubscriptionType('razorpay');
+    setError(null);
+  }
+
+
+  const fetchClientSecret = useCallback(async (teamName: string, teamDescription: string) => {
+    const result = await initiateTeamCreationMutation.mutateAsync({
+      name: teamName,
+      description: teamDescription,
+      subscriptionType: 'stripe',
+    });
+    if ('sessionId' in result) {
+      return result.sessionId;
+    } else {
+      throw new Error('Session ID not returned for Stripe payment');
+    }
+  }, [initiateTeamCreationMutation]);
+  
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
@@ -45,6 +72,7 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
        
       })
 
+     
       if (subscriptionType === 'razorpay') {
         if ('subscriptionId' in result) {
           const options = {
@@ -81,10 +109,17 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
         } else {
           throw new Error('Subscription ID not returned for Razorpay payment')
         }
-      } else if (subscriptionType === 'polar') {
-        // Implement Polar payment flow
-        alert('Stripe not implemented yet')
-      } else {
+      }
+      
+      else if (subscriptionType === 'stripe') {
+        if ('checkoutUrl' in result) {
+          router.push(result.checkoutUrl!)
+        } else {
+          throw new Error('Checkout URL not returned for Stripe payment')
+        }
+      } 
+      
+      else {
         // Invite method
         alert('Team created successfully with invite access!')
         onTeamCreated()
@@ -109,64 +144,63 @@ export default function CreateTeamForm({ onTeamCreated }: CreateTeamFormProps) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Team</DialogTitle>
-          <DialogDescription>
-            Enter details for your new team. You can add members after creation.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleCreateTeam}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="teamName" className="text-right">
-                Team Name
-              </Label>
-              <Input
-                id="teamName"
-                value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="teamDescription" className="text-right">
-                Description
-              </Label>
-              <Input
-                id="teamDescription"
-                value={newTeamDescription}
-                onChange={(e) => setNewTeamDescription(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="subscriptionType" className="text-right">
-                Subscription Type
-              </Label>
-              <Select
-                value={subscriptionType}
-                onValueChange={(value) => setSubscriptionType(value as 'razorpay' | 'polar' | 'invite')}
-              >
-                <SelectTrigger className="w-full col-span-3">
-                  <SelectValue placeholder="Select Subscription Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="razorpay">Razorpay (INR)</SelectItem>
-                  <SelectItem value="polar">Stripe(All Currencies)</SelectItem>
-                  <SelectItem value="invite">Invite (Free Access)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-           
+      <DialogHeader>
+        <DialogTitle>Create New Team</DialogTitle>
+        <DialogDescription>
+          Enter details for your new team. You can add members after creation.
+        </DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handleCreateTeam}>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="teamName" className="text-right">
+              Team Name
+            </Label>
+            <Input
+              id="teamName"
+              value={newTeamName}
+              onChange={(e) => setNewTeamName(e.target.value)}
+              className="col-span-3"
+            />
           </div>
-          {error && <div className="text-red-500 mb-4">{error}</div>}
-          <DialogFooter>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Team'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="teamDescription" className="text-right">
+              Description
+            </Label>
+            <Input
+              id="teamDescription"
+              value={newTeamDescription}
+              onChange={(e) => setNewTeamDescription(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="subscriptionType" className="text-right">
+              Subscription Type
+            </Label>
+            <Select
+              value={subscriptionType}
+              onValueChange={(value) => setSubscriptionType(value as 'razorpay' | 'stripe' | 'invite')}
+            >
+              <SelectTrigger className="w-full col-span-3">
+                <SelectValue placeholder="Select Subscription Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="razorpay">Razorpay (INR)</SelectItem>
+                <SelectItem value="stripe">Stripe (All Currencies)</SelectItem>
+                <SelectItem value="invite">Invite (Free Access)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        <DialogFooter>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Team'}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
     </>
   )
 }

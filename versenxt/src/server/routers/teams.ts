@@ -1,6 +1,4 @@
 
-
-
 import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { z } from 'zod';
 import prisma from '../../lib/prisma';
@@ -8,6 +6,7 @@ import { WorkOS } from '@workos-inc/node';
 import { TRPCError } from '@trpc/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import Stripe from 'stripe';
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 const razorpay = new Razorpay({
@@ -15,6 +14,8 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_SECRET_KEY!,
 });
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
 function verifyRazorpaySignature(paymentId: string, subscriptionId: string, razorpaySignature: string, keySecret: string): boolean {
   const payload = `${paymentId}|${subscriptionId}`;
   const generatedSignature = crypto
@@ -81,7 +82,7 @@ export const teamRouter = router({
   .input(z.object({
     name: z.string(),
     description: z.string().optional(),
-    subscriptionType: z.enum(['razorpay', 'polar', 'invite']),
+    subscriptionType: z.enum(['razorpay', 'stripe', 'invite']),
   }))
   .mutation(async ({ input, ctx }) => {
     const user = ctx.user;
@@ -120,7 +121,42 @@ export const teamRouter = router({
         },
       });
       return { teamId: team.id };
-    } else {
+    } 
+    else if (input.subscriptionType === 'stripe') {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: process.env.STRIPE_PRICE_ID,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+        client_reference_id: team.id.toString(),
+        customer_email: user.email,
+        metadata: {
+          teamId: team.id.toString(),
+        },
+      });
+
+      await prisma.subscription.create({
+        data: {
+          teamId: team.id,
+          teamName: team.name,
+          status: 'pending',
+          type: 'paid',
+          provider: 'stripe',
+          providerId: session.id,
+          creatorId: user.id,
+          plan: 'premium',
+        },
+      });
+
+      return { teamId: team.id, checkoutUrl: session.url };
+    }
+    else {
       const subscription = await razorpay.subscriptions.create({
         plan_id: "plan_Otr2kSSAMC9lc2",
         customer_notify: 1,
@@ -584,3 +620,40 @@ export const teamRouter = router({
 
 
 
+
+
+
+
+
+// else if (input.subscriptionType === 'stripe') {
+//   const session = await stripe.checkout.sessions.create({
+//     ui_mode: 'embedded',
+//     line_items: [
+//       {
+//         // Provide the exact Price ID (for example, pr_1234) of
+//         // the product you want to sell
+//         price: 'price_1Q9MbLSBkcsV2UzZvBXqAlqO',
+//         quantity: 1,
+//       },
+//     ],
+//     mode: 'subscription',
+//     return_url:
+//       `${process.env.NEXT_PUBLIC_API_URL}/dashboard?teamId=${team.id}`,
+
+//   });
+
+//   await prisma.subscription.create({
+//     data: {
+//       teamId: team.id,
+//       teamName: team.name,
+//       status: 'pending',
+//       type: 'paid',
+//       provider: 'stripe',
+//       providerId: session.id,
+//       creatorId: user.id,
+//       plan: 'premium',
+//     },
+//   });
+
+//   return { teamId: team.id, sessionId: session.id, sessionUrl: session.url };
+// }

@@ -23,10 +23,10 @@ interface ProjectStage {
 interface Project {
   id: number;
   title: string;
-  description: string | null;
+  description?: string | null;
   status: string;
-  startDate: string | null;
-  endDate: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   createdAt: string;
   updatedAt: string;
   teamId: number;

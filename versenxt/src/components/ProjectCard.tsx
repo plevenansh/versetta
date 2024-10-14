@@ -12,10 +12,10 @@ import { slugify } from '../utils/slugify';
 interface Project {
   id: number;
   title: string;
-  description: string | null;
+  description?: string | null;
   status: string;
-  startDate: string | null;
-  endDate: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   creatorId: number;
   teamId: number;
   mainStages: MainStage[];
@@ -93,9 +93,12 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
     }
   };
 
-  const handleUpdateProject = async (updatedProject: Project) => {
+  const handleUpdateProject = async (updatedProject: Partial<Project>) => {
     try {
-      await updateProjectMutation.mutateAsync(updatedProject);
+      await updateProjectMutation.mutateAsync({
+        id: project.id,
+        ...updatedProject,
+      });
       refetchProjects();
     } catch (error) {
       console.error('Error updating project:', error);

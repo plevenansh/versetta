@@ -145,7 +145,7 @@ export const projectRouter = router({
   create: protectedProcedure
   .input(z.object({
     title: z.string(),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(),
     status: z.string().optional().default("active"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
@@ -250,10 +250,10 @@ export const projectRouter = router({
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),
-      description: z.string().optional(),
+      description: z.string().nullable().optional(),
       status: z.string().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
+      startDate: z.string().nullable().optional(),
+      endDate: z.string().nullable().optional(),
       duration: z.string().optional(),
       teamId: z.number().optional(),
       mainStages: z.array(z.object({

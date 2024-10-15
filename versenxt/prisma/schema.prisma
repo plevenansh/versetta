@@ -55,6 +55,7 @@ model TeamMember {
   createdProjects    Project[] @relation("ProjectCreator")
   assignedTasks      Task[]    @relation("TaskAssignee")
   createdTasks       Task[]    @relation("TaskCreator")
+  createdStorage Storage[] @relation("StorageCreator")
   team               Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user               User      @relation(fields: [userId], references: [id])
 
@@ -134,7 +135,8 @@ model SubStage {
   mainStage   MainStage @relation(fields: [mainStageId], references: [id])
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks       Task[]
-
+  storage Storage[]
+  
   @@index([mainStageId])
   @@index([projectId]) // Add this line
 }
@@ -187,13 +189,24 @@ model Storage {
   name      String
   type      StorageType
   url       String
-  teamId    Int
-  projectId Int?
-  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  blobName    String      @unique // Add this field
+  contentType String?
+  size        Int?
+  teamId      Int
+  projectId   Int?
+  subStageId  Int?
+  creatorId   Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  team        Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project     Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subStage    SubStage?   @relation(fields: [subStageId], references: [id], onDelete: Cascade)
+  creator     TeamMember  @relation("StorageCreator", fields: [creatorId], references: [id])
 
   @@index([teamId])
   @@index([projectId])
+  @@index([subStageId])
+  @@index([creatorId])
 }
 
 enum StorageType {

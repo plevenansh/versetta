@@ -7,7 +7,7 @@ interface FileUploaderProps {
   teamId: number;
   projectId?: number;
   subStageId?: number;
-  onUploadComplete: () => void;
+  onUploadComplete: (fileUrl: string) => void;
 }
 
 export function FileUploader({ teamId, projectId, subStageId, onUploadComplete }: FileUploaderProps) {
@@ -29,17 +29,17 @@ export function FileUploader({ teamId, projectId, subStageId, onUploadComplete }
           subStageId,
         });
   
-       await fetch(sasUrl, {
-              method: 'PUT',
-              headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.type,
-              },
-              body: file,
-            });
-            refetchFiles(); // Refetch the file list after successful upload
-            onUploadComplete();
-       
+        await fetch(sasUrl, {
+          method: 'PUT',
+          headers: {
+            'x-ms-blob-type': 'BlockBlob',
+            'Content-Type': file.type,
+          },
+          body: file,
+        });
+        
+        refetchFiles(); // Refetch the file list after successful upload
+        onUploadComplete(sasUrl); // Pass the sasUrl to onUploadComplete
       } catch (error) {
         console.error('Error uploading file:', error);
       } finally {

@@ -171,24 +171,24 @@ export default function ProjectSection() {
     }
   }, [userTeams]);
 
-  // useEffect(() => {
-  //   if (fetchedProjects) {
-  //     const sortedProjects = [...fetchedProjects].sort((a, b) => {
-  //       if (a.completed && !b.completed) return 1;
-  //       if (!a.completed && b.completed) return -1;
-  //       if (a.endDate && b.endDate) {
-  //         return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
-  //       } else if (a.endDate) {
-  //         return -1;
-  //       } else if (b.endDate) {
-  //         return 1;
-  //       } else {
-  //         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  //       }
-  //     });
-  //     setProjects(sortedProjects);
-  //   }
-  // }, [fetchedProjects]);
+  useEffect(() => {
+    if (fetchedProjects) {
+      const sortedProjects = [...fetchedProjects].sort((a, b) => {
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
+        if (a.endDate && b.endDate) {
+          return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+        } else if (a.endDate) {
+          return -1;
+        } else if (b.endDate) {
+          return 1;
+        } else {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+      });
+      setProjects(sortedProjects);
+    }
+  }, [fetchedProjects]);
 
   const handleAddProject = () => {
     setIsAddModalOpen(true);

@@ -184,7 +184,7 @@ export default function Overview({ project }: OverviewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Project Details</CardTitle>
@@ -323,7 +323,7 @@ export default function Overview({ project }: OverviewProps) {
             <Button onClick={handleAddTask} className="ml-2">Add Task</Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }

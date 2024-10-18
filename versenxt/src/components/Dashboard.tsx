@@ -25,18 +25,18 @@ export default function ClientDashboard() {
     { enabled: !!teamId }
   );
 
-  const { data: nextProjectProgress, isLoading: progressLoading } = trpc.projects.getNextProjectProgress.useQuery(
-    teamId || 0,
-    { enabled: !!teamId }
-  );
+  // const { data: nextProjectProgress, isLoading: progressLoading } = trpc.projects.getNextProjectProgress.useQuery(
+  //   teamId || 0,
+  //   { enabled: !!teamId }
+  // );
 
   const handleCreateTeam = () => {
     router.push('/teams');
   };
 
-  if (userLoading || teamsLoading || projectsLoading || progressLoading) {
-    return <div>Loading...</div>;
-  }
+  // if (userLoading || teamsLoading || projectsLoading || progressLoading) {
+  //   return <div>Loading...</div>;
+  // }
 
   if (userError) {
     return <div>Error: {userError.message}</div>;
@@ -87,9 +87,9 @@ export default function ClientDashboard() {
             <CardTitle className="text-2xl font-bold text-[#2f66dd]">Next Project Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{nextProjectProgress?.progress || 0}%</div>
+            {/* <div className="text-3xl font-bold">{nextProjectProgress?.progress || 0}%</div>
             <Progress value={nextProjectProgress?.progress || 0} className="mt-2 h-2 bg-gray-200 progress-grey" />
-            <p className="text-sm text-gray-500 mt-2">{nextProjectProgress?.title || 'No active projects'}</p>
+            <p className="text-sm text-gray-500 mt-2">{nextProjectProgress?.title || 'No active projects'}</p> */}
           </CardContent>
         </Card>
       </div>

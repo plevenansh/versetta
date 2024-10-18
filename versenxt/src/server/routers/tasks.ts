@@ -10,7 +10,7 @@ const taskInputSchema = z.object({
   status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
   dueDate: z.string().optional().nullable(),
-  projectId: z.number(),
+  projectId: z.number().nullable(),
   mainStageId: z.number().optional().nullable(),
   subStageId: z.number().optional().nullable(),
   teamId: z.number(),
@@ -20,7 +20,7 @@ const taskInputSchema = z.object({
 export const taskRouter = router({
   getAll: protectedProcedure
     .input(z.object({
-      projectId: z.number().optional(),
+      projectId: z.number().nullable().optional(),
       mainStageId: z.number().optional(),
       subStageId: z.number().optional(),
       teamId: z.number().optional(),
@@ -69,54 +69,110 @@ export const taskRouter = router({
       }
     }),
 
+  // create: protectedProcedure
+  //   .input(taskInputSchema)
+  //   .mutation(async ({ input, ctx }) => {
+  //     try {
+  //       const creatorTeamMember = await prisma.teamMember.findFirst({
+  //         where: {
+  //           userId: ctx.user.id,
+  //           teamId: input.teamId,
+  //         },
+  //       });
+
+  //       if (!creatorTeamMember) {
+  //         throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not a member of this team' });
+  //       }
+
+  //       const data: Prisma.TaskCreateInput = {
+  //         title: input.title,
+  //         description: input.description,
+  //         status: input.status,
+  //         priority: input.priority,
+  //         dueDate: input.dueDate ? new Date(input.dueDate) : null,
+  //         team: { connect: { id: input.teamId } },
+  //         creator: { connect: { id: creatorTeamMember.id } },
+  //         project: { connect: { id: input.projectId } },
+  //         ...(input.mainStageId && { mainStage: { connect: { id: input.mainStageId } } }),
+  //         ...(input.subStageId && { subStage: { connect: { id: input.subStageId } } }),
+  //         ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
+  //       };
+
+  //       const newTask = await prisma.task.create({
+  //         data,
+  //         include: {
+  //           project: true,
+  //           mainStage: true,
+  //           subStage: true,
+  //           team: true,
+  //           creator: { include: { user: true } },
+  //           assignee: { include: { user: true } }
+  //         }
+  //       });
+
+  //       return newTask;
+  //     } catch (error) {
+  //       console.error('Error creating task:', error);
+  //       if (error instanceof TRPCError) throw error;
+  //       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create task' });
+  //     }
+  //   }),
+
+
+  // server/routers/tasks.ts
+
   create: protectedProcedure
-    .input(taskInputSchema)
-    .mutation(async ({ input, ctx }) => {
-      try {
-        const creatorTeamMember = await prisma.teamMember.findFirst({
-          where: {
-            userId: ctx.user.id,
-            teamId: input.teamId,
-          },
-        });
+  .input(taskInputSchema.extend({
+    projectId: z.number().nullable().optional(),
+    mainStageId: z.number().optional(),
+    subStageId: z.number().optional(),
+  }))
+  .mutation(async ({ input, ctx }) => {
+    try {
+      const creatorTeamMember = await prisma.teamMember.findFirst({
+        where: {
+          userId: ctx.user.id,
+          teamId: input.teamId,
+        },
+      });
 
-        if (!creatorTeamMember) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not a member of this team' });
-        }
-
-        const data: Prisma.TaskCreateInput = {
-          title: input.title,
-          description: input.description,
-          status: input.status,
-          priority: input.priority,
-          dueDate: input.dueDate ? new Date(input.dueDate) : null,
-          team: { connect: { id: input.teamId } },
-          creator: { connect: { id: creatorTeamMember.id } },
-          project: { connect: { id: input.projectId } },
-          ...(input.mainStageId && { mainStage: { connect: { id: input.mainStageId } } }),
-          ...(input.subStageId && { subStage: { connect: { id: input.subStageId } } }),
-          ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
-        };
-
-        const newTask = await prisma.task.create({
-          data,
-          include: {
-            project: true,
-            mainStage: true,
-            subStage: true,
-            team: true,
-            creator: { include: { user: true } },
-            assignee: { include: { user: true } }
-          }
-        });
-
-        return newTask;
-      } catch (error) {
-        console.error('Error creating task:', error);
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create task' });
+      if (!creatorTeamMember) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not a member of this team' });
       }
-    }),
+
+      const data: Prisma.TaskCreateInput = {
+        title: input.title,
+        description: input.description,
+        status: input.status,
+        priority: input.priority,
+        dueDate: input.dueDate ? new Date(input.dueDate) : null,
+        team: { connect: { id: input.teamId } },
+        creator: { connect: { id: creatorTeamMember.id } },
+        ...(input.projectId && { project: { connect: { id: input.projectId } } }),
+        ...(input.mainStageId && { mainStage: { connect: { id: input.mainStageId } } }),
+        ...(input.subStageId && { subStage: { connect: { id: input.subStageId } } }),
+        ...(input.assigneeId && { assignee: { connect: { id: input.assigneeId } } }),
+      };
+
+      const newTask = await prisma.task.create({
+        data,
+        include: {
+          project: true,
+          mainStage: true,
+          subStage: true,
+          team: true,
+          creator: { include: { user: true } },
+          assignee: { include: { user: true } }
+        }
+      });
+
+      return newTask;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      if (error instanceof TRPCError) throw error;
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create task' });
+    }
+  }),
 
     update: protectedProcedure
     .input(taskInputSchema.extend({ id: z.number() }))
@@ -152,7 +208,9 @@ export const taskRouter = router({
             status: updateData.status,
             priority: updateData.priority,
             dueDate: updateData.dueDate ? new Date(updateData.dueDate) : null,
-            project: { connect: { id: updateData.projectId } },
+            project: updateData.projectId 
+            ?{ connect: { id: updateData.projectId } }
+            : { disconnect: true },
             mainStage: updateData.mainStageId 
               ? { connect: { id: updateData.mainStageId } } 
               : { disconnect: true },

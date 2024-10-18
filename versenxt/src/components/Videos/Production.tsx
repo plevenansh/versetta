@@ -1,312 +1,357 @@
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Textarea } from "../ui/textarea"
-import { ScrollArea } from "../ui/scroll-area"
-import { Checkbox } from "../ui/checkbox"
-import { Plus, X } from 'lucide-react'
-import { trpc } from '../../utils/trpc'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { ScrollArea } from "../ui/scroll-area";
+import { Checkbox } from "../ui/checkbox";
+import { Switch } from "../ui/switch";
+import { Plus, X, Star, Save } from 'lucide-react';
+import { trpc } from '../../utils/trpc';
+import { Badge } from "../ui/badge";
+import { TaskDialog } from '../TaskDialog';
 
-interface FilmingSession {
-  id: number
-  scene: string
-  time: string
-  location: string
+interface SubStage {
+  id: number;
+  name: string;
+  enabled: boolean;
+  starred: boolean;
+  content: any;
 }
 
-interface BRollIdea {
-  id: number
-  idea: string
-}
-
-interface Shot {
-  id: number
-  description: string
-  completed: boolean
+interface MainStage {
+  id: number;
+  name: string;
+  starred: boolean;
+  subStages: SubStage[];
 }
 
 interface Project {
   id: number;
-  productionNotes: string | null;
-  filmingSchedule: FilmingSession[];
-  bRollIdeas: BRollIdea[];
-  shotList: Shot[];
   title: string;
-  description: string | null;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  createdAt: string;
-  updatedAt: string;
+  mainStages: MainStage[];
   teamId: number;
-  creatorId: number;
-  creationOrder: number;
-  completed: boolean;
-  concept: string | null;
-  script: string | null;
 }
 
-export default function Production({ project }: { project: Project }) {
-  const [newFilmingSession, setNewFilmingSession] = useState({ scene: '', time: '', location: '' })
-  const [newBRollIdea, setNewBRollIdea] = useState('')
-  const [newShot, setNewShot] = useState('')
-  const [productionNotes, setProductionNotes] = useState(project.productionNotes || '')
+interface ProductionProps {
+  project: Project;
+  mainStage: MainStage;
+}
 
+export default function Production({ project, mainStage }: ProductionProps) {
+  const [localSubStages, setLocalSubStages] = useState(mainStage.subStages);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedStageForTask, setSelectedStageForTask] = useState<{ mainStageId?: number, subStageId?: number } | null>(null);
   const utils = trpc.useUtils();
 
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
+  const updateSubStageMutation = trpc.projectPage.updateSubStage.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
   });
 
-  const addFilmingSession = trpc.projectPage.addFilmingSession.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
+  useEffect(() => {
+    setLocalSubStages(mainStage.subStages);
+  }, [mainStage.subStages]);
 
-  const deleteFilmingSession = trpc.projectPage.deleteFilmingSession.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
+  const handleUpdateSubStage = async (subStage: SubStage, updates: Partial<SubStage>) => {
+    const updatedSubStage = { ...subStage, ...updates };
+    setLocalSubStages(prevStages => 
+      prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
+    );
 
-  const addBRollIdea = trpc.projectPage.addBRollIdea.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const deleteBRollIdea = trpc.projectPage.deleteBRollIdea.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const addShot = trpc.projectPage.addShot.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const updateShot = trpc.projectPage.updateShot.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const deleteShot = trpc.projectPage.deleteShot.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const handleProductionNotesChange = async (notes: string) => {
-    setProductionNotes(notes)
     try {
-      await updateProject.mutateAsync({
-        id: project.id,
-        productionNotes: notes,
-      })
+      await updateSubStageMutation.mutateAsync({
+        id: subStage.id,
+        ...updates,
+      });
     } catch (error) {
-      console.error('Failed to update production notes:', error)
+      console.error('Error updating sub-stage:', error);
+      setLocalSubStages(prevStages => 
+        prevStages.map(stage => stage.id === subStage.id ? subStage : stage)
+      );
     }
-  }
+  };
 
-  const handleAddFilmingSession = async () => {
-    if (newFilmingSession.scene.trim() && newFilmingSession.time.trim() && newFilmingSession.location.trim()) {
-      try {
-        await addFilmingSession.mutateAsync({
-          projectId: project.id,
-          ...newFilmingSession,
-        })
-        setNewFilmingSession({ scene: '', time: '', location: '' })
-      } catch (error) {
-        console.error('Failed to add filming session:', error)
-      }
-    }
-  }
+  const handleAddTask = (mainStageId?: number, subStageId?: number) => {
+    setSelectedStageForTask({ mainStageId, subStageId });
+    setIsTaskDialogOpen(true);
+  };
 
-  const handleDeleteFilmingSession = async (id: number) => {
-    try {
-      await deleteFilmingSession.mutateAsync(id)
-    } catch (error) {
-      console.error('Failed to delete filming session:', error)
-    }
-  }
+  const renderSubStageHeader = (subStage: SubStage) => (
+    <div className="flex justify-between items-center">
+      <CardTitle>{subStage.name}</CardTitle>
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={subStage.enabled}
+          onCheckedChange={(enabled) => handleUpdateSubStage(subStage, { enabled })}
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
+        >
+          <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, subStage.id)}>
+          <Plus className="h-4 w-4 mr-2" /> Add Task
+        </Button>
+      </div>
+    </div>
+  );
 
-  const handleAddBRollIdea = async () => {
-    if (newBRollIdea.trim()) {
-      try {
-        await addBRollIdea.mutateAsync({
-          projectId: project.id,
-          idea: newBRollIdea,
-        })
-        setNewBRollIdea('')
-      } catch (error) {
-        console.error('Failed to add B-Roll idea:', error)
-      }
+  const renderSubStage = (subStage: SubStage) => {
+    switch (subStage.name.toLowerCase()) {
+      case 'filming schedule':
+        return (
+          <Card key={subStage.id} className="mb-6">
+            <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+            <CardContent>
+              <FilmingScheduleComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+            </CardContent>
+          </Card>
+        );
+      case 'b-roll ideas':
+      case 'b roll ideas':
+      case 'broll ideas':
+        return (
+          <Card key={subStage.id}>
+            <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+            <CardContent>
+              <BRollComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+            </CardContent>
+          </Card>
+        );
+      case 'shot list':
+        return (
+          <Card key={subStage.id}>
+            <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+            <CardContent>
+              <ShotListComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+            </CardContent>
+          </Card>
+        );
+      case 'production notes':
+        return (
+          <Card key={subStage.id} className="mb-6">
+            <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+            <CardContent>
+              <ProductionNotesComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+            </CardContent>
+          </Card>
+        );
+      default:
+        return null;
     }
-  }
+  };
 
-  const handleDeleteBRollIdea = async (id: number) => {
-    try {
-      await deleteBRollIdea.mutateAsync(id)
-    } catch (error) {
-      console.error('Failed to delete B-Roll idea:', error)
-    }
-  }
-
-  const handleAddShot = async () => {
-    if (newShot.trim()) {
-      try {
-        await addShot.mutateAsync({
-          projectId: project.id,
-          description: newShot,
-        })
-        setNewShot('')
-      } catch (error) {
-        console.error('Failed to add shot:', error)
-      }
-    }
-  }
-
-  const handleUpdateShot = async (id: number, completed: boolean) => {
-    try {
-      await updateShot.mutateAsync({
-        id,
-        completed,
-      })
-    } catch (error) {
-      console.error('Failed to update shot:', error)
-    }
-  }
-
-  const handleDeleteShot = async (id: number) => {
-    try {
-      await deleteShot.mutateAsync(id)
-    } catch (error) {
-      console.error('Failed to delete shot:', error)
-    }
-  }
+  const filmingSchedule = localSubStages.find(s => s.name.toLowerCase() === 'filming schedule');
+  const bRoll = localSubStages.find(s => ['b-roll ideas', 'b roll ideas', 'broll ideas'].includes(s.name.toLowerCase()));
+  const shotList = localSubStages.find(s => s.name.toLowerCase() === 'shot list');
+  const productionNotes = localSubStages.find(s => s.name.toLowerCase() === 'production notes');
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Filming Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.filmingSchedule.map((session: FilmingSession) => (
-              <div key={session.id} className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-medium">{session.scene}</p>
-                  <p className="text-sm text-muted-foreground">{session.time} - {session.location}</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteFilmingSession(session.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex flex-col space-y-2 mt-4">
-            <Input 
-              placeholder="Scene" 
-              value={newFilmingSession.scene}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, scene: e.target.value})}
-            />
-            <Input 
-              placeholder="Time" 
-              value={newFilmingSession.time}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, time: e.target.value})}
-            />
-            <Input 
-              placeholder="Location" 
-              value={newFilmingSession.location}
-              onChange={(e) => setNewFilmingSession({...newFilmingSession, location: e.target.value})}
-            />
-            <Button onClick={handleAddFilmingSession}>Add Filming Session</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>B-Roll Ideas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.bRollIdeas.map((idea: BRollIdea) => (
-              <div key={idea.id} className="flex items-center justify-between mb-2">
-                <p>{idea.idea}</p>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteBRollIdea(idea.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Add new B-roll idea" 
-              value={newBRollIdea}
-              onChange={(e) => setNewBRollIdea(e.target.value)}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddBRollIdea}>Add</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Shot List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.shotList.map((shot: Shot) => (
-              <div key={shot.id} className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Checkbox 
-                    id={`shot-${shot.id}`}
-                    checked={shot.completed}
-                    onCheckedChange={(checked) => handleUpdateShot(shot.id, checked as boolean)}
-                  />
-                  <label htmlFor={`shot-${shot.id}`} className="ml-2">{shot.description}</label>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(shot.id)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Add new shot" 
-              value={newShot}
-              onChange={(e) => setNewShot(e.target.value)}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddShot}>Add</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Production Notes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea 
-            placeholder="Add any production notes, reminders, or special instructions here..." 
-            value={productionNotes}
-            onChange={(e) => handleProductionNotesChange(e.target.value)}
-            className="min-h-[150px]"
-          />
-        </CardContent>
-      </Card>
+      {filmingSchedule && renderSubStage(filmingSchedule)}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {bRoll && renderSubStage(bRoll)}
+        {shotList && renderSubStage(shotList)}
+      </div>
+      {productionNotes && renderSubStage(productionNotes)}
+      <TaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => {
+          setIsTaskDialogOpen(false);
+          setSelectedStageForTask(null);
+        }}
+        projectId={project.id}
+        teamId={project.teamId}
+        mainStageId={selectedStageForTask?.mainStageId}
+        subStageId={selectedStageForTask?.subStageId}
+      />
     </div>
-  )
+  );
 }
+
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
+}
+
+const FilmingScheduleComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newSession, setNewSession] = useState({ scene: '', time: '', location: '', other: '' });
+
+  const handleAddSession = () => {
+    if (newSession.scene && newSession.time && newSession.location) {
+      const updatedSessions = [...(subStage.content?.filmingSchedule || []), newSession];
+      onUpdate(subStage, { content: { ...subStage.content, filmingSchedule: updatedSessions } });
+      setNewSession({ scene: '', time: '', location: '', other: '' });
+    }
+  };
+
+  const handleDeleteSession = (index: number) => {
+    const updatedSessions = subStage.content?.filmingSchedule.filter((_: any, i: number) => i !== index);
+    onUpdate(subStage, { content: { ...subStage.content, filmingSchedule: updatedSessions } });
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        {subStage.content?.filmingSchedule?.map((session: any, index: number) => (
+          <div key={index} className="flex items-center justify-between mb-2">
+            <div>
+              <Badge>{session.scene}</Badge>
+              <span className="ml-2">{session.time} - {session.location}</span>
+              {session.other && <span className="ml-2 text-sm text-gray-500">{session.other}</span>}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => handleDeleteSession(index)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </ScrollArea>
+      <div className="flex flex-col space-y-2">
+        <Input 
+          placeholder="Scene" 
+          value={newSession.scene}
+          onChange={(e) => setNewSession({...newSession, scene: e.target.value})}
+        />
+        <Input 
+          placeholder="Time" 
+          value={newSession.time}
+          onChange={(e) => setNewSession({...newSession, time: e.target.value})}
+        />
+        <Input 
+          placeholder="Location" 
+          value={newSession.location}
+          onChange={(e) => setNewSession({...newSession, location: e.target.value})}
+        />
+        <Input 
+          placeholder="Other details" 
+          value={newSession.other}
+          onChange={(e) => setNewSession({...newSession, other: e.target.value})}
+        />
+        <Button onClick={handleAddSession}>Add Session</Button>
+      </div>
+    </div>
+  );
+};
+
+const BRollComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newIdea, setNewIdea] = useState('');
+
+  const handleAddIdea = () => {
+    if (newIdea.trim()) {
+      const updatedIdeas = [...(subStage.content?.bRollIdeas || []), { idea: newIdea.trim() }];
+      onUpdate(subStage, { content: { ...subStage.content, bRollIdeas: updatedIdeas } });
+      setNewIdea('');
+    }
+  };
+
+  const handleDeleteIdea = (index: number) => {
+    const updatedIdeas = subStage.content?.bRollIdeas.filter((_: any, i: number) => i !== index);
+    onUpdate(subStage, { content: { ...subStage.content, bRollIdeas: updatedIdeas } });
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+          {subStage.content?.bRollIdeas?.map((idea: any, index: number) => (
+            <li key={index} className="flex items-center justify-between">
+              <span>{idea.idea}</span>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteIdea(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex mt-4">
+        <Input 
+          value={newIdea}
+          onChange={(e) => setNewIdea(e.target.value)}
+          placeholder="Add new B-roll idea"
+          className="flex-grow mr-2"
+        />
+        <Button onClick={handleAddIdea}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
+const ShotListComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newShot, setNewShot] = useState('');
+
+  const handleAddShot = () => {
+    if (newShot.trim()) {
+      const updatedShots = [...(subStage.content?.shotList || []), { description: newShot.trim(), completed: false }];
+      onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+      setNewShot('');
+    }
+  };
+
+  const handleToggleShot = (index: number) => {
+    const updatedShots = subStage.content?.shotList.map((shot: any, i: number) => 
+      i === index ? { ...shot, completed: !shot.completed } : shot
+    );
+    onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+  };
+
+  const handleDeleteShot = (index: number) => {
+    const updatedShots = subStage.content?.shotList.filter((_: any, i: number) => i !== index);
+    onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+          {subStage.content?.shotList?.map((shot: any, index: number) => (
+            <li key={index} className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={shot.completed}
+                  onCheckedChange={() => handleToggleShot(index)}
+                />
+                <span className={shot.completed ? 'line-through' : ''}>{shot.description}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteShot(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex mt-4">
+        <Input 
+          value={newShot}
+          onChange={(e) => setNewShot(e.target.value)}
+          placeholder="Add new shot"
+          className="flex-grow mr-2"
+        />
+        <Button onClick={handleAddShot}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
+const ProductionNotesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [notes, setNotes] = useState(subStage.content?.notes || '');
+
+  const handleSaveNotes = () => {
+    onUpdate(subStage, { content: { ...subStage.content, notes } });
+  };
+
+  return (
+    <div>
+      <Textarea 
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Enter production notes here..."
+        className="min-h-[200px] mb-2"
+      />
+      <Button onClick={handleSaveNotes}>
+        <Save className="h-4 w-4 mr-2" /> Save Notes
+      </Button>
+    </div>
+  );
+};

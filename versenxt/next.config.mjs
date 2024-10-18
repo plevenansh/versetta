@@ -2,7 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['workoscdn.com'],
+    domains: ['workoscdn.com','versetta1.blob.core.windows.net'],
+    //domains: ['versetta1.blob.core.windows.net'],
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

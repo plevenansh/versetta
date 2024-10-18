@@ -185,7 +185,18 @@ getDownloadUrl: protectedProcedure
           creator: { include: { user: true } },
         },
       });
+    // Generate SAS URLs for each file
+    const filesWithSasUrls = await Promise.all(files.map(async (file) => {
+      const blockBlobClient = containerClient.getBlockBlobClient(file.blobName);
+      const sasUrl = await blockBlobClient.generateSasUrl({
+        permissions: BlobSASPermissions.parse("r"),
+        expiresOn: new Date(new Date().valueOf() + 3600 * 1000), // 1 hour from now
+      });
+      return { ...file, sasUrl };
+    }));
 
-      return files;
-    }),
+    return filesWithSasUrls;
+  }),
+
+
 });

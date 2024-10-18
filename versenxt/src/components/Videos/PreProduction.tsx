@@ -1,15 +1,18 @@
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Textarea } from "../ui/textarea"
-import { ScrollArea } from "../ui/scroll-area"
-import { Checkbox } from "../ui/checkbox"
-import { Plus, X, ImageIcon } from 'lucide-react'
-import { trpc } from '../../utils/trpc'
-import Image from 'next/image'
-import { FileUploader } from '../FileUploader'
-import { FileList } from '../FileList'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { ScrollArea } from "../ui/scroll-area";
+import { Checkbox } from "../ui/checkbox";
+import { Switch } from "../ui/switch";
+import { Plus, X, Image as ImageIcon, Star, Save } from 'lucide-react';
+import { trpc } from '../../utils/trpc';
+import Image from 'next/image';
+import { FileList } from '../FileList';
+import { FileUploader } from '../FileUploader';
+import { FileViewer } from '../FileViewer';
+import { TaskDialog } from '../TaskDialog';
 
 interface SubStage {
   id: number;
@@ -17,6 +20,11 @@ interface SubStage {
   enabled: boolean;
   starred: boolean;
   content: any;
+}
+
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
 }
 
 interface MainStage {
@@ -29,16 +37,8 @@ interface MainStage {
 interface Project {
   id: number;
   title: string;
-  description: string | null;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-  teamId: number;
-  creatorId: number;
-  completed: boolean;
   mainStages: MainStage[];
+  teamId: number;
 }
 
 interface PreProductionProps {
@@ -47,116 +47,211 @@ interface PreProductionProps {
 }
 
 export default function PreProduction({ project, mainStage }: PreProductionProps) {
+  const [localSubStages, setLocalSubStages] = useState(mainStage.subStages);
+  const [scriptText, setScriptText] = useState('');
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedStageForTask, setSelectedStageForTask] = useState<{ mainStageId?: number, subStageId?: number } | null>(null);
   const utils = trpc.useUtils();
 
   const updateSubStageMutation = trpc.projectPage.updateSubStage.useMutation({
     onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
   });
 
-  const handleUpdateSubStage = async (subStage: SubStage, newContent: any) => {
+  useEffect(() => {
+    setLocalSubStages(mainStage.subStages);
+    const scriptSubStage = mainStage.subStages.find(s => s.name === 'Script');
+    if (scriptSubStage && scriptSubStage.content?.script) {
+      setScriptText(scriptSubStage.content.script);
+    }
+  }, [mainStage.subStages]);
+
+  const handleUpdateSubStage = async (subStage: SubStage, updates: Partial<SubStage>) => {
+    const updatedSubStage = { ...subStage, ...updates };
+    setLocalSubStages(prevStages => 
+      prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
+    );
+
+    if (updates.content?.script) {
+      setScriptText(updates.content.script);
+    }
+
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        content: newContent,
+        ...updates,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
+      setLocalSubStages(prevStages => 
+        prevStages.map(stage => stage.id === subStage.id ? subStage : stage)
+      );
+      if (updates.content?.script) {
+        setScriptText(subStage.content?.script || '');
+      }
     }
   };
 
-  const renderSubStage = (subStage: SubStage) => {
-    switch (subStage.name) {
-      case 'Script':
-        return (
-          <Card key={subStage.id}>
-            <CardHeader>
-              <CardTitle>Script</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea 
-                placeholder="Write your script here..." 
-                className="min-h-[300px]"
-                value={subStage.content?.script || ''}
-                onChange={(e) => handleUpdateSubStage(subStage, { ...subStage.content, script: e.target.value })}
-              />
-            </CardContent>
-          </Card>
-        );
-      case 'Equipment Checklist':
-        return (
-          <Card key={subStage.id}>
-            <CardHeader>
-              <CardTitle>Equipment Checklist</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EquipmentChecklistComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
-            </CardContent>
-          </Card>
-        );
-      case 'Storyboard':
-        return (
-          <Card key={subStage.id}>
-            <CardHeader>
-              <CardTitle>Storyboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <StoryboardComponent subStage={subStage} onUpdate={handleUpdateSubStage} projectId={project.id} />
-            </CardContent>
-          </Card>
-        );
-      default:
-        return null;
-    }
+  const handleAddTask = (mainStageId?: number, subStageId?: number) => {
+    setSelectedStageForTask({ mainStageId, subStageId });
+    setIsTaskDialogOpen(true);
   };
+
+  const renderSubStage = (subStage: SubStage) => (
+    <Card key={subStage.id} className="mb-6">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle>{subStage.name}</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={subStage.enabled}
+            onCheckedChange={(enabled) => handleUpdateSubStage(subStage, { enabled })}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
+          >
+            <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, subStage.id)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Task
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {subStage.name === 'Script' && (
+          <>
+            <Textarea 
+              placeholder="Write your script here..." 
+              className="min-h-[300px] mb-2"
+              value={scriptText}
+              onChange={(e) => setScriptText(e.target.value)}
+            />
+            <Button onClick={() => handleUpdateSubStage(subStage, { content: { script: scriptText } })}>
+              <Save className="h-4 w-4 mr-2" /> Save Script
+            </Button>
+          </>
+        )}
+        {subStage.name === 'Keyword Research' && (
+          <KeywordResearchComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        )}
+        {subStage.name === 'Equipment Checklist' && (
+          <EquipmentChecklistComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        )}
+        {subStage.name === 'Storyboard' && (
+          <StoryboardComponent subStage={subStage} onUpdate={handleUpdateSubStage} projectId={project.id} />
+        )}
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
-      {mainStage.subStages.map(renderSubStage)}
+      {renderSubStage(localSubStages.find(s => s.name === 'Script')!)}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {renderSubStage(localSubStages.find(s => s.name === 'Keyword Research')!)}
+        {renderSubStage(localSubStages.find(s => s.name === 'Equipment Checklist')!)}
+      </div>
+      {renderSubStage(localSubStages.find(s => s.name === 'Storyboard')!)}
+      <TaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => {
+          setIsTaskDialogOpen(false);
+          setSelectedStageForTask(null);
+        }}
+        projectId={project.id}
+        teamId={project.teamId}
+        mainStageId={selectedStageForTask?.mainStageId}
+        subStageId={selectedStageForTask?.subStageId}
+      />
     </div>
   );
 }
 
-interface SubComponentProps {
-  subStage: SubStage;
-  onUpdate: (subStage: SubStage, newContent: any) => Promise<void>;
-}
+const KeywordResearchComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newKeyword, setNewKeyword] = useState('');
+  const [keywords, setKeywords] = useState<string[]>(subStage.content?.keywords || []);
 
-const EquipmentChecklistComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
-  const [newEquipment, setNewEquipment] = useState('');
-
-  const handleAddEquipment = () => {
-    if (newEquipment.trim()) {
-      const updatedEquipment = [...(subStage.content?.equipment || []), { name: newEquipment, checked: false }];
-      onUpdate(subStage, { ...subStage.content, equipment: updatedEquipment });
-      setNewEquipment('');
+  const handleAddKeyword = () => {
+    if (newKeyword.trim()) {
+      const updatedKeywords = [...keywords, newKeyword.trim()];
+      setKeywords(updatedKeywords);
+      onUpdate(subStage, { content: { ...subStage.content, keywords: updatedKeywords } });
+      setNewKeyword('');
     }
   };
 
-  const handleUpdateEquipment = (index: number, checked: boolean) => {
-    const updatedEquipment = subStage.content?.equipment.map((item: any, i: number) => 
-      i === index ? { ...item, checked } : item
-    );
-    onUpdate(subStage, { ...subStage.content, equipment: updatedEquipment });
-  };
-
-  const handleDeleteEquipment = (index: number) => {
-    const updatedEquipment = subStage.content?.equipment.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { ...subStage.content, equipment: updatedEquipment });
+  const handleDeleteKeyword = (index: number) => {
+    const updatedKeywords = keywords.filter((_, i) => i !== index);
+    setKeywords(updatedKeywords);
+    onUpdate(subStage, { content: { ...subStage.content, keywords: updatedKeywords } });
   };
 
   return (
     <div>
-      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+      <ScrollArea className="h-[200px] w-full mb-4">
         <ul className="space-y-2">
-          {subStage.content?.equipment?.map((item: any, index: number) => (
+          {keywords.map((keyword, index) => (
+            <li key={index} className="flex items-center justify-between">
+              <span>{keyword}</span>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteKeyword(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex mt-4">
+        <Input 
+          value={newKeyword}
+          onChange={(e) => setNewKeyword(e.target.value)}
+          placeholder="Add new keyword"
+          className="flex-grow mr-2"
+        />
+        <Button onClick={handleAddKeyword}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
+const EquipmentChecklistComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newEquipment, setNewEquipment] = useState('');
+  const [equipment, setEquipment] = useState<Array<{ name: string; checked: boolean }>>(subStage.content?.equipment || []);
+
+  const handleAddEquipment = () => {
+    if (newEquipment.trim()) {
+      const updatedEquipment = [...equipment, { name: newEquipment.trim(), checked: false }];
+      setEquipment(updatedEquipment);
+      onUpdate(subStage, { content: { ...subStage.content, equipment: updatedEquipment } });
+      setNewEquipment('');
+    }
+  };
+
+  const handleToggleEquipment = (index: number) => {
+    const updatedEquipment = equipment.map((item, i) => 
+      i === index ? { ...item, checked: !item.checked } : item
+    );
+    setEquipment(updatedEquipment);
+    onUpdate(subStage, { content: { ...subStage.content, equipment: updatedEquipment } });
+  };
+
+  const handleDeleteEquipment = (index: number) => {
+    const updatedEquipment = equipment.filter((_, i) => i !== index);
+    setEquipment(updatedEquipment);
+    onUpdate(subStage, { content: { ...subStage.content, equipment: updatedEquipment } });
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+          {equipment.map((item, index) => (
             <li key={index} className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Checkbox 
-                  id={`equipment-${index}`}
                   checked={item.checked}
-                  onCheckedChange={(checked) => handleUpdateEquipment(index, checked as boolean)}
+                  onCheckedChange={() => handleToggleEquipment(index)}
                 />
-                <label htmlFor={`equipment-${index}`} className="text-sm">{item.name}</label>
+                <span className={item.checked ? 'line-through' : ''}>{item.name}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => handleDeleteEquipment(index)}>
                 <X className="h-4 w-4" />
@@ -165,11 +260,11 @@ const EquipmentChecklistComponent: React.FC<SubComponentProps> = ({ subStage, on
           ))}
         </ul>
       </ScrollArea>
-      <div className="flex items-center mt-4">
+      <div className="flex mt-4">
         <Input 
-          placeholder="Add new equipment" 
           value={newEquipment}
           onChange={(e) => setNewEquipment(e.target.value)}
+          placeholder="Add new equipment"
           className="flex-grow mr-2"
         />
         <Button onClick={handleAddEquipment}>Add</Button>
@@ -183,34 +278,47 @@ interface StoryboardComponentProps extends SubComponentProps {
 }
 
 const StoryboardComponent: React.FC<StoryboardComponentProps> = ({ subStage, onUpdate, projectId }) => {
-  const handleAddStoryboardFrame = (fileUrl: string) => {
-    const updatedStoryboard = [...(subStage.content?.storyboard || []), { imageUrl: fileUrl, scene: subStage.content?.storyboard?.length + 1 || 1 }];
-    onUpdate(subStage, { ...subStage.content, storyboard: updatedStoryboard });
+  const [storyboardFrames, setStoryboardFrames] = useState<Array<{ imageUrl: string; scene: number }>>(subStage.content?.storyboard || []);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
+
+  const handleAddFrame = (fileUrl: string) => {
+    const updatedFrames = [...storyboardFrames, { imageUrl: fileUrl, scene: storyboardFrames.length + 1 }];
+    setStoryboardFrames(updatedFrames);
+    onUpdate(subStage, { content: { ...subStage.content, storyboard: updatedFrames } });
   };
 
-  const handleDeleteStoryboardFrame = (index: number) => {
-    const updatedStoryboard = subStage.content?.storyboard.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { ...subStage.content, storyboard: updatedStoryboard });
+  const handleDeleteFrame = (index: number) => {
+    const updatedFrames = storyboardFrames.filter((_, i) => i !== index);
+    setStoryboardFrames(updatedFrames);
+    onUpdate(subStage, { content: { ...subStage.content, storyboard: updatedFrames } });
+  };
+
+  const handleViewImage = (imageUrl: string, index: number) => {
+    setViewerFile({ url: imageUrl, name: `Scene ${index + 1}`, contentType: 'image/jpeg' });
+    setViewerOpen(true);
   };
 
   return (
     <div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {subStage.content?.storyboard?.map((frame: any, index: number) => (
-          <div key={index} className="relative">
+        {storyboardFrames.map((frame, index) => (
+          <div key={index} className="relative group">
             <Image 
               src={frame.imageUrl} 
               alt={`Scene ${frame.scene}`} 
               width={200} 
               height={150} 
               layout="responsive"
-              className="rounded"
+              objectFit="cover"
+              className="rounded cursor-pointer"
+              onClick={() => handleViewImage(frame.imageUrl, index)}
             />
             <Button 
               variant="destructive" 
               size="sm" 
-              className="absolute top-1 right-1"
-              onClick={() => handleDeleteStoryboardFrame(index)}
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => handleDeleteFrame(index)}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -221,269 +329,31 @@ const StoryboardComponent: React.FC<StoryboardComponentProps> = ({ subStage, onU
         teamId={projectId} 
         projectId={projectId} 
         subStageId={subStage.id}
-        onUploadComplete={(fileUrl) => handleAddStoryboardFrame(fileUrl)}
+        onUploadComplete={handleAddFrame}
       />
       <FileList 
         teamId={projectId} 
         projectId={projectId} 
         subStageId={subStage.id}
       />
+      {viewerFile && (
+        <FileViewer
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
+          contentType={viewerFile.contentType}
+        />
+      )}
     </div>
   );
 };
 
+// return (
+//   <div className="space-y-6">
+//     {renderSubStage(localSubStages.find(s => s.name === 'Script')!)}
+//     {renderKeyPointsAndResearch()}
+//     {renderStoryboardSubStage(localSubStages.find(s => s.name === 'Storyboard')!)}
+//   </div>
+// );
 
-
-
-// import React, { useState } from 'react'
-// import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-// import { Button } from "../ui/button"
-// import { Input } from "../ui/input"
-// import { Textarea } from "../ui/textarea"
-// import { ScrollArea } from "../ui/scroll-area"
-// import { Checkbox } from "../ui/checkbox"
-// import { Plus, X, ImageIcon } from 'lucide-react'
-// import { trpc } from '../../utils/trpc'
-// import Image from 'next/image'
-
-// interface Equipment {
-//   id: number;
-//   name: string;
-//   checked: boolean;
-// }
-
-// interface StoryboardFrame {
-//   id: number;
-//   imageUrl: string;
-//   scene: number;
-// }
-
-// interface Project {
-//   id: number;
-//   script: string | null;
-//   equipment: Equipment[];
-//   storyboard: StoryboardFrame[];
-//   title: string;
-//   description: string | null;
-//   status: string;
-//   startDate: string | null;
-//   endDate: string | null;
-//   createdAt: string;
-//   updatedAt: string;
-//   teamId: number;
-//   creatorId: number;
-//   creationOrder: number;
-//   completed: boolean;
-//   concept: string | null;
-//   productionNotes: string | null;
-// }
-
-// interface PreProductionProps {
-//   project: Project;
-// }
-
-// export default function PreProduction({ project }: PreProductionProps) {
-//   const [newEquipment, setNewEquipment] = useState('')
-//   const [script, setScript] = useState(project.script || '')
-
-//   const utils = trpc.useUtils();
-
-//   const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const addEquipment = trpc.projectPage.addEquipment.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const updateEquipment = trpc.projectPage.updateEquipment.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const deleteEquipment = trpc.projectPage.deleteEquipment.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const addStoryboardFrame = trpc.projectPage.addStoryboardFrame.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const deleteStoryboardFrame = trpc.projectPage.deleteStoryboardFrame.useMutation({
-//     onSuccess: () => {
-//       utils.projectPage.getProjectDetails.invalidate(project.id);
-//     }
-//   });
-
-//   const handleScriptChange = async (newScript: string) => {
-//     setScript(newScript);
-//     try {
-//       await updateProject.mutateAsync({
-//         id: project.id,
-//         script: newScript,
-//       });
-//     } catch (error) {
-//       console.error('Failed to update script:', error);
-//       // Handle error (e.g., show error message to user)
-//     }
-//   }
-  
-//   const handleAddEquipment = async () => {
-//     if (newEquipment.trim()) {
-//       try {
-//         await addEquipment.mutateAsync({
-//           projectId: project.id,
-//           name: newEquipment,
-//         });
-//         setNewEquipment('');
-//       } catch (error) {
-//         console.error('Failed to add equipment:', error);
-//         // Handle error
-//       }
-//     }
-//   }
-
-//   const handleUpdateEquipment = async (id: number, checked: boolean) => {
-//     try {
-//       await updateEquipment.mutateAsync({
-//         id,
-//         checked,
-//       });
-//     } catch (error) {
-//       console.error('Failed to update equipment:', error);
-//       // Handle error
-//     }
-//   }
-
-//   const handleDeleteEquipment = async (id: number) => {
-//     try {
-//       await deleteEquipment.mutateAsync(id);
-//     } catch (error) {
-//       console.error('Failed to delete equipment:', error);
-//       // Handle error
-//     }
-//   }
-
-//   const handleAddStoryboardFrame = async () => {
-//     // In a real application, you'd handle file upload here
-//     const imageUrl = 'placeholder-image-url';
-//     try {
-//       await addStoryboardFrame.mutateAsync({
-//         projectId: project.id,
-//         imageUrl,
-//         scene: project.storyboard.length + 1,
-//       });
-//     } catch (error) {
-//       console.error('Failed to add storyboard frame:', error);
-//       // Handle error
-//     }
-//   }
-
-//   const handleDeleteStoryboardFrame = async (id: number) => {
-//     try {
-//       await deleteStoryboardFrame.mutateAsync(id);
-//     } catch (error) {
-//       console.error('Failed to delete storyboard frame:', error);
-//       // Handle error
-//     }
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>Script</CardTitle>
-//         </CardHeader>
-//         <CardContent>
-//           <Textarea 
-//             placeholder="Write your script here..." 
-//             className="min-h-[300px]"
-//             value={script}
-//             onChange={(e) => handleScriptChange(e.target.value)}
-//           />
-//         </CardContent>
-//       </Card>
-
-//       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>Equipment Checklist</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-//               <ul className="space-y-2">
-//                 {project.equipment.map((item) => (
-//                   <li key={item.id} className="flex items-center justify-between">
-//                     <div className="flex items-center space-x-2">
-//                       <Checkbox 
-//                         id={`equipment-${item.id}`}
-//                         checked={item.checked}
-//                         onCheckedChange={(checked) => handleUpdateEquipment(item.id, checked as boolean)}
-//                       />
-//                       <label htmlFor={`equipment-${item.id}`} className="text-sm">{item.name}</label>
-//                     </div>
-//                     <Button variant="ghost" size="sm" onClick={() => handleDeleteEquipment(item.id)}>
-//                       <X className="h-4 w-4" />
-//                     </Button>
-//                   </li>
-//                 ))}
-//               </ul>
-//             </ScrollArea>
-//             <div className="flex items-center mt-4">
-//               <Input 
-//                 placeholder="Add new equipment" 
-//                 value={newEquipment}
-//                 onChange={(e) => setNewEquipment(e.target.value)}
-//                 className="flex-1 mr-2"
-//               />
-//               <Button onClick={handleAddEquipment}>Add</Button>
-//             </div>
-//           </CardContent>
-//         </Card>
-
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>Storyboard</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-//               {project.storyboard.map((frame) => (
-//                 <div key={frame.id} className="relative">
-//                   <Image 
-//                     src={frame.imageUrl} 
-//                     alt={`Scene ${frame.scene}`} 
-//                     width={200} 
-//                     height={150} 
-//                     layout="responsive"
-//                     className="rounded"
-//                   />
-//                   <Button 
-//                     variant="destructive" 
-//                     size="sm" 
-//                     className="absolute top-1 right-1"
-//                     onClick={() => handleDeleteStoryboardFrame(frame.id)}
-//                   >
-//                     <X className="h-4 w-4" />
-//                   </Button>
-//                 </div>
-//               ))}
-//               <Button onClick={handleAddStoryboardFrame} className="h-24 flex flex-col items-center justify-center">
-//                 <ImageIcon className="h-8 w-8 mb-2" />
-//                 <span>Add Frame</span>
-//               </Button>
-//             </div>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     </div>
-//   )
-// }

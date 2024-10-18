@@ -1,260 +1,506 @@
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Textarea } from "../ui/textarea"
-import { ScrollArea } from "../ui/scroll-area"
-import { Checkbox } from "../ui/checkbox"
-import { Upload, X } from 'lucide-react'
-import { trpc } from '../../utils/trpc'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { ScrollArea } from "../ui/scroll-area";
+import { Checkbox } from "../ui/checkbox";
+import { Switch } from "../ui/switch";
+import { Plus, X, Star, Save, Upload } from 'lucide-react';
+import { trpc } from '../../utils/trpc';
+import Image from 'next/image';
+import { FileUploader } from '../FileUploader';
+import { FileList } from '../FileList';
+import { Progress } from "../ui/progress";
+import { Badge } from "../ui/badge";
+import { TaskDialog } from '../TaskDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+
+interface SubStage {
+  id: number;
+  name: string;
+  enabled: boolean;
+  starred: boolean;
+  content: any;
+}
+
+interface MainStage {
+  id: number;
+  name: string;
+  starred: boolean;
+  subStages: SubStage[];
+}
 
 interface Project {
   id: number;
-  videoAssets: VideoAsset[];
-  thumbnails: Thumbnail[];
-  productionNotes: string | null;
-}
-
-interface VideoAsset {
-  id: number;
   title: string;
-  url: string;
-  type: string;
+  mainStages: MainStage[];
+  teamId: number;
 }
 
-interface Thumbnail {
-  id: number;
-  imageUrl: string;
-  selected: boolean;
+interface PostProductionProps {
+  project: Project;
+  mainStage: MainStage;
 }
 
-interface NewVideoAsset {
-  title: string;
-  url: string;
-  type: string;
-}
-
-interface NewThumbnail {
-  imageUrl: string;
-}
-
-export default function PostProduction({ project }: { project: Project }) {
-  const [newVideoAsset, setNewVideoAsset] = useState<NewVideoAsset>({ title: '', url: '', type: '' })
-  const [newThumbnail, setNewThumbnail] = useState<NewThumbnail>({ imageUrl: '' })
-  const [feedback, setFeedback] = useState(project.productionNotes || '')
-
+export default function PostProduction({ project, mainStage }: PostProductionProps) {
+  const [localSubStages, setLocalSubStages] = useState(mainStage.subStages);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedStageForTask, setSelectedStageForTask] = useState<{ mainStageId?: number, subStageId?: number } | null>(null);
   const utils = trpc.useUtils();
 
-  const addVideoAsset = trpc.projectPage.addVideoAsset.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
+  const updateSubStageMutation = trpc.projectPage.updateSubStage.useMutation({
+    onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
   });
 
-  const deleteVideoAsset = trpc.projectPage.deleteVideoAsset.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
+  useEffect(() => {
+    setLocalSubStages(mainStage.subStages);
+  }, [mainStage.subStages]);
 
-  const addThumbnail = trpc.projectPage.addThumbnail.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
+  const handleUpdateSubStage = async (subStage: SubStage, updates: Partial<SubStage>) => {
+    const updatedSubStage = { ...subStage, ...updates };
+    setLocalSubStages(prevStages => 
+      prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
+    );
 
-  const updateThumbnail = trpc.projectPage.updateThumbnail.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const deleteThumbnail = trpc.projectPage.deleteThumbnail.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const updateProject = trpc.projectPage.updateProjectDetails.useMutation({
-    onSuccess: () => {
-      utils.projectPage.getProjectDetails.invalidate(project.id);
-    }
-  });
-
-  const handleAddVideoAsset = async () => {
-    if (newVideoAsset.title.trim() && newVideoAsset.url.trim() && newVideoAsset.type.trim()) {
-      try {
-        await addVideoAsset.mutateAsync({
-          projectId: project.id,
-          ...newVideoAsset,
-        });
-        setNewVideoAsset({ title: '', url: '', type: '' });
-      } catch (error) {
-        console.error('Failed to add video asset:', error);
-        // Handle error (e.g., show error message to user)
-      }
-    }
-  }
-
-  const handleDeleteVideoAsset = async (id: number) => {
     try {
-      await deleteVideoAsset.mutateAsync(id);
-    } catch (error) {
-      console.error('Failed to delete video asset:', error);
-      // Handle error
-    }
-  }
-
-  const handleAddThumbnail = async () => {
-    if (newThumbnail.imageUrl.trim()) {
-      try {
-        await addThumbnail.mutateAsync({
-          projectId: project.id,
-          ...newThumbnail,
-        });
-        setNewThumbnail({ imageUrl: '' });
-      } catch (error) {
-        console.error('Failed to add thumbnail:', error);
-        // Handle error
-      }
-    }
-  }
-
-  const handleUpdateThumbnail = async (id: number, selected: boolean) => {
-    try {
-      await updateThumbnail.mutateAsync({
-        id,
-        selected,
+      await updateSubStageMutation.mutateAsync({
+        id: subStage.id,
+        ...updates,
       });
     } catch (error) {
-      console.error('Failed to update thumbnail:', error);
-      // Handle error
+      console.error('Error updating sub-stage:', error);
+      setLocalSubStages(prevStages => 
+        prevStages.map(stage => stage.id === subStage.id ? subStage : stage)
+      );
     }
-  }
+  };
 
-  const handleDeleteThumbnail = async (id: number) => {
-    try {
-      await deleteThumbnail.mutateAsync(id);
-    } catch (error) {
-      console.error('Failed to delete thumbnail:', error);
-      // Handle error
-    }
-  }
+  const handleAddTask = (mainStageId?: number, subStageId?: number) => {
+    setSelectedStageForTask({ mainStageId, subStageId });
+    setIsTaskDialogOpen(true);
+  };
 
-  const handleFeedbackChange = async (newFeedback: string) => {
-    setFeedback(newFeedback);
-    try {
-      await updateProject.mutateAsync({
-        id: project.id,
-        productionNotes: newFeedback,
-      });
-    } catch (error) {
-      console.error('Failed to update feedback:', error);
-      // Handle error
-    }
-  }
+  const renderSubStageHeader = (subStage: SubStage) => (
+    <div className="flex justify-between items-center">
+      <CardTitle>{subStage.name}</CardTitle>
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={subStage.enabled}
+          onCheckedChange={(enabled) => handleUpdateSubStage(subStage, { enabled })}
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
+        >
+          <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, subStage.id)}>
+          <Plus className="h-4 w-4 mr-2" /> Add Task
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Video Assets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {project.videoAssets.map((asset) => (
-              <div key={asset.id} className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-medium">{asset.title}</p>
-                  <p className="text-sm text-muted-foreground">{asset.type}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteVideoAsset(asset.id)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </ScrollArea>
-          <div className="flex flex-col space-y-2 mt-4">
-            <Input 
-              placeholder="Asset Title" 
-              value={newVideoAsset.title}
-              onChange={(e) => setNewVideoAsset({...newVideoAsset, title: e.target.value})}
-            />
-            <Input 
-              placeholder="Asset URL" 
-              value={newVideoAsset.url}
-              onChange={(e) => setNewVideoAsset({...newVideoAsset, url: e.target.value})}
-            />
-            <Input 
-              placeholder="Asset Type (e.g., raw, edited, final)" 
-              value={newVideoAsset.type}
-              onChange={(e) => setNewVideoAsset({...newVideoAsset, type: e.target.value})}
-            />
-            <Button onClick={handleAddVideoAsset}>Add Video Asset</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Thumbnails</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            {project.thumbnails.map((thumbnail) => (
-              <div key={thumbnail.id} className="relative">
-                {/* <Image 
-                  src={thumbnail.imageUrl} 
-                  alt="Thumbnail" 
-                  width={200} 
-                  height={150} 
-                  layout="responsive"
-                  className="rounded"
-                /> */}
-                <div className="absolute top-2 right-2 space-x-2">
-                  <Checkbox 
-                    checked={thumbnail.selected}
-                    onCheckedChange={(checked) => handleUpdateThumbnail(thumbnail.id, checked as boolean)}
-                  />
-                  <Button variant="destructive" size="sm" onClick={() => handleDeleteThumbnail(thumbnail.id)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center mt-4">
-            <Input 
-              placeholder="Thumbnail Image URL" 
-              value={newThumbnail.imageUrl}
-              onChange={(e) => setNewThumbnail({...newThumbnail, imageUrl: e.target.value})}
-              className="flex-1 mr-2"
-            />
-            <Button onClick={handleAddThumbnail}>Add Thumbnail</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Feedback and Revisions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea 
-            placeholder="Add feedback or revision notes here..." 
-            value={feedback}
-            onChange={(e) => handleFeedbackChange(e.target.value)}
-            className="min-h-[150px]"
-          />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {renderEditingProgress(localSubStages.find(s => s.name === 'Editing Progress')!)}
+        {renderThumbnailCreator(localSubStages.find(s => s.name === 'Thumbnail Creator')!)}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {renderVideoFootage(localSubStages.find(s => s.name === 'Video Footage')!)}
+        {renderSubtitles(localSubStages.find(s => s.name === 'Subtitles')!)}
+      </div>
+      {renderFeedbackAndRevisions(localSubStages.find(s => s.name === 'Feedback and Revisions')!)}
+      {renderExportSettings(localSubStages.find(s => s.name === 'Export Settings')!)}
+      <TaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => {
+          setIsTaskDialogOpen(false);
+          setSelectedStageForTask(null);
+        }}
+        projectId={project.id}
+        teamId={project.teamId}
+        mainStageId={selectedStageForTask?.mainStageId}
+        subStageId={selectedStageForTask?.subStageId}
+      />
     </div>
-  )
+  );
+
+  function renderEditingProgress(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <EditingProgressComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function renderThumbnailCreator(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <ThumbnailCreatorComponent subStage={subStage} onUpdate={handleUpdateSubStage} projectId={project.id} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function renderVideoFootage(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <VideoFootageComponent subStage={subStage} onUpdate={handleUpdateSubStage} projectId={project.id} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function renderSubtitles(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <SubtitlesComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function renderFeedbackAndRevisions(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <FeedbackAndRevisionsComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function renderExportSettings(subStage: SubStage) {
+    return (
+      <Card key={subStage.id} className="mb-6">
+        <CardHeader>{renderSubStageHeader(subStage)}</CardHeader>
+        <CardContent>
+          <ExportSettingsComponent subStage={subStage} onUpdate={handleUpdateSubStage} />
+        </CardContent>
+      </Card>
+    );
+  }
 }
+
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
+}
+
+const EditingProgressComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newProcess, setNewProcess] = useState('');
+  const editingProcesses = subStage.content?.editingProcesses || [];
+
+  const handleAddProcess = () => {
+    if (newProcess.trim()) {
+      const updatedProcesses = [...editingProcesses, { name: newProcess.trim(), completed: false }];
+      onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+      setNewProcess('');
+    }
+  };
+
+  const handleToggleProcess = (index: number) => {
+    const updatedProcesses = editingProcesses.map((process: { name: string; completed: boolean }, i: number) => 
+      i === index ? { ...process, completed: !process.completed } : process
+    );
+    onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+  };
+  
+  const handleDeleteProcess = (index: number) => {
+    const updatedProcesses = editingProcesses.filter((_: any, i: number) => i !== index);
+    onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+  };
+
+  const calculateProgress = () => {
+    const completedProcesses = editingProcesses.filter((process: { completed: boolean }) => process.completed).length;
+    return editingProcesses.length > 0 ? (completedProcesses / editingProcesses.length) * 100 : 0;
+  };
+
+  return (
+    <div>
+      <Progress value={calculateProgress()} className="mb-4" />
+      <p className="mb-4">Overall Progress: {Math.round(calculateProgress())}%</p>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+        {editingProcesses.map((process: { name: string; completed: boolean }, index: number) => (
+            <li key={index} className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={process.completed}
+                  onCheckedChange={() => handleToggleProcess(index)}
+                />
+                <span className={process.completed ? 'line-through' : ''}>{process.name}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteProcess(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex mt-4">
+        <Input 
+          value={newProcess}
+          onChange={(e) => setNewProcess(e.target.value)}
+          placeholder="Add new editing process"
+          className="flex-grow mr-2"
+        />
+        <Button onClick={handleAddProcess}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
+const ThumbnailCreatorComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
+  const handleUploadThumbnail = (fileUrl: string) => {
+    onUpdate(subStage, { content: { ...subStage.content, thumbnailUrl: fileUrl } });
+  };
+
+  return (
+    <div>
+      {subStage.content?.thumbnailUrl ? (
+        <div className="relative w-full h-48 mb-4">
+          <Image 
+            src={subStage.content.thumbnailUrl} 
+            alt="Thumbnail" 
+            layout="fill" 
+            objectFit="cover" 
+            className="rounded"
+          />
+        </div>
+      ) : (
+        <div className="bg-gray-200 w-full h-48 flex items-center justify-center mb-4 rounded">
+          <p>No thumbnail uploaded</p>
+        </div>
+      )}
+      <FileUploader 
+        teamId={projectId} 
+        projectId={projectId} 
+        subStageId={subStage.id}
+        onUploadComplete={handleUploadThumbnail}
+      />
+    </div>
+  );
+};
+
+const VideoFootageComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
+  return (
+    <div>
+      <FileList 
+        teamId={projectId} 
+        projectId={projectId} 
+        subStageId={subStage.id}
+      />
+      <FileUploader 
+        teamId={projectId} 
+        projectId={projectId} 
+        subStageId={subStage.id}
+        onUploadComplete={(fileUrl) => {
+          const updatedFootage = [...(subStage.content?.footage || []), { url: fileUrl }];
+          onUpdate(subStage, { content: { ...subStage.content, footage: updatedFootage } });
+        }}
+      />
+    </div>
+  );
+};
+
+const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newSubtitle, setNewSubtitle] = useState({ language: '', file: null as File | null });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewSubtitle({ ...newSubtitle, file: e.target.files[0] });
+    }
+  };
+
+  const handleAddSubtitle = () => {
+    if (newSubtitle.language && newSubtitle.file) {
+      // In a real app, you'd upload the file here and get a URL back
+      const fakeUrl = URL.createObjectURL(newSubtitle.file);
+      const updatedSubtitles = [...(subStage.content?.subtitles || []), { language: newSubtitle.language, url: fakeUrl }];
+      onUpdate(subStage, { content: { ...subStage.content, subtitles: updatedSubtitles } });
+      setNewSubtitle({ language: '', file: null });
+    }
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+        {subStage.content?.subtitles?.map((subtitle: { language: string; url: string }, index: number) => (
+            <li key={index} className="flex items-center justify-between">
+              <span>{subtitle.language}</span>
+              <Button variant="outline" size="sm" onClick={() => window.open(subtitle.url, '_blank')}>
+                Download
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex space-x-2 mt-4">
+        <Input 
+          value={newSubtitle.language}
+          onChange={(e) => setNewSubtitle({ ...newSubtitle, language: e.target.value })}
+          placeholder="Language"
+          className="flex-grow"
+        />
+             <Input 
+          type="file" 
+          onChange={handleFileChange}
+          accept=".srt,.vtt"
+        />
+        <Button onClick={handleAddSubtitle}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
+const FeedbackAndRevisionsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [newFeedback, setNewFeedback] = useState({ content: '', creator: '', mentioned: '', completed: false });
+
+  const handleAddFeedback = () => {
+    if (newFeedback.content && newFeedback.creator) {
+      const updatedFeedback = [...(subStage.content?.feedback || []), newFeedback];
+      onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+      setNewFeedback({ content: '', creator: '', mentioned: '', completed: false });
+    }
+  };
+
+  const handleToggleFeedback = (index: number) => {
+    const updatedFeedback = subStage.content?.feedback.map((item: any, i: number) => 
+      i === index ? { ...item, completed: !item.completed } : item
+    );
+    onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+  };
+
+  const handleDeleteFeedback = (index: number) => {
+    const updatedFeedback = subStage.content?.feedback.filter((_: any, i: number) => i !== index);
+    onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+  };
+
+  return (
+    <div>
+      <ScrollArea className="h-[200px] w-full mb-4">
+        <ul className="space-y-2">
+          {subStage.content?.feedback?.map((item: any, index: number) => (
+            <li key={index} className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={item.completed}
+                  onCheckedChange={() => handleToggleFeedback(index)}
+                />
+                <span className={item.completed ? 'line-through' : ''}>
+                  {item.content}
+                  <Badge variant="outline"  className="ml-2">{item.creator}</Badge>
+                  {item.mentioned && <Badge className="ml-2">@{item.mentioned}</Badge>}
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteFeedback(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
+      <div className="flex flex-col space-y-2 mt-4">
+        <Input 
+          value={newFeedback.content}
+          onChange={(e) => setNewFeedback({ ...newFeedback, content: e.target.value })}
+          placeholder="Feedback content"
+        />
+        <Input 
+          value={newFeedback.creator}
+          onChange={(e) => setNewFeedback({ ...newFeedback, creator: e.target.value })}
+          placeholder="Feedback creator"
+        />
+        <Input 
+          value={newFeedback.mentioned}
+          onChange={(e) => setNewFeedback({ ...newFeedback, mentioned: e.target.value })}
+          placeholder="Mentioned person (optional)"
+        />
+        <Button onClick={handleAddFeedback}>Add Feedback</Button>
+      </div>
+    </div>
+  );
+};
+
+const ExportSettingsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
+  const [settings, setSettings] = useState(subStage.content?.exportSettings || {
+    resolution: '1080p',
+    frameRate: '30fps',
+    format: 'mp4'
+  });
+
+  const handleSettingChange = (setting: string, value: string) => {
+    const updatedSettings = { ...settings, [setting]: value };
+    setSettings(updatedSettings);
+    onUpdate(subStage, { content: { ...subStage.content, exportSettings: updatedSettings } });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block mb-2">Resolution</label>
+        <Select
+          value={settings.resolution}
+          onValueChange={(value) => handleSettingChange('resolution', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Resolution" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="720p">720p</SelectItem>
+            <SelectItem value="1080p">1080p</SelectItem>
+            <SelectItem value="4K">4K</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label className="block mb-2">Frame Rate</label>
+        <Select
+          value={settings.frameRate}
+          onValueChange={(value) => handleSettingChange('frameRate', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Frame Rate" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="24fps">24fps</SelectItem>
+            <SelectItem value="30fps">30fps</SelectItem>
+            <SelectItem value="60fps">60fps</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label className="block mb-2">Format</label>
+        <Select
+          value={settings.format}
+          onValueChange={(value) => handleSettingChange('format', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Format" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mp4">MP4</SelectItem>
+            <SelectItem value="mov">MOV</SelectItem>
+            <SelectItem value="avi">AVI</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+};

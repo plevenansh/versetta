@@ -9,9 +9,10 @@ import { Switch } from "../ui/switch";
 import { Plus, X, Image as ImageIcon, Star, Save } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import Image from 'next/image';
-import { FileUploader } from '../FileUploader';
 import { FileList } from '../FileList';
-
+import { FileUploader } from '../FileUploader';
+import { FileViewer } from '../FileViewer';
+import { TaskDialog } from '../TaskDialog';
 interface SubStage {
   id: number;
   name: string;
@@ -54,7 +55,9 @@ interface FileUploaderProps {
 export default function Ideation({ project, mainStage }: IdeationProps) {
   const [localSubStages, setLocalSubStages] = useState(mainStage.subStages);
   const [conceptText, setConceptText] = useState(mainStage.subStages.find(s => s.name === 'Concept')?.content?.concept || '');
-
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedStageForTask, setSelectedStageForTask] = useState<{ mainStageId?: number, subStageId?: number } | null>(null);
+  
   useEffect(() => {
     const conceptSubStage = mainStage.subStages.find(s => s.name === 'Concept');
     if (conceptSubStage && conceptSubStage.content?.concept) {
@@ -101,48 +104,56 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
       }
     }
   };
-  
-  const handleAddTask = async (subStageId: number) => {
-    try {
-      await createTaskMutation.mutateAsync({
-        title: "New Task",
-        status: "PENDING",
-        priority: "MEDIUM",
-        projectId: project.id,
-        teamId: project.teamId,
-        subStageId: subStageId,
-      });
-    } catch (error) {
-      console.error('Error adding task:', error);
-    }
+
+  // const handleAddTask = async (subStageId: number) => {
+  //   try {
+  //     await createTaskMutation.mutateAsync({
+  //       title: "New Task",
+  //       status: "PENDING",
+  //       priority: "MEDIUM",
+  //       projectId: project.id,
+  //       teamId: project.teamId,
+  //       subStageId: subStageId,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error adding task:', error);
+  //   }
+  // };
+
+
+  const handleAddTask = (mainStageId?: number, subStageId?: number) => {
+    setSelectedStageForTask({ mainStageId, subStageId });
+    setIsTaskDialogOpen(true);
   };
 
+
+   // Update renderSubStage function
   const renderSubStage = (subStage: SubStage) => {
     switch (subStage.name) {
       case 'Concept':
-  return (
-    <Card key={subStage.id} className="mb-6">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle>{subStage.name}</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={subStage.enabled}
-            onCheckedChange={(enabled) => handleUpdateSubStage(subStage, { enabled })}
-          />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
-          >
-            <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleAddTask(subStage.id)}>
-            <Plus className="h-4 w-4 mr-2" /> Add Task
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Textarea 
+        return (
+          <Card key={subStage.id} className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>{subStage.name}</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={subStage.enabled}
+                  onCheckedChange={(enabled) => handleUpdateSubStage(subStage, { enabled })}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
+                >
+                  <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, subStage.id)}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Task
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+            <Textarea 
           placeholder="Describe your video concept here..." 
           className="min-h-[150px] mb-2"
           value={conceptText}
@@ -151,9 +162,9 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
         <Button onClick={() => handleUpdateSubStage(subStage, { content: { concept: conceptText } })}>
           <Save className="h-4 w-4 mr-2" /> Save Concept
         </Button>
-      </CardContent>
-    </Card>
-  );
+            </CardContent>
+          </Card>
+        );
       default:
         return null;
     }
@@ -164,39 +175,29 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
     const research = localSubStages.find(s => s.name === 'Research & Reference');
 
     return (
-      <div className="grid grid-cols-2 gap-6 mb-6">
+     <div className="grid grid-cols-2 gap-6 mb-6">
         {keyPoints && (
-  <Card className="flex flex-col h-full">
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
-      <CardTitle>{keyPoints.name}</CardTitle>
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={keyPoints.enabled}
-          onCheckedChange={(enabled) => handleUpdateSubStage(keyPoints, { enabled })}
-        />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleUpdateSubStage(keyPoints, { starred: !keyPoints.starred })}
-        >
-          <Star className={`h-4 w-4 ${keyPoints.starred ? 'fill-yellow-400' : ''}`} />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => handleAddTask(keyPoints.id)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Task
-        </Button>
-      </div>
-    </CardHeader>
-    <CardContent className="flex-grow">
-      <KeyPointsComponent subStage={keyPoints} onUpdate={handleUpdateSubStage} />
-    </CardContent>
-  </Card>
-)}
+          <Card className="flex flex-col h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>{keyPoints.name}</CardTitle>
+              <div className="flex items-center space-x-2">
+                {/* ... existing buttons ... */}
+                <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, keyPoints.id)}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Task
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              <KeyPointsComponent subStage={keyPoints} onUpdate={handleUpdateSubStage} />
+            </CardContent>
+          </Card>
+        )}
         {research && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle>{research.name}</CardTitle>
               <div className="flex items-center space-x-2">
-                <Switch
+              <Switch
                   checked={research.enabled}
                   onCheckedChange={(enabled) => handleUpdateSubStage(research, { enabled })}
                 />
@@ -207,7 +208,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
                 >
                   <Star className={`h-4 w-4 ${research.starred ? 'fill-yellow-400' : ''}`} />
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleAddTask(research.id)}>
+                <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, research.id)}>
                   <Plus className="h-4 w-4 mr-2" /> Add Task
                 </Button>
               </div>
@@ -230,7 +231,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>{inspirationBoard.name}</CardTitle>
           <div className="flex items-center space-x-2">
-            <Switch
+          <Switch
               checked={inspirationBoard.enabled}
               onCheckedChange={(enabled) => handleUpdateSubStage(inspirationBoard, { enabled })}
             />
@@ -241,7 +242,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
             >
               <Star className={`h-4 w-4 ${inspirationBoard.starred ? 'fill-yellow-400' : ''}`} />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleAddTask(inspirationBoard.id)}>
+            <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, inspirationBoard.id)}>
               <Plus className="h-4 w-4 mr-2" /> Add Task
             </Button>
           </div>
@@ -258,6 +259,17 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
       {renderSubStage(localSubStages.find(s => s.name === 'Concept')!)}
       {renderKeyPointsAndResearch()}
       {renderInspirationBoard()}
+      <TaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => {
+          setIsTaskDialogOpen(false);
+          setSelectedStageForTask(null);
+        }}
+        projectId={project.id}
+        teamId={project.teamId}
+        mainStageId={selectedStageForTask?.mainStageId}
+        subStageId={selectedStageForTask?.subStageId}
+      />
     </div>
   );
 }
@@ -385,6 +397,8 @@ const ReferencesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }
 
 const InspirationBoardComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
   const [inspirations, setInspirations] = useState<Array<{ imageUrl: string }>>(subStage.content?.inspirations || []);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
 
   const handleAddInspiration = (fileUrl: string) => {
     const updatedInspirations = [...inspirations, { imageUrl: fileUrl }];
@@ -398,18 +412,27 @@ const InspirationBoardComponent: React.FC<SubComponentProps & { projectId: numbe
     onUpdate(subStage, { content: { ...subStage.content, inspirations: updatedInspirations } });
   };
 
+  const handleViewImage = (imageUrl: string, index: number) => {
+    setViewerFile({ url: imageUrl, name: `Inspiration ${index + 1}`, contentType: 'image/jpeg' });
+    setViewerOpen(true);
+  };
+
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {inspirations.map((inspiration, index) => (
-          <div key={index} className="relative group">
+          <div key={index} className="relative group aspect-square">
             <Image 
               src={inspiration.imageUrl} 
               alt={`Inspiration ${index + 1}`} 
-              width={200} 
-              height={150} 
-              layout="responsive"
-              className="rounded"
+              layout="fill"
+              objectFit="cover"
+              className="rounded cursor-pointer"
+              onClick={() => handleViewImage(inspiration.imageUrl, index)}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/placeholder-user.jpg'; // Replace with your placeholder image path
+              }}
             />
             <Button 
               variant="destructive" 
@@ -421,19 +444,43 @@ const InspirationBoardComponent: React.FC<SubComponentProps & { projectId: numbe
             </Button>
           </div>
         ))}
+        <div 
+          className="aspect-square bg-gray-100 rounded flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+          onClick={() => document.getElementById('file-upload')?.click()}
+        >
+          <Plus className="h-8 w-8 text-gray-400" />
+          <input 
+            id="file-upload" 
+            type="file" 
+            className="hidden" 
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                // Here you would typically upload the file and get a URL back
+                // For this example, we'll use a fake URL
+                const fakeUrl = URL.createObjectURL(file);
+                handleAddInspiration(fakeUrl);
+              }
+            }}
+          />
+        </div>
       </div>
       <FileUploader 
-  teamId={projectId} 
-  projectId={projectId} 
-  subStageId={subStage.id}
-  onUploadComplete={handleAddInspiration}
-/>
-        <FileList 
-          teamId={projectId} 
-          projectId={projectId} 
-          subStageId={subStage.id}
+        teamId={projectId} 
+        projectId={projectId} 
+        subStageId={subStage.id}
+        onUploadComplete={handleAddInspiration}
+      />
+      {viewerFile && (
+        <FileViewer
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
+          contentType={viewerFile.contentType}
         />
-      </div>
+      )}
+    </div>
   );
 };
-

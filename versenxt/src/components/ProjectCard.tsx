@@ -49,6 +49,7 @@ interface SubStage {
   name: string;
   enabled: boolean;
   starred: boolean;
+  content: any;
 }
 
 interface Task {

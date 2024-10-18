@@ -7,6 +7,20 @@ import { FileUploader } from '../../components/FileUploader';
 import { FileList } from '../../components/FileList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
+
+interface Project {
+  id: number;
+  title: string;
+  mainStages: Array<{
+    id: number;
+    name: string;
+    subStages: Array<{
+      id: number;
+      name: string;
+    }>;
+  }>;
+}
+
 export default function StoragePage() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
@@ -83,7 +97,7 @@ export default function StoragePage() {
             <SelectTrigger>
               <SelectValue placeholder="Select Sub-Stage" />
             </SelectTrigger>
-            <SelectContent>
+            {/* <SelectContent>
               <SelectItem value="all">All Sub-Stages</SelectItem>
               {projects?.find(p => p.id === selectedProjectId)?.mainStages.flatMap(ms => 
                 ms.subStages.map(ss => (
@@ -92,7 +106,7 @@ export default function StoragePage() {
                   </SelectItem>
                 ))
               )}
-            </SelectContent>
+            </SelectContent> */}
           </Select>
         </div>
       )}

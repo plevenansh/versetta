@@ -14,34 +14,32 @@ interface Project {
   title: string;
   description?: string | null;
   status: string;
-  startDate?: string | null;
-  endDate?: string | null;
+  startDate: string | null;
+  endDate: string | null;
   creatorId: number;
   teamId: number;
-  mainStages: MainStage[];
   completed: boolean;
   createdAt: string;
   updatedAt: string;
   team: {
-    name: string;
     id: number;
-    createdAt: string;
-    updatedAt: string;
-    description: string | null;
-    creatorId: number;
+    name: string;
   };
   duration: string;
   creator: {
+    id: number;
     user: {
+      id: number;
       name: string;
     }
   };
+  mainStages: MainStage[];
+  tasks: Task[];
 }
 
 interface MainStage {
   id: number;
   name: string;
-  projectId: number;
   starred: boolean;
   subStages: SubStage[];
 }
@@ -51,9 +49,27 @@ interface SubStage {
   name: string;
   enabled: boolean;
   starred: boolean;
-  content: any;
-  mainStageId: number;
-  projectId: number;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+  priority: string;
+  assignee?: {
+    id: number;
+    user: {
+      id: number;
+      name: string;
+    }
+  };
+  creator: {
+    id: number;
+    user: {
+      id: number;
+      name: string;
+    }
+  };
 }
 
 interface ProjectCardProps {
@@ -118,7 +134,7 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
             {project.completed ? 'Completed' : 'In Progress'}
           </Badge>
         </div>
-      </CardHeader>
+        </CardHeader>
       <CardContent>
         <div className="space-y-2">
           <p><strong>Created by:</strong> {project.creator.user.name}</p>

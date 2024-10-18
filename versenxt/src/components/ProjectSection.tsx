@@ -22,32 +22,28 @@ interface Project {
   endDate: string | null;
   creatorId: number;
   teamId: number;
-  mainStages: MainStage[];
   completed: boolean;
   createdAt: string;
   updatedAt: string;
   team: {
     id: number;
     name: string;
-    description: string | null;
-    createdAt: string;
-    updatedAt: string;
-    workOsOrgId: string;
-    creatorId: number;
-    subActive: boolean;
   };
   duration: string;
   creator: {
+    id: number;
     user: {
+      id: number;
       name: string;
     }
   };
+  mainStages: MainStage[];
+  tasks: Task[];
 }
 
 interface MainStage {
   id: number;
   name: string;
-  projectId: number;
   starred: boolean;
   subStages: SubStage[];
 }
@@ -58,8 +54,27 @@ interface SubStage {
   enabled: boolean;
   starred: boolean;
   content: any;
-  mainStageId: number;
-  projectId: number;
+  // Remove mainStageId and projectId
+}
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+  priority: string;
+  assignee?: {
+    id: number;
+    user: {
+      id: number;
+      name: string;
+    }
+  };
+  creator: {
+    id: number;
+    user: {
+      id: number;
+      name: string;
+    }
+  };
 }
 
 interface NewProject {
@@ -74,67 +89,67 @@ interface NewProject {
 const defaultMainStages: MainStage[] = [
   {
     id: 0,
-    projectId: 0,
+   
     name: 'Ideation',
     starred: false,
     subStages: [
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Concept', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Key Points', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Research & Reference', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Inspiration Board', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Concept', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Key Points', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Research & Reference', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Inspiration Board', enabled: true, starred: false, content: null },
     ]
   },
   {
     id: 0,
-    projectId: 0,
+    
     name: 'Pre-Production',
     starred: false,
     subStages: [
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Script', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Keyword Research', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Equipment Checklist', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Storyboard', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Script', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Keyword Research', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Equipment Checklist', enabled: true, starred: false, content: null },
+      { id: 0,   name: 'Storyboard', enabled: true, starred: false, content: null },
     ]
   },
   {
     id: 0,
-    projectId: 0,
+  
     name: 'Production',
     starred: false,
     subStages: [
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Filming Schedule', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'B-roll Ideas', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Shot List', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Production Notes', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Filming Schedule', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'B-roll Ideas', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Shot List', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Production Notes', enabled: true, starred: false, content: null },
     ]
   },
   {
     id: 0,
-    projectId: 0,
+  
     name: 'Post-Production',
     starred: false,
     subStages: [
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Editing Progress', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Thumbnail Creator', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Video Footage', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Subtitles', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Feedback and Revisions', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Export Settings', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Editing Progress', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Thumbnail Creator', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Video Footage', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Subtitles', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Feedback and Revisions', enabled: true, starred: false, content: null },
+      { id: 0,  name: 'Export Settings', enabled: true, starred: false, content: null },
     ]
   },
   {
     id: 0,
-    projectId: 0,
+ 
     name: 'Publishing',
     starred: false,
     subStages: [
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Video Details', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Thumbnails', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Publishing Schedule', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Publishing Schedule', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Subtitles', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Cross-Platform Sharing', enabled: true, starred: false, content: null },
-      { id: 0, mainStageId: 0, projectId: 0, name: 'Monetization', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Video Details', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Thumbnails', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Publishing Schedule', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Publishing Schedule', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Subtitles', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Cross-Platform Sharing', enabled: true, starred: false, content: null },
+      { id: 0, name: 'Monetization', enabled: true, starred: false, content: null },
     ]
   }
 ];

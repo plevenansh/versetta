@@ -34,13 +34,17 @@ interface MainStage {
 interface Project {
   id: number;
   title: string;
-  mainStages: MainStage[];
+ // mainStages: MainStage[];
   teamId: number;
 }
 
 interface PostProductionProps {
   project: Project;
   mainStage: MainStage;
+}
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
 }
 
 export default function PostProduction({ project, mainStage }: PostProductionProps) {
@@ -66,7 +70,10 @@ export default function PostProduction({ project, mainStage }: PostProductionPro
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        ...updates,
+        name: updates.name,
+        enabled: updates.enabled,
+        starred: updates.starred,
+        content: updates.content,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
@@ -196,10 +203,6 @@ export default function PostProduction({ project, mainStage }: PostProductionPro
   }
 }
 
-interface SubComponentProps {
-  subStage: SubStage;
-  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
-}
 
 const EditingProgressComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
   const [newProcess, setNewProcess] = useState('');
@@ -208,7 +211,13 @@ const EditingProgressComponent: React.FC<SubComponentProps> = ({ subStage, onUpd
   const handleAddProcess = () => {
     if (newProcess.trim()) {
       const updatedProcesses = [...editingProcesses, { name: newProcess.trim(), completed: false }];
-      onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          editingProcesses: updatedProcesses 
+        } 
+      });
+      
       setNewProcess('');
     }
   };
@@ -217,12 +226,24 @@ const EditingProgressComponent: React.FC<SubComponentProps> = ({ subStage, onUpd
     const updatedProcesses = editingProcesses.map((process: { name: string; completed: boolean }, i: number) => 
       i === index ? { ...process, completed: !process.completed } : process
     );
-    onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        editingProcesses: updatedProcesses 
+      } 
+    });
+    
   };
   
   const handleDeleteProcess = (index: number) => {
     const updatedProcesses = editingProcesses.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { content: { ...subStage.content, editingProcesses: updatedProcesses } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        editingProcesses: updatedProcesses 
+      } 
+    });
+    
   };
 
   const calculateProgress = () => {
@@ -266,8 +287,14 @@ const EditingProgressComponent: React.FC<SubComponentProps> = ({ subStage, onUpd
 };
 
 const ThumbnailCreatorComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
+  const thumbnailUrl = subStage.content?.thumbnailUrl || '';
   const handleUploadThumbnail = (fileUrl: string) => {
-    onUpdate(subStage, { content: { ...subStage.content, thumbnailUrl: fileUrl } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        thumbnailUrl: fileUrl 
+      } 
+    });
   };
 
   return (
@@ -311,7 +338,12 @@ const VideoFootageComponent: React.FC<SubComponentProps & { projectId: number }>
         subStageId={subStage.id}
         onUploadComplete={(fileUrl) => {
           const updatedFootage = [...(subStage.content?.footage || []), { url: fileUrl }];
-          onUpdate(subStage, { content: { ...subStage.content, footage: updatedFootage } });
+          onUpdate(subStage, { 
+            content: { 
+              ...subStage.content, 
+              footage: updatedFootage 
+            } 
+          });
         }}
       />
     </div>
@@ -332,7 +364,12 @@ const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate })
       // In a real app, you'd upload the file here and get a URL back
       const fakeUrl = URL.createObjectURL(newSubtitle.file);
       const updatedSubtitles = [...(subStage.content?.subtitles || []), { language: newSubtitle.language, url: fakeUrl }];
-      onUpdate(subStage, { content: { ...subStage.content, subtitles: updatedSubtitles } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          subtitles: updatedSubtitles 
+        } 
+      });
       setNewSubtitle({ language: '', file: null });
     }
   };
@@ -371,11 +408,17 @@ const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate })
 
 const FeedbackAndRevisionsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
   const [newFeedback, setNewFeedback] = useState({ content: '', creator: '', mentioned: '', completed: false });
+  const feedback = subStage.content?.feedback || [];
 
   const handleAddFeedback = () => {
     if (newFeedback.content && newFeedback.creator) {
       const updatedFeedback = [...(subStage.content?.feedback || []), newFeedback];
-      onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          feedback: updatedFeedback 
+        } 
+      });
       setNewFeedback({ content: '', creator: '', mentioned: '', completed: false });
     }
   };
@@ -384,12 +427,22 @@ const FeedbackAndRevisionsComponent: React.FC<SubComponentProps> = ({ subStage, 
     const updatedFeedback = subStage.content?.feedback.map((item: any, i: number) => 
       i === index ? { ...item, completed: !item.completed } : item
     );
-    onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        feedback: updatedFeedback 
+      } 
+    });
   };
 
   const handleDeleteFeedback = (index: number) => {
     const updatedFeedback = subStage.content?.feedback.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { content: { ...subStage.content, feedback: updatedFeedback } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        feedback: updatedFeedback 
+      } 
+    });
   };
 
   return (
@@ -444,11 +497,17 @@ const ExportSettingsComponent: React.FC<SubComponentProps> = ({ subStage, onUpda
     frameRate: '30fps',
     format: 'mp4'
   });
+  
 
   const handleSettingChange = (setting: string, value: string) => {
     const updatedSettings = { ...settings, [setting]: value };
     setSettings(updatedSettings);
-    onUpdate(subStage, { content: { ...subStage.content, exportSettings: updatedSettings } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        exportSettings: updatedSettings 
+      } 
+    });
   };
 
   return (

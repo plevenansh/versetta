@@ -14,18 +14,16 @@ interface SubStage {
   enabled: boolean;
   starred: boolean;
   content: any;
-  mainStageId: number;
-  projectId: number;
+  // Remove mainStageId and projectId
 }
 
 interface MainStage {
   id: number;
   name: string;
-  projectId: number;
   starred: boolean;
   subStages: SubStage[];
+  // Remove projectId
 }
-
 interface Project {
   id: number;
   title: string;
@@ -149,7 +147,14 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
                         size="sm"
                         onClick={() => {
                           const updatedStages = [...editedProject.mainStages];
-                          updatedStages[index].subStages = updatedStages[index].subStages.filter(s => s.id !== subStage.id);
+                          updatedStages[index].subStages.push({
+                            id: Date.now(),
+                            name: '',
+                            enabled: true,
+                            starred: false,
+                            content: null,
+                            // Remove mainStageId and projectId
+                          });
                           setEditedProject({ ...editedProject, mainStages: updatedStages });
                         }}
                       >
@@ -164,14 +169,12 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
                     className="mt-2"
                     onClick={() => {
                       const updatedStages = [...editedProject.mainStages];
-                      updatedStages[index].subStages.push({
+                      updatedStages.push({
                         id: Date.now(),
                         name: '',
-                        enabled: true,
                         starred: false,
-                        content: null,
-                        mainStageId: stage.id,
-                        projectId: project.id
+                        subStages: []
+                        // Remove projectId
                       });
                       setEditedProject({ ...editedProject, mainStages: updatedStages });
                     }}
@@ -188,7 +191,7 @@ export function EditProjectModal({ project, isOpen, onClose, onUpdate }: EditPro
                   updatedStages.push({
                     id: Date.now(),
                     name: '',
-                    projectId: project.id,
+                 //   projectId: project.id,
                     starred: false,
                     subStages: []
                   });

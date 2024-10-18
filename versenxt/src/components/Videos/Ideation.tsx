@@ -18,13 +18,8 @@ interface SubStage {
   name: string;
   enabled: boolean;
   starred: boolean;
-  content: any;
+  content: any; // Add this line
 }
-interface SubComponentProps {
-  subStage: SubStage;
-  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
-}
-
 
 interface MainStage {
   id: number;
@@ -36,7 +31,6 @@ interface MainStage {
 interface Project {
   id: number;
   title: string;
-  mainStages: MainStage[];
   teamId: number;
 }
 
@@ -44,12 +38,15 @@ interface IdeationProps {
   project: Project;
   mainStage: MainStage;
 }
-
 interface FileUploaderProps {
   teamId: number;
   projectId: number;
   subStageId: number;
   onUploadComplete: (fileUrl: string) => void; // Change this line
+}
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
 }
 
 export default function Ideation({ project, mainStage }: IdeationProps) {
@@ -69,7 +66,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
   const updateSubStageMutation = trpc.projectPage.updateSubStage.useMutation({
     onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
   });
-
+  
   const createTaskMutation = trpc.tasks.create.useMutation({
     onSuccess: () => utils.projectPage.getProjectDetails.invalidate(project.id)
   });
@@ -84,8 +81,8 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
       prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
     );
   
-    if (updates.content?.concept) {
-      setConceptText(updates.content.concept);
+    if (updates.content) {
+      setConceptText(updates.content.concept || '');
     }
   
     try {
@@ -95,7 +92,6 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
-      // Revert local state if update fails
       setLocalSubStages(prevStages => 
         prevStages.map(stage => stage.id === subStage.id ? subStage : stage)
       );
@@ -127,7 +123,6 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
   };
 
 
-   // Update renderSubStage function
   const renderSubStage = (subStage: SubStage) => {
     switch (subStage.name) {
       case 'Concept':
@@ -153,15 +148,15 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
               </div>
             </CardHeader>
             <CardContent>
-            <Textarea 
-          placeholder="Describe your video concept here..." 
-          className="min-h-[150px] mb-2"
-          value={conceptText}
-          onChange={(e) => setConceptText(e.target.value)}
-        />
-        <Button onClick={() => handleUpdateSubStage(subStage, { content: { concept: conceptText } })}>
-          <Save className="h-4 w-4 mr-2" /> Save Concept
-        </Button>
+              <Textarea 
+                placeholder="Describe your video concept here..." 
+                className="min-h-[150px] mb-2"
+                value={conceptText}
+                onChange={(e) => setConceptText(e.target.value)}
+              />
+              <Button onClick={() => handleUpdateSubStage(subStage, { content: { concept: conceptText } })}>
+                <Save className="h-4 w-4 mr-2" /> Save Concept
+              </Button>
             </CardContent>
           </Card>
         );
@@ -285,7 +280,7 @@ const KeyPointsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate })
     if (newKeyPoint.trim()) {
       const updatedKeyPoints = [...keyPoints, { content: newKeyPoint, completed: false }];
       setKeyPoints(updatedKeyPoints);
-      onUpdate(subStage, { content: { ...subStage.content, keyPoints: updatedKeyPoints } });
+      onUpdate(subStage, { content: { keyPoints: updatedKeyPoints } });
       setNewKeyPoint('');
     }
   };

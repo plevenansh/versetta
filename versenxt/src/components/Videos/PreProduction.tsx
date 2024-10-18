@@ -22,10 +22,6 @@ interface SubStage {
   content: any;
 }
 
-interface SubComponentProps {
-  subStage: SubStage;
-  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
-}
 
 interface MainStage {
   id: number;
@@ -37,13 +33,17 @@ interface MainStage {
 interface Project {
   id: number;
   title: string;
-  mainStages: MainStage[];
+ // mainStages: MainStage[];
   teamId: number;
 }
 
 interface PreProductionProps {
   project: Project;
   mainStage: MainStage;
+}
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
 }
 
 export default function PreProduction({ project, mainStage }: PreProductionProps) {
@@ -70,15 +70,18 @@ export default function PreProduction({ project, mainStage }: PreProductionProps
     setLocalSubStages(prevStages => 
       prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
     );
-
+  
     if (updates.content?.script) {
       setScriptText(updates.content.script);
     }
-
+  
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        ...updates,
+        name: updates.name,
+        enabled: updates.enabled,
+        starred: updates.starred,
+        content: updates.content,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);

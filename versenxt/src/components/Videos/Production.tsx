@@ -16,7 +16,12 @@ interface SubStage {
   name: string;
   enabled: boolean;
   starred: boolean;
-  content: any;
+  content?: {
+    filmingSchedule?: Array<{ scene: string; time: string; location: string; other: string }>;
+    bRollIdeas?: Array<{ idea: string }>;
+    shotList?: Array<{ description: string; completed: boolean }>;
+    notes?: string;
+  };
 }
 
 interface MainStage {
@@ -29,7 +34,7 @@ interface MainStage {
 interface Project {
   id: number;
   title: string;
-  mainStages: MainStage[];
+ // mainStages: MainStage[];
   teamId: number;
 }
 
@@ -57,11 +62,14 @@ export default function Production({ project, mainStage }: ProductionProps) {
     setLocalSubStages(prevStages => 
       prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
     );
-
+  
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        ...updates,
+        name: updates.name,
+        enabled: updates.enabled,
+        starred: updates.starred,
+        content: updates.content,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
@@ -182,20 +190,30 @@ const FilmingScheduleComponent: React.FC<SubComponentProps> = ({ subStage, onUpd
   const handleAddSession = () => {
     if (newSession.scene && newSession.time && newSession.location) {
       const updatedSessions = [...(subStage.content?.filmingSchedule || []), newSession];
-      onUpdate(subStage, { content: { ...subStage.content, filmingSchedule: updatedSessions } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          filmingSchedule: updatedSessions 
+        } 
+      });
       setNewSession({ scene: '', time: '', location: '', other: '' });
     }
   };
 
   const handleDeleteSession = (index: number) => {
     const updatedSessions = subStage.content?.filmingSchedule.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { content: { ...subStage.content, filmingSchedule: updatedSessions } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        filmingSchedule: updatedSessions 
+      } 
+    });
   };
 
   return (
     <div>
       <ScrollArea className="h-[200px] w-full mb-4">
-        {subStage.content?.filmingSchedule?.map((session: any, index: number) => (
+      {subStage.content?.filmingSchedule?.map((session, index) => (
           <div key={index} className="flex items-center justify-between mb-2">
             <div>
               <Badge>{session.scene}</Badge>
@@ -241,21 +259,31 @@ const BRollComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => 
   const handleAddIdea = () => {
     if (newIdea.trim()) {
       const updatedIdeas = [...(subStage.content?.bRollIdeas || []), { idea: newIdea.trim() }];
-      onUpdate(subStage, { content: { ...subStage.content, bRollIdeas: updatedIdeas } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          bRollIdeas: updatedIdeas 
+        } 
+      });
       setNewIdea('');
     }
   };
 
   const handleDeleteIdea = (index: number) => {
     const updatedIdeas = subStage.content?.bRollIdeas.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { content: { ...subStage.content, bRollIdeas: updatedIdeas } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        bRollIdeas: updatedIdeas 
+      } 
+    });
   };
 
   return (
     <div>
       <ScrollArea className="h-[200px] w-full mb-4">
         <ul className="space-y-2">
-          {subStage.content?.bRollIdeas?.map((idea: any, index: number) => (
+        {subStage.content?.bRollIdeas?.map((idea, index) => (
             <li key={index} className="flex items-center justify-between">
               <span>{idea.idea}</span>
               <Button variant="ghost" size="sm" onClick={() => handleDeleteIdea(index)}>
@@ -284,7 +312,12 @@ const ShotListComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) 
   const handleAddShot = () => {
     if (newShot.trim()) {
       const updatedShots = [...(subStage.content?.shotList || []), { description: newShot.trim(), completed: false }];
-      onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          shotList: updatedShots 
+        } 
+      });
       setNewShot('');
     }
   };
@@ -293,19 +326,29 @@ const ShotListComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) 
     const updatedShots = subStage.content?.shotList.map((shot: any, i: number) => 
       i === index ? { ...shot, completed: !shot.completed } : shot
     );
-    onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        shotList: updatedShots 
+      } 
+    });
   };
 
   const handleDeleteShot = (index: number) => {
     const updatedShots = subStage.content?.shotList.filter((_: any, i: number) => i !== index);
-    onUpdate(subStage, { content: { ...subStage.content, shotList: updatedShots } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        shotList: updatedShots 
+      } 
+    });
   };
 
   return (
     <div>
       <ScrollArea className="h-[200px] w-full mb-4">
         <ul className="space-y-2">
-          {subStage.content?.shotList?.map((shot: any, index: number) => (
+        {subStage.content?.shotList?.map((shot, index) => (
             <li key={index} className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -338,7 +381,12 @@ const ProductionNotesComponent: React.FC<SubComponentProps> = ({ subStage, onUpd
   const [notes, setNotes] = useState(subStage.content?.notes || '');
 
   const handleSaveNotes = () => {
-    onUpdate(subStage, { content: { ...subStage.content, notes } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        notes: notes 
+      } 
+    });
   };
 
   return (

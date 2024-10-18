@@ -16,7 +16,35 @@ interface SubStage {
   name: string;
   enabled: boolean;
   starred: boolean;
-  content: any;
+  content?: any;
+  // content?: {
+  //   videoDetails?: {
+  //     title: string;
+  //     description: string;
+  //     tags: string;
+  //     category: string;
+  //     commentsEnabled: boolean;
+  //   };
+  //   thumbnailUrl?: string;
+  //   publishingSchedule?: {
+  //     publishDate: string;
+  //     notifySubscribers: boolean;
+  //     isPremiere: boolean;
+  //   };
+  //   subtitles?: Array<{ language: string; url: string }>;
+  //   platforms?: {
+  //     Youtube: boolean;
+  //     X: boolean;
+  //     Instagram: boolean;
+  //     LinkedIn: boolean;
+  //     Facebook: boolean;
+  //   };
+  //   monetization?: {
+  //     adsEnabled: boolean;
+  //     sponsorship: string;
+  //     membershipOnly: boolean;
+  //   };
+  // };
 }
 interface Platforms {
   Youtube: boolean;
@@ -26,11 +54,23 @@ interface Platforms {
   Facebook: boolean;
 }
 
+interface Project {
+  id: number;
+  title: string;
+  description: string | null;
+  teamId: number;
+}
+
 interface MainStage {
   id: number;
   name: string;
   starred: boolean;
   subStages: SubStage[];
+}
+
+interface SubComponentProps {
+  subStage: SubStage;
+  onUpdate: (subStage: SubStage, updates: Partial<SubStage>) => Promise<void>;
 }
 
 interface PublishingProps {
@@ -68,7 +108,10 @@ export default function Publishing({ project, mainStage }: PublishingProps) {
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        ...updates,
+        name: updates.name,
+        enabled: updates.enabled,
+        starred: updates.starred,
+        content: updates.content,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
@@ -212,7 +255,13 @@ const VideoDetailsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate
   };
 
   const handleSave = () => {
-    onUpdate(subStage, { content: details });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        videoDetails: details 
+      } 
+    });
+    
   };
 
   return (
@@ -260,8 +309,14 @@ const VideoDetailsComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate
 };
 
 const ThumbnailsComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
+  const [thumbnailUrl, setThumbnailUrl] = useState(subStage.content?.thumbnailUrl || '');
   const handleUploadThumbnail = (fileUrl: string) => {
-    onUpdate(subStage, { content: { ...subStage.content, thumbnailUrl: fileUrl } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        thumbnailUrl: fileUrl 
+      } 
+    });
   };
 
   return (
@@ -282,11 +337,7 @@ const ThumbnailsComponent: React.FC<SubComponentProps & { projectId: number }> =
 };
 
 const PublishingScheduleComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
-  const [schedule, setSchedule] = useState<{
-    publishDate: string;
-    notifySubscribers: boolean;
-    isPremiere: boolean;
-  }>(subStage.content || {
+  const [schedule, setSchedule] = useState(subStage.content?.publishingSchedule || {
     publishDate: '',
     notifySubscribers: true,
     isPremiere: false,
@@ -302,7 +353,12 @@ const PublishingScheduleComponent: React.FC<SubComponentProps> = ({ subStage, on
   };
 
   const handleSave = () => {
-    onUpdate(subStage, { content: schedule });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        publishingSchedule: schedule 
+      } 
+    });
   };
 
   return (
@@ -335,7 +391,7 @@ const PublishingScheduleComponent: React.FC<SubComponentProps> = ({ subStage, on
 };
 
 const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
-  const [subtitles, setSubtitles] = useState<Array<{ language: string; url: string }>>(subStage.content?.subtitles || []);
+  const [subtitles, setSubtitles] = useState(subStage.content?.subtitles || []);
   const [newSubtitle, setNewSubtitle] = useState({ language: '', file: null as File | null });
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -354,7 +410,12 @@ const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate })
       const fakeUrl = URL.createObjectURL(newSubtitle.file);
       const updatedSubtitles = [...subtitles, { language: newSubtitle.language, url: fakeUrl }];
       setSubtitles(updatedSubtitles);
-      onUpdate(subStage, { content: { ...subStage.content, subtitles: updatedSubtitles } });
+      onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          subtitles: updatedSubtitles 
+        } 
+      });
       setNewSubtitle({ language: '', file: null });
     }
   };
@@ -409,7 +470,7 @@ const SubtitlesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate })
 };
 
 const CrossPlatformSharingComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
-  const [platforms, setPlatforms] = useState<Platforms>(subStage.content?.platforms || {
+  const [platforms, setPlatforms] = useState(subStage.content?.platforms || {
     Youtube: false,
     X: false,
     Instagram: false,
@@ -420,7 +481,12 @@ const CrossPlatformSharingComponent: React.FC<SubComponentProps> = ({ subStage, 
   const handleTogglePlatform = (platform: keyof Platforms) => {
     const updatedPlatforms = { ...platforms, [platform]: !platforms[platform] };
     setPlatforms(updatedPlatforms);
-    onUpdate(subStage, { content: { ...subStage.content, platforms: updatedPlatforms } });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        platforms: updatedPlatforms 
+      } 
+    });
   };
 
   const platformIcons = {
@@ -451,7 +517,7 @@ const CrossPlatformSharingComponent: React.FC<SubComponentProps> = ({ subStage, 
 };
 
 const MonetizationComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }) => {
-  const [monetization, setMonetization] = useState(subStage.content || {
+  const [monetization, setMonetization] = useState(subStage.content?.monetization || {
     adsEnabled: false,
     sponsorship: '',
     membershipOnly: false,
@@ -460,14 +526,24 @@ const MonetizationComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate
   const handleSwitchChange = (name: string) => (checked: boolean) => {
     const updatedMonetization = { ...monetization, [name]: checked };
     setMonetization(updatedMonetization);
-    onUpdate(subStage, { content: updatedMonetization });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        monetization: updatedMonetization 
+      } 
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const updatedMonetization = { ...monetization, [name]: value };
     setMonetization(updatedMonetization);
-    onUpdate(subStage, { content: updatedMonetization });
+    onUpdate(subStage, { 
+      content: { 
+        ...subStage.content, 
+        monetization: updatedMonetization 
+      } 
+    });
   };
 
   return (

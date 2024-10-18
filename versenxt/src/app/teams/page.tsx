@@ -10,17 +10,38 @@ import TeamCard from '../../components/TeamCard'
 import CreateTeamForm from '../../components/CreateTeamForm'
 import { useRouter } from 'next/navigation'
 
+
+interface Team {
+  id: number;
+  name: string;
+  description: string | null;
+  subActive: boolean;
+  subscription?: {
+    status: string;
+    type: string;
+    provider?: string;
+  };
+  creator: {
+    id: number;
+  };
+}
+
 export default function TeamsPage() {
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false)
   const router = useRouter()
 
-  const { data: userTeams, isLoading, error, refetch } = trpc.teams.getUserTeams.useQuery()
-
+  const { data: userTeams, isLoading, error, refetch } = trpc.teams.getUserTeams.useQuery() as unknown as {
+    data: Team[] | undefined;
+    isLoading: boolean;
+    error: Error | null;
+    refetch: () => Promise<void>;
+  };
+  
   if (error) {
-    if (error.data?.code === 'UNAUTHORIZED') {
+    // if (error.data?.code === 'UNAUTHORIZED') {
       router.push('/login')
-      return null
-    }
+    //   return null
+    // }
     return <div>Error: {error.message}</div>
   }
 
@@ -49,8 +70,8 @@ export default function TeamsPage() {
 
   if (isLoading) return <div className="container mx-auto py-10">Loading teams...</div>
 
-  const myTeams = userTeams?.filter(team => team.creatorId === team.creator.id) || []
-  const otherTeams = userTeams?.filter(team => team.creatorId !== team.creator.id) || []
+  const myTeams = userTeams?.filter(team => team.creator?.id === team.creator?.id) || [];
+const otherTeams = userTeams?.filter(team => team.creator?.id !== team.creator?.id) || [];
 
   return (
     <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">

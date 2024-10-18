@@ -24,19 +24,31 @@ interface Task {
   teamId: number;
   assigneeId: number | null;
   creatorId: number;
+  createdAt: string;
+  updatedAt: string;
   project: { id: number; title: string } | null;
   mainStage: { id: number; name: string } | null;
   subStage: { id: number; name: string } | null;
   assignee: { id: number; user: { name: string } } | null;
   creator: { id: number; user: { name: string } };
+  team?: {
+    description?: string | null;
+    name?: string;
+    id?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    workOsOrgId?: string;
+    creatorId?: number;
+    subActive?: boolean;
+  };
 }
 
 interface Project {
-  id: number ;
+  id: number;
   title: string;
   mainStages: MainStage[];
-  
-  // ... other properties
+  tasks?: Task[];
+  // Add other properties that are definitely present in your project data
 }
 
 interface SubStage {
@@ -89,8 +101,7 @@ export default function TaskList() {
   const { data: user } = trpc.users.getUser.useQuery();
   const { data: userTeams } = trpc.users.getUserTeams.useQuery();
   const { data: teamMembers } = trpc.teams.listTeamMembers.useQuery(selectedTeamId || -1, { enabled: !!selectedTeamId });
-  const { data: projects } = trpc.projects.getByTeamId.useQuery(selectedTeamId || -1, { enabled: !!selectedTeamId });
-
+  const { data: projects } = trpc.projects.getByTeamId.useQuery(selectedTeamId || -1, { enabled: !!selectedTeamId }) as { data: Project[] | undefined };
   const { data: fetchedTasks, refetch: refetchTasks } = trpc.tasks.getTasksForUser.useQuery({ filter }, { enabled: !!user });
 
   const createTaskMutation = trpc.tasks.create.useMutation({ onSuccess: () => refetchTasks() });
@@ -105,7 +116,7 @@ export default function TaskList() {
 
   useEffect(() => {
     if (fetchedTasks) {
-      setTasks(fetchedTasks);
+      setTasks(fetchedTasks as Task[]);
     }
   }, [fetchedTasks]);
 
@@ -181,20 +192,21 @@ export default function TaskList() {
     return new Date(dateString).toLocaleDateString();
   };
   const renderSubStageOptions = (editingTask: Task, projects: Project[] | undefined) => {
-  const project = projects?.find(p => p.id === editingTask.projectId);
-  if (!project) return null;
+    if (!projects) return null;
+    const project = projects.find(p => p.id === editingTask.projectId);
+    if (!project || !project.mainStages) return null;
+    
+    const mainStage = project.mainStages.find(s => s.id === editingTask.mainStageId);
+    if (!mainStage || !mainStage.subStages) return null;
   
-  const mainStage = project.mainStages.find(s => s.id === editingTask.mainStageId);
-  if (!mainStage) return null;
-
-  return mainStage.subStages.map((subStage) => (
-    <SelectItem key={subStage.id} value={subStage.id.toString()}>
-      {subStage.name}
-    </SelectItem>
-  ));
-};
+    return mainStage.subStages.map((subStage) => (
+      <SelectItem key={subStage.id} value={subStage.id.toString()}>
+        {subStage.name}
+      </SelectItem>
+    ));
+  };
 const renderMainStageOptions = (project: Project | undefined) => {
-  if (!project) return null;
+  if (!project || !project.mainStages) return null;
   return project.mainStages.map((stage) => (
     <SelectItem key={stage.id} value={stage.id.toString()}>
       {stage.name}
@@ -491,31 +503,32 @@ return (
                   </SelectContent>
                 </Select>
                 {editingTask.projectId && (
-                   <Select
-                   value={newTask.mainStageId?.toString() || ''}
-                   onValueChange={(value) => setNewTask({ ...newTask, mainStageId: Number(value), subStageId: null })}
-                 >
-                   <SelectTrigger>
-                     <SelectValue placeholder="Select Main Stage" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     {renderMainStageOptions(projects?.find(p => p.id === newTask.projectId))}
-                   </SelectContent>
-                 </Select>
-                )}
-                {editingTask.projectId && editingTask.mainStageId && (
-                  <Select
-                    value={editingTask.subStageId?.toString() || ''}
-                    onValueChange={(value) => setEditingTask({ ...editingTask, subStageId: Number(value) })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Sub Stage" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {renderSubStageOptions(editingTask, projects)}
-                    </SelectContent>
-                  </Select>
-                )}
+  <Select
+    value={editingTask.mainStageId?.toString() || ''}
+    onValueChange={(value) => setEditingTask({ ...editingTask, mainStageId: Number(value), subStageId: null })}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select Main Stage" />
+    </SelectTrigger>
+    <SelectContent>
+      {renderMainStageOptions(projects?.find(p => p.id === editingTask.projectId))}
+    </SelectContent>
+  </Select>
+)}
+
+{editingTask.projectId && editingTask.mainStageId && (
+  <Select
+    value={editingTask.subStageId?.toString() || ''}
+    onValueChange={(value) => setEditingTask({ ...editingTask, subStageId: Number(value) })}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select Sub Stage" />
+    </SelectTrigger>
+    <SelectContent>
+      {renderSubStageOptions(editingTask, projects)}
+    </SelectContent>
+  </Select>
+)}
                 <Select
                   value={editingTask.assigneeId?.toString() || ''}
                   onValueChange={(value) => setEditingTask({ ...editingTask, assigneeId: Number(value) })}

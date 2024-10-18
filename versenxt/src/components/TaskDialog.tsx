@@ -37,7 +37,7 @@ export function TaskDialog({ isOpen, onClose, projectId, teamId, mainStageId, su
       status,
       priority,
       dueDate: dueDate || null,
-      projectId,
+      projectId: projectId || null,
       teamId,
       mainStageId: mainStageId || undefined,
       subStageId: subStageId || undefined,

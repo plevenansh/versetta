@@ -124,10 +124,35 @@
        return updatedSubStage;
      }),
 
-     
+     getMainStages: protectedProcedure
+     .input(z.number())
+     .query(async ({ input }) => {
+       const mainStages = await prisma.mainStage.findMany({
+         where: { projectId: input },
+         include: {
+           subStages: {
+             select: { id: true, name: true }
+           }
+         }
+       });
+       return mainStages;
+     }),
+   
+   getSubStages: protectedProcedure
+     .input(z.number())
+     .query(async ({ input }) => {
+       const subStages = await prisma.subStage.findMany({
+         where: { projectId: input },
+         select: { id: true, name: true }
+       });
+       return subStages;
+     }),    
  
    // Add other project page specific procedures here
  });
+ 
+
+
  
  export default projectPageRouter;
 

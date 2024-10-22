@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -6,7 +6,7 @@ import { Edit3, Video, Users, Activity, Star } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import { Progress } from "../ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { CommentSection } from '../CommentSection'; // Import the CommentSection component
 
 interface SubStage {
   id: number;
@@ -152,28 +152,16 @@ export default function Overview({ project }: OverviewProps) {
         </CardContent>
       </Card>
 
+      {/* Project-wide Comment Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Comments</CardTitle>
+          <CardTitle>Project Comments</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[
-              { name: 'John Doe', comment: 'Great progress on the editing!', time: '2 hours ago' },
-              { name: 'Jane Smith', comment: 'Let\'s review the script one more time.', time: '1 day ago' },
-            ].map((comment, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <Avatar>
-                  <AvatarFallback>{comment.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{comment.name}</p>
-                  <p>{comment.comment}</p>
-                  <p className="text-sm text-gray-500">{comment.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <CommentSection
+            projectId={project.id}
+            contextName={project.title}
+          />
         </CardContent>
       </Card>
     </div>

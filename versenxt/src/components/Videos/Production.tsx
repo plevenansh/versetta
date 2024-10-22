@@ -10,6 +10,8 @@ import { Plus, X, Star, Save } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import { Badge } from "../ui/badge";
 import { TaskDialog } from '../TaskDialog';
+import { CommentSection } from '../CommentSection';
+
 
 interface SubStage {
   id: number;
@@ -156,25 +158,34 @@ export default function Production({ project, mainStage }: ProductionProps) {
   const shotList = localSubStages.find(s => s.name.toLowerCase() === 'shot list');
   const productionNotes = localSubStages.find(s => s.name.toLowerCase() === 'production notes');
 
-  return (
-    <div className="space-y-6">
-      {filmingSchedule && renderSubStage(filmingSchedule)}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {bRoll && renderSubStage(bRoll)}
-        {shotList && renderSubStage(shotList)}
+   return (
+    <div className="flex">
+      <div className="w-3/4 pr-4 space-y-6">
+        {filmingSchedule && renderSubStage(filmingSchedule)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {bRoll && renderSubStage(bRoll)}
+          {shotList && renderSubStage(shotList)}
+        </div>
+        {productionNotes && renderSubStage(productionNotes)}
+        <TaskDialog
+          isOpen={isTaskDialogOpen}
+          onClose={() => {
+            setIsTaskDialogOpen(false);
+            setSelectedStageForTask(null);
+          }}
+          projectId={project.id}
+          teamId={project.teamId}
+          mainStageId={selectedStageForTask?.mainStageId}
+          subStageId={selectedStageForTask?.subStageId}
+        />
       </div>
-      {productionNotes && renderSubStage(productionNotes)}
-      <TaskDialog
-        isOpen={isTaskDialogOpen}
-        onClose={() => {
-          setIsTaskDialogOpen(false);
-          setSelectedStageForTask(null);
-        }}
-        projectId={project.id}
-        teamId={project.teamId}
-        mainStageId={selectedStageForTask?.mainStageId}
-        subStageId={selectedStageForTask?.subStageId}
-      />
+      <div className="w-1/4">
+        <CommentSection
+          projectId={project.id}
+          mainStageId={mainStage.id}
+          contextName={`${project.title} - ${mainStage.name}`}
+        />
+      </div>
     </div>
   );
 }

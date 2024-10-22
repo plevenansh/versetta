@@ -13,6 +13,7 @@ import { FileList } from '../FileList';
 import { FileUploader } from '../FileUploader';
 import { FileViewer } from '../FileViewer';
 import { TaskDialog } from '../TaskDialog';
+import { CommentSection } from '../CommentSection';
 interface SubStage {
   id: number;
   name: string;
@@ -140,7 +141,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
                   size="sm"
                   onClick={() => handleUpdateSubStage(subStage, { starred: !subStage.starred })}
                 >
-                  <Star className={`h-4 w-4 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
+                  <Star className={`h-5 w-5 ${subStage.starred ? 'fill-yellow-400' : ''}`} />
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, subStage.id)}>
                   <Plus className="h-4 w-4 mr-2" /> Add Task
@@ -164,6 +165,7 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
         return null;
     }
   };
+
 
   const renderKeyPointsAndResearch = () => {
     const keyPoints = localSubStages.find(s => s.name === 'Key Points');
@@ -249,8 +251,9 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
     );
   };
 
-  return (
-    <div className="space-y-6">
+    return (
+      <div className="flex">
+      <div className="w-7/10 pr-4">
       {renderSubStage(localSubStages.find(s => s.name === 'Concept')!)}
       {renderKeyPointsAndResearch()}
       {renderInspirationBoard()}
@@ -265,7 +268,16 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
         mainStageId={selectedStageForTask?.mainStageId}
         subStageId={selectedStageForTask?.subStageId}
       />
+         </div>
+         <div className="w-3/10">
+        <CommentSection
+          projectId={project.id}
+          mainStageId={mainStage.id}
+          contextName={`${project.title} - ${mainStage.name}`}
+        />
+      </div>
     </div>
+
   );
 }
 

@@ -10,7 +10,7 @@ import { FileUploader } from '../FileUploader';
 import { FileList } from '../FileList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { TaskDialog } from '../TaskDialog';
-
+import { CommentSection } from '../CommentSection';
 interface SubStage {
   id: number;
   name: string;
@@ -203,7 +203,9 @@ export default function Publishing({ project, mainStage }: PublishingProps) {
   );
 
   return (
-    <div className="space-y-6">
+   // <div className="space-y-6">
+            <div className="flex">
+            <div className="w-2/3 pr-4">
       {renderVideoDetails(localSubStages.find(s => s.name === 'Video Details')!)}
       {renderThumbnails(localSubStages.find(s => s.name === 'Thumbnails')!)}
       {renderPublishingSchedule(localSubStages.find(s => s.name === 'Publishing Schedule')!)}
@@ -221,7 +223,16 @@ export default function Publishing({ project, mainStage }: PublishingProps) {
         mainStageId={selectedStageForTask?.mainStageId}
         subStageId={selectedStageForTask?.subStageId}
       />
-    </div>
+      </div>
+      <div className="w-1/3">
+        <CommentSection
+          projectId={project.id}
+          mainStageId={mainStage.id}
+          contextName={`${project.title} - ${mainStage.name}`}
+        />
+      </div>
+      </div>
+    //</div>
   );
 }
 

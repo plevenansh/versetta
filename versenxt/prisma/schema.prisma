@@ -20,6 +20,7 @@ model User {
   createdTeams    Team[]        @relation("TeamCreator")
   subscriptions   Subscription[]
   commentAnalyses CommentAnalysis[]
+  
 
   @@map("users")
 }
@@ -58,7 +59,9 @@ model TeamMember {
   createdStorage Storage[] @relation("StorageCreator")
   team               Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user               User      @relation(fields: [userId], references: [id])
-
+  mentions        CommentMention[]
+   comments        Comment[]
+   
   @@unique([userId, teamId])
   @@index([userId])
   @@index([teamId])
@@ -106,6 +109,7 @@ model Project {
   subStages       SubStage[]
   tasks           Task[]
   storage         Storage[]
+  comments        Comment[]
 
   @@index([teamId])
   @@index([creatorId])
@@ -119,6 +123,7 @@ model MainStage {
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   subStages   SubStage[]
   tasks       Task[]
+  comments    Comment[]
 
   @@unique([projectId, name])
   @@index([projectId])
@@ -135,7 +140,8 @@ model SubStage {
   mainStage   MainStage @relation(fields: [mainStageId], references: [id])
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks       Task[]
-  storage Storage[]
+  storage     Storage[]
+  comments    Comment[]
   
   @@index([mainStageId])
   @@index([projectId]) // Add this line
@@ -231,4 +237,41 @@ model CommentAnalysis {
   createdAt       DateTime @default(now())
 
   @@index([userId])
+}
+
+model Comment {
+  id           Int       @id @default(autoincrement())
+  content      String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projectId    Int
+  project      Project   @relation(fields: [projectId], references: [id])
+  authorId     Int
+  author       TeamMember @relation(fields: [authorId], references: [id])
+  parentId     Int?
+  parent       Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies      Comment[] @relation("CommentReplies")
+  mentions     CommentMention[]
+  mainStageId  Int?
+  mainStage    MainStage? @relation(fields: [mainStageId], references: [id])
+  subStageId   Int?
+  subStage     SubStage?  @relation(fields: [subStageId], references: [id])
+
+  @@index([projectId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([mainStageId])
+  @@index([subStageId])
+}
+
+
+model CommentMention {
+  id           Int       @id @default(autoincrement())
+  commentId    Int
+  comment      Comment   @relation(fields: [commentId], references: [id])
+  teamMemberId Int
+  teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+
+  @@index([commentId])
+  @@index([teamMemberId])
 }

@@ -7,6 +7,7 @@ import { projectPageRouter } from './routers/projectPage';
 import { teamRouter } from './routers/teams';
 import { youtubeRouter } from './routers/youtube';
 import { storageRouter } from './routers/storage';
+import {commentRouter} from './routers/comments';
 
 export const appRouter = router({
   users: userRouter,
@@ -16,6 +17,8 @@ export const appRouter = router({
   youtube: youtubeRouter,
   projectPage: projectPageRouter,
   storage: storageRouter,
+  comments: commentRouter,
+
 });
 
 export type AppRouter = typeof appRouter;

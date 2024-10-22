@@ -13,6 +13,7 @@ import { FileList } from '../FileList';
 import { FileUploader } from '../FileUploader';
 import { FileViewer } from '../FileViewer';
 import { TaskDialog } from '../TaskDialog';
+import { CommentSection } from '../CommentSection';
 
 interface SubStage {
   id: number;
@@ -149,6 +150,8 @@ export default function PreProduction({ project, mainStage }: PreProductionProps
 
   return (
     <div className="space-y-6">
+      <div className="flex">
+      <div className="w-2/3 pr-4">
       {renderSubStage(localSubStages.find(s => s.name === 'Script')!)}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {renderSubStage(localSubStages.find(s => s.name === 'Keyword Research')!)}
@@ -166,6 +169,15 @@ export default function PreProduction({ project, mainStage }: PreProductionProps
         mainStageId={selectedStageForTask?.mainStageId}
         subStageId={selectedStageForTask?.subStageId}
       />
+      </div>
+      <div className="w-1/3">
+        <CommentSection
+          projectId={project.id}
+          mainStageId={mainStage.id}
+          contextName={`${project.title} - ${mainStage.name}`}
+        />
+      </div>
+      </div>
     </div>
   );
 }

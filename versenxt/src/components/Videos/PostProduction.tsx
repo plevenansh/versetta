@@ -15,6 +15,7 @@ import { Progress } from "../ui/progress";
 import { Badge } from "../ui/badge";
 import { TaskDialog } from '../TaskDialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { CommentSection } from '../CommentSection';
 
 interface SubStage {
   id: number;
@@ -111,7 +112,8 @@ export default function PostProduction({ project, mainStage }: PostProductionPro
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex">
+      <div className="w-6/10 pr-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {renderEditingProgress(localSubStages.find(s => s.name === 'Editing Progress')!)}
         {renderThumbnailCreator(localSubStages.find(s => s.name === 'Thumbnail Creator')!)}
@@ -133,6 +135,14 @@ export default function PostProduction({ project, mainStage }: PostProductionPro
         mainStageId={selectedStageForTask?.mainStageId}
         subStageId={selectedStageForTask?.subStageId}
       />
+      </div>
+      <div className="w-4/10">
+        <CommentSection
+          projectId={project.id}
+          mainStageId={mainStage.id}
+          contextName={`${project.title} - ${mainStage.name}`}
+        />
+      </div>
     </div>
   );
 

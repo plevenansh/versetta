@@ -1,63 +1,110 @@
 
-import React, { useState } from 'react';
+// components/FileList.tsx
+import React, { useState, useMemo } from 'react';
 import { trpc } from '../utils/trpc';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { FileViewer } from './FileViewer';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Skeleton } from './ui/skeleton';
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "./ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "./ui/dropdown-menu";
+import {Eye, Download, Trash2, MoreVertical, Image as ImageIcon, FileText, Video, File, Grid, List,SortAsc,SortDesc,} from 'lucide-react';
 import Image from 'next/image';
+import { formatFileSize, formatDate } from '../lib/utils';
 
 interface FileListProps {
   teamId: number;
   projectId?: number;
   subStageId?: number;
-  
+  view?: 'grid' | 'list';
+  onFileSelect?: (fileId: number) => void;
+  className?: string;
 }
 
-interface File {
+interface FileType {
   id: number;
   name: string;
   contentType: string | null;
+  size: number | null;
+  createdAt: string;
   sasUrl: string;
+  type: string;
+  creator: {
+    user: {
+      name: string;
+    };
+  };
 }
 
+export function FileList({ 
+  teamId, 
+  projectId, 
+  subStageId, 
+  view: initialView = 'grid',
+  onFileSelect,
+  className 
+}: FileListProps) {
+  const [view, setView] = useState<'grid' | 'list'>(initialView);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [fileType, setFileType] = useState<string>('all');
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
 
-export function FileList({ teamId, projectId, subStageId }: FileListProps) {
-  const { data: files, isLoading, error, refetch } = trpc.storage.listFiles.useQuery({ teamId, projectId, subStageId });
+  const { data: files, isLoading, error, refetch } = trpc.storage.listFiles.useQuery({
+    teamId,
+    projectId,
+    subStageId,
+    search,
+    sortBy: sortBy as any,
+    sortOrder,
+    type: fileType !== 'all' ? fileType as any : undefined,
+  });
+
   const getViewUrlMutation = trpc.storage.getViewUrl.useMutation();
   const getDownloadUrlMutation = trpc.storage.getDownloadUrl.useMutation();
   const deleteFileMutation = trpc.storage.deleteFile.useMutation({
     onSuccess: () => refetch()
   });
 
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
-
-
-  
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  const filteredFiles = useMemo(() => {
+    if (!files?.files) return [];
+    return files.files.filter(file => 
+      file.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [files, search]);
 
   const handleView = async (fileId: number, fileName: string, contentType: string | null) => {
     try {
       const result = await getViewUrlMutation.mutateAsync(fileId);
       if (result.sasUrl) {
-        setViewerFile({ url: result.sasUrl, name: fileName, contentType: contentType || 'application/octet-stream' });
+        setViewerFile({ 
+          url: result.sasUrl, 
+          name: fileName, 
+          contentType: contentType || 'application/octet-stream' 
+        });
         setViewerOpen(true);
       }
     } catch (error) {
       console.error('Error viewing file:', error);
-      alert('Failed to view file. Please try again.');
     }
   };
 
   const handleDownload = async (fileId: number) => {
     try {
-      const result = await getDownloadUrlMutation.mutateAsync(fileId);
+      const result = await getDownloadUrlMutation.mutateAsync({
+        fileId,
+        disposition: 'attachment'
+      });
       if (result.sasUrl) {
         window.open(result.sasUrl, '_blank');
       }
     } catch (error) {
       console.error('Error downloading file:', error);
-      alert('Failed to download file. Please try again.');
     }
   };
 
@@ -67,47 +114,190 @@ export function FileList({ teamId, projectId, subStageId }: FileListProps) {
         await deleteFileMutation.mutateAsync(fileId);
       } catch (error) {
         console.error('Error deleting file:', error);
-        alert('Failed to delete file. Please try again.');
       }
     }
   };
 
-  const isImageFile = (contentType: string | null): boolean => {
-    return contentType?.startsWith('image/') || false;
+  const getFileIcon = (contentType: string | null) => {
+    if (!contentType) return <File className="h-6 w-6" />;
+    if (contentType.startsWith('image/')) return <ImageIcon className="h-6 w-6" />;
+    if (contentType.startsWith('video/')) return <Video className="h-6 w-6" />;
+    if (contentType === 'application/pdf') return <FileText className="h-6 w-6" />;
+    return <File className="h-6 w-6" />;
   };
 
-  return (
+  if (error) return <div className="text-red-500">Error: {error.message}</div>;
+
+  const renderGridView = () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {files?.map((file) => (
-        <div key={file.id} className="relative group">
-          {isImageFile(file.contentType) ? (
-            <Image 
-              src={file.sasUrl} 
-              alt={file.name} 
-              width={200} 
-              height={150} 
-              layout="responsive"
-              objectFit="cover"
-              className="rounded"
-            />
-          ) : (
-            <div className="w-full h-[150px] bg-gray-200 flex items-center justify-center rounded">
-              <span className="text-gray-500">{file.name}</span>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button onClick={() => handleView(file.id, file.name, file.contentType)} variant="secondary" size="sm" className="mr-2">
-              View
-            </Button>
-            <Button onClick={() => handleDownload(file.id)} variant="secondary" size="sm" className="mr-2">
-              Download
-            </Button>
-            <Button onClick={() => handleDelete(file.id)} variant="destructive" size="sm">
-              Delete
-            </Button>
-          </div>
+      {isLoading ? (
+        Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-[200px] rounded-lg" />
+        ))
+      ) : (
+        filteredFiles.map((file: FileType) => (
+          <Card key={file.id} className="group relative overflow-hidden">
+            <CardContent className="p-0">
+              {file.contentType?.startsWith('image/') ? (
+                <div className="aspect-square relative">
+                  <Image
+                    src={file.sasUrl}
+                    alt={file.name}
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-t-lg"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                  {getFileIcon(file.contentType)}
+                </div>
+              )}
+              <div className="p-3">
+                <p className="font-medium truncate">{file.name}</p>
+                <p className="text-sm text-gray-500">{formatFileSize(file.size || 0)}</p>
+              </div>
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleView(file.id, file.name, file.contentType)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleDownload(file.id)}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(file.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+
+  const renderListView = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Size</TableHead>
+          <TableHead>Created</TableHead>
+          <TableHead>Created By</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+            </TableRow>
+          ))
+        ) : (
+          filteredFiles.map((file: FileType) => (
+            <TableRow key={file.id}>
+              <TableCell className="font-medium">
+                <div className="flex items-center space-x-2">
+                  {getFileIcon(file.contentType)}
+                  <span>{file.name}</span>
+                </div>
+              </TableCell>
+              <TableCell>{file.type}</TableCell>
+              <TableCell>{formatFileSize(file.size || 0)}</TableCell>
+              <TableCell>{formatDate(file.createdAt)}</TableCell>
+              <TableCell>{file.creator.user.name}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleView(file.id, file.name, file.contentType)}>
+                      <Eye className="h-4 w-4 mr-2" /> View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDownload(file.id)}>
+                      <Download className="h-4 w-4 mr-2" /> Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleDelete(file.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+
+  return (
+    <div className={className}>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search files..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      ))}
+        <Select value={fileType} onValueChange={setFileType}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="File type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="THUMBNAIL">Thumbnails</SelectItem>
+            <SelectItem value="RAW_FOOTAGE">Raw Footage</SelectItem>
+            <SelectItem value="FINISHED_VIDEO">Finished Videos</SelectItem>
+            <SelectItem value="PROJECT_ASSET">Project Assets</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setView('grid')}
+            className={view === 'grid' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setView('list')}
+            className={view === 'list' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {view === 'grid' ? renderGridView() : renderListView()}
+
       {viewerFile && (
         <FileViewer
           isOpen={viewerOpen}
@@ -120,4 +310,126 @@ export function FileList({ teamId, projectId, subStageId }: FileListProps) {
     </div>
   );
 }
+
+// import React, { useState } from 'react';
+// import { trpc } from '../utils/trpc';
+// import { Button } from './ui/button';
+// import { FileViewer } from './FileViewer';
+// import Image from 'next/image';
+
+// interface FileListProps {
+//   teamId: number;
+//   projectId?: number;
+//   subStageId?: number;
+  
+// }
+
+// interface File {
+//   id: number;
+//   name: string;
+//   contentType: string | null;
+//   sasUrl: string;
+// }
+
+
+// export function FileList({ teamId, projectId, subStageId }: FileListProps) {
+//   const { data: files, isLoading, error, refetch } = trpc.storage.listFiles.useQuery({ teamId, projectId, subStageId });
+//   const getViewUrlMutation = trpc.storage.getViewUrl.useMutation();
+//   const getDownloadUrlMutation = trpc.storage.getDownloadUrl.useMutation();
+//   const deleteFileMutation = trpc.storage.deleteFile.useMutation({
+//     onSuccess: () => refetch()
+//   });
+
+//   const [viewerOpen, setViewerOpen] = useState(false);
+//   const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
+
+
+  
+//   if (isLoading) return <div>Loading...</div>;
+//   if (error) return <div>Error: {error.message}</div>;
+
+//   const handleView = async (fileId: number, fileName: string, contentType: string | null) => {
+//     try {
+//       const result = await getViewUrlMutation.mutateAsync(fileId);
+//       if (result.sasUrl) {
+//         setViewerFile({ url: result.sasUrl, name: fileName, contentType: contentType || 'application/octet-stream' });
+//         setViewerOpen(true);
+//       }
+//     } catch (error) {
+//       console.error('Error viewing file:', error);
+//       alert('Failed to view file. Please try again.');
+//     }
+//   };
+
+//   const handleDownload = async (fileId: number) => {
+//     try {
+//       const result = await getDownloadUrlMutation.mutateAsync(fileId);
+//       if (result.sasUrl) {
+//         window.open(result.sasUrl, '_blank');
+//       }
+//     } catch (error) {
+//       console.error('Error downloading file:', error);
+//       alert('Failed to download file. Please try again.');
+//     }
+//   };
+
+//   const handleDelete = async (fileId: number) => {
+//     if (window.confirm('Are you sure you want to delete this file?')) {
+//       try {
+//         await deleteFileMutation.mutateAsync(fileId);
+//       } catch (error) {
+//         console.error('Error deleting file:', error);
+//         alert('Failed to delete file. Please try again.');
+//       }
+//     }
+//   };
+
+//   const isImageFile = (contentType: string | null): boolean => {
+//     return contentType?.startsWith('image/') || false;
+//   };
+
+//   return (
+//     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+//       {files?.map((file) => (
+//         <div key={file.id} className="relative group">
+//           {isImageFile(file.contentType) ? (
+//             <Image 
+//               src={file.sasUrl} 
+//               alt={file.name} 
+//               width={200} 
+//               height={150} 
+//               layout="responsive"
+//               objectFit="cover"
+//               className="rounded"
+//             />
+//           ) : (
+//             <div className="w-full h-[150px] bg-gray-200 flex items-center justify-center rounded">
+//               <span className="text-gray-500">{file.name}</span>
+//             </div>
+//           )}
+//           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+//             <Button onClick={() => handleView(file.id, file.name, file.contentType)} variant="secondary" size="sm" className="mr-2">
+//               View
+//             </Button>
+//             <Button onClick={() => handleDownload(file.id)} variant="secondary" size="sm" className="mr-2">
+//               Download
+//             </Button>
+//             <Button onClick={() => handleDelete(file.id)} variant="destructive" size="sm">
+//               Delete
+//             </Button>
+//           </div>
+//         </div>
+//       ))}
+//       {viewerFile && (
+//         <FileViewer
+//           isOpen={viewerOpen}
+//           onClose={() => setViewerOpen(false)}
+//           fileUrl={viewerFile.url}
+//           fileName={viewerFile.name}
+//           contentType={viewerFile.contentType}
+//         />
+//       )}
+//     </div>
+//   );
+// }
 

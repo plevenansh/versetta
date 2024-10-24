@@ -207,7 +207,7 @@ listFiles: protectedProcedure
     type: StorageTypeEnum.optional(),
     tags: z.array(z.string()).optional(),
     search: z.string().optional(),
-        sortBy: z.enum(['name', 'createdAt', 'size', 'type', 'starred']).optional(),
+    sortBy: z.enum(['name', 'createdAt', 'size', 'type', 'starred']).optional(),
     sortOrder: z.enum(['asc', 'desc']).optional(),
     page: z.number().optional(),
     pageSize: z.number().optional(),

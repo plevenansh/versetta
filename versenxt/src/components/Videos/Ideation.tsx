@@ -6,21 +6,71 @@ import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { Checkbox } from "../ui/checkbox";
 import { Switch } from "../ui/switch";
-import { Plus, X, Image as ImageIcon, Star, Save } from 'lucide-react';
+import { Plus,Eye,Trash2, X, Image as ImageIcon, Star, Save } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import Image from 'next/image';
-import { FileList } from '../FileList';
+//import { FileList } from '../FileList';
 import { FileUploader } from '../FileUploader';
 import { FileViewer } from '../FileViewer';
 import { TaskDialog } from '../TaskDialog';
 import { CommentSection } from '../CommentSection';
+
+// interface SubStage {
+//   id: number;
+//   name: string;
+//   enabled: boolean;
+//   starred: boolean;
+//   content?: {
+//     inspirations?: Array<{ imageUrl: string; fileId: number }>;
+//   };
+// }
+
+interface StorageFile {
+  id: number;
+  name: string;
+  sasUrl: string;
+  contentType: string | null;
+}
+
+
+interface FileQueryResult {
+  files: StorageFile[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface InspirationBoardProps extends SubComponentProps {
+  projectId: number;
+  teamId: number;
+}
+
+interface SubStageContent {
+  concept?: string;
+  keyPoints?: Array<{ content: string; completed: boolean }>;
+  references?: Array<{ title: string; link: string }>;
+  inspirations?: Array<{ imageUrl: string; fileId: number }>;
+}
+
 interface SubStage {
   id: number;
   name: string;
   enabled: boolean;
   starred: boolean;
-  content: any; // Add this line
+  content?: SubStageContent;
 }
+// Update the query type
+interface FileQueryResult {
+  files: StorageFile[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
+
 
 interface MainStage {
   id: number;
@@ -41,9 +91,15 @@ interface IdeationProps {
 }
 interface FileUploaderProps {
   teamId: number;
-  projectId: number;
-  subStageId: number;
-  onUploadComplete: (fileUrl: string) => void; // Change this line
+  projectId?: number;
+  subStageId?: number;
+  folderId?: number;
+ // type?: StorageType;
+  allowedTypes?: string[];
+  maxSize?: number;
+  multiple?: boolean;
+  onUploadComplete: (fileUrl: string) => void; // Keep as single argument
+  className?: string;
 }
 interface SubComponentProps {
   subStage: SubStage;
@@ -82,14 +138,17 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
       prevStages.map(stage => stage.id === subStage.id ? updatedSubStage : stage)
     );
   
-    if (updates.content) {
-      setConceptText(updates.content.concept || '');
+    if (updates.content?.concept) {
+      setConceptText(updates.content.concept);
     }
   
     try {
       await updateSubStageMutation.mutateAsync({
         id: subStage.id,
-        ...updates,
+        name: updates.name,
+        enabled: updates.enabled,
+        starred: updates.starred,
+        content: updates.content,
       });
     } catch (error) {
       console.error('Error updating sub-stage:', error);
@@ -222,13 +281,13 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
   const renderInspirationBoard = () => {
     const inspirationBoard = localSubStages.find(s => s.name === 'Inspiration Board');
     if (!inspirationBoard) return null;
-
+  
     return (
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>{inspirationBoard.name}</CardTitle>
           <div className="flex items-center space-x-2">
-          <Switch
+            <Switch
               checked={inspirationBoard.enabled}
               onCheckedChange={(enabled) => handleUpdateSubStage(inspirationBoard, { enabled })}
             />
@@ -239,13 +298,22 @@ export default function Ideation({ project, mainStage }: IdeationProps) {
             >
               <Star className={`h-4 w-4 ${inspirationBoard.starred ? 'fill-yellow-400' : ''}`} />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleAddTask(mainStage.id, inspirationBoard.id)}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleAddTask(mainStage.id, inspirationBoard.id)}
+            >
               <Plus className="h-4 w-4 mr-2" /> Add Task
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <InspirationBoardComponent subStage={inspirationBoard} onUpdate={handleUpdateSubStage} projectId={project.id} />
+          <InspirationBoardComponent
+            subStage={inspirationBoard}
+            onUpdate={handleUpdateSubStage}
+            projectId={project.id}
+            teamId={project.teamId}
+          />
         </CardContent>
       </Card>
     );
@@ -402,87 +470,180 @@ const ReferencesComponent: React.FC<SubComponentProps> = ({ subStage, onUpdate }
   );
 };
 
-const InspirationBoardComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
-  const [inspirations, setInspirations] = useState<Array<{ imageUrl: string }>>(subStage.content?.inspirations || []);
+const InspirationBoardComponent: React.FC<InspirationBoardProps> = ({ 
+  subStage, 
+  onUpdate, 
+  projectId,
+  teamId 
+}) => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFile, setViewerFile] = useState<{ url: string; name: string; contentType: string } | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
 
-  const handleAddInspiration = (fileUrl: string) => {
-    const updatedInspirations = [...inspirations, { imageUrl: fileUrl }];
-    setInspirations(updatedInspirations);
-    onUpdate(subStage, { content: { ...subStage.content, inspirations: updatedInspirations } });
+  // Add the query with proper type
+  const { data: fileData, refetch: refetchFiles } = trpc.storage.listFiles.useQuery({
+    teamId,
+    projectId,
+    subStageId: subStage.id,
+    type: 'INSPIRATION'
+  });
+
+  const deleteFileMutation = trpc.storage.deleteFile.useMutation({
+    onSuccess: () => refetchFiles()
+  });
+
+  const getViewUrlMutation = trpc.storage.getViewUrl.useMutation();
+
+  const handleFileUploadComplete = async (fileUrl: string) => {
+    try {
+      await onUpdate(subStage, {
+        content: {
+          ...subStage.content,
+          inspirations: [
+            ...(subStage.content?.inspirations || []),
+            { imageUrl: fileUrl, fileId: Date.now() }
+          ]
+        }
+      });
+      refetchFiles();
+    } catch (error) {
+      console.error('Error handling file upload:', error);
+    }
   };
 
-  const handleDeleteInspiration = (index: number) => {
-    const updatedInspirations = inspirations.filter((_, i) => i !== index);
-    setInspirations(updatedInspirations);
-    onUpdate(subStage, { content: { ...subStage.content, inspirations: updatedInspirations } });
+  const handleDeleteFile = async (fileId: number) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return;
+
+    try {
+      await deleteFileMutation.mutateAsync(fileId);
+      
+      const currentInspirations = subStage.content?.inspirations || [];
+      const updatedInspirations = currentInspirations.filter(insp => insp.fileId !== fileId);
+      
+      await onUpdate(subStage, { 
+        content: { 
+          ...subStage.content, 
+          inspirations: updatedInspirations 
+        } 
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
   };
 
-  const handleViewImage = (imageUrl: string, index: number) => {
-    setViewerFile({ url: imageUrl, name: `Inspiration ${index + 1}`, contentType: 'image/jpeg' });
-    setViewerOpen(true);
+  const handleViewFile = async (file: StorageFile) => {
+    try {
+      const result = await getViewUrlMutation.mutateAsync(file.id);
+      setViewerFile({
+        url: result.sasUrl,
+        name: file.name,
+        contentType: file.contentType || 'image/jpeg'
+      });
+      setViewerOpen(true);
+    } catch (error) {
+      console.error('Error viewing file:', error);
+    }
   };
 
   return (
-    <div>
+    <div className="space-y-4">
+     
+  
+      {/* Grid of Images */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {inspirations.map((inspiration, index) => (
-          <div key={index} className="relative group aspect-square">
-            <Image 
-              src={inspiration.imageUrl} 
-              alt={`Inspiration ${index + 1}`} 
+        {fileData?.files?.map((file: StorageFile) => (
+          <div key={file.id} className="relative group aspect-square">
+            <Image
+              src={file.sasUrl}
+              alt={file.name}
               layout="fill"
               objectFit="cover"
-              className="rounded cursor-pointer"
-              onClick={() => handleViewImage(inspiration.imageUrl, index)}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder-user.jpg'; // Replace with your placeholder image path
+              className="rounded cursor-pointer transition-transform hover:scale-105"
+              onClick={() => handleViewFile(file)}
+            />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewFile(file);
+                }}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteFile(file.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <Checkbox
+              className="absolute top-2 left-2 opacity-0 group-hover:opacity-100"
+              checked={selectedFiles.includes(file.id)}
+              onCheckedChange={(checked: boolean) => {
+                setSelectedFiles(prev => 
+                  checked 
+                    ? [...prev, file.id]
+                    : prev.filter(id => id !== file.id)
+                );
               }}
             />
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => handleDeleteInspiration(index)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         ))}
-        <div 
-          className="aspect-square bg-gray-100 rounded flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
-          onClick={() => document.getElementById('file-upload')?.click()}
-        >
-          <Plus className="h-8 w-8 text-gray-400" />
-          <input 
-            id="file-upload" 
-            type="file" 
-            className="hidden" 
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                // Here you would typically upload the file and get a URL back
-                // For this example, we'll use a fake URL
-                const fakeUrl = URL.createObjectURL(file);
-                handleAddInspiration(fakeUrl);
-              }
-            }}
-          />
-        </div>
       </div>
-      <FileUploader 
-        teamId={projectId} 
-        projectId={projectId} 
+      <FileUploader
+        teamId={teamId}
+        projectId={projectId}
         subStageId={subStage.id}
-        onUploadComplete={handleAddInspiration}
+        type="INSPIRATION"
+        allowedTypes={['image/*']}
+        maxSize={5 * 1024 * 1024}
+        onUploadComplete={handleFileUploadComplete}
+        className="mb-6"
       />
+
+      {selectedFiles.length > 0 && (
+        <div className="fixed bottom-4 right-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 rounded-lg shadow-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">
+              {selectedFiles.length} selected
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (window.confirm('Delete selected files?')) {
+                  selectedFiles.forEach(fileId => handleDeleteFile(fileId));
+                  setSelectedFiles([]);
+                }
+              }}
+            >
+              Delete Selected
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedFiles([])}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {viewerFile && (
         <FileViewer
           isOpen={viewerOpen}
-          onClose={() => setViewerOpen(false)}
+          onClose={() => {
+            setViewerOpen(false);
+            setViewerFile(null);
+          }}
           fileUrl={viewerFile.url}
           fileName={viewerFile.name}
           contentType={viewerFile.contentType}

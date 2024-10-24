@@ -14,7 +14,7 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string): string {
   const d = new Date(date);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
@@ -51,6 +51,8 @@ export function getFileTypeIcon(contentType: string | null): string {
   if (contentType.includes('presentation') || contentType.includes('powerpoint')) return 'presentation';
   return 'file';
 }
+
+
 
 
 // import { type ClassValue, clsx } from "clsx"

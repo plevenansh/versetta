@@ -7,7 +7,7 @@ import { Switch } from "../ui/switch";
 import { Plus, X, Star, Save,Youtube, Twitter, Instagram, Linkedin, Facebook} from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import { FileUploader } from '../FileUploader';
-import { FileList } from '../FileList';
+//import { FileList } from '../FileList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { TaskDialog } from '../TaskDialog';
 import { CommentSection } from '../CommentSection';
@@ -338,11 +338,11 @@ const ThumbnailsComponent: React.FC<SubComponentProps & { projectId: number }> =
         subStageId={subStage.id}
         onUploadComplete={handleUploadThumbnail}
       />
-      <FileList 
+      {/* <FileList 
         teamId={projectId} 
         projectId={projectId} 
         subStageId={subStage.id}
-      />
+      /> */}
     </div>
   );
 };

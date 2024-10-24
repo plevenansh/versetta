@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { trpc } from '../../utils/trpc';
 import { FileUploader } from '../../components/FileUploader';
-import { FileList } from '../../components/FileList';
+// import { FileList } from '../../components/FileList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
 interface Team {
@@ -155,13 +155,13 @@ export default function StoragePage() {
 
       <div>
         <h2 className="text-xl font-semibold mb-2">File List</h2>
-        {selectedTeamId && (
+        {/* {selectedTeamId && (
           <FileList
             teamId={selectedTeamId}
             projectId={selectedProjectId === null ? undefined : selectedProjectId}
             subStageId={selectedSubStageId === null ? undefined : selectedSubStageId}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

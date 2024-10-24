@@ -10,7 +10,7 @@ import { Plus, X, Star, Save, Upload } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import Image from 'next/image';
 import { FileUploader } from '../FileUploader';
-import { FileList } from '../FileList';
+// import { FileList } from '../FileList';
 import { Progress } from "../ui/progress";
 import { Badge } from "../ui/badge";
 import { TaskDialog } from '../TaskDialog';
@@ -337,11 +337,11 @@ const ThumbnailCreatorComponent: React.FC<SubComponentProps & { projectId: numbe
 const VideoFootageComponent: React.FC<SubComponentProps & { projectId: number }> = ({ subStage, onUpdate, projectId }) => {
   return (
     <div>
-      <FileList 
+      {/* <FileList 
         teamId={projectId} 
         projectId={projectId} 
         subStageId={subStage.id}
-      />
+      /> */}
       <FileUploader 
         teamId={projectId} 
         projectId={projectId} 

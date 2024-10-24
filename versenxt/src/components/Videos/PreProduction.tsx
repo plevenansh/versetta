@@ -9,7 +9,7 @@ import { Switch } from "../ui/switch";
 import { Plus, X, Image as ImageIcon, Star, Save } from 'lucide-react';
 import { trpc } from '../../utils/trpc';
 import Image from 'next/image';
-import { FileList } from '../FileList';
+//import { FileList } from '../FileList';
 import { FileUploader } from '../FileUploader';
 import { FileViewer } from '../FileViewer';
 import { TaskDialog } from '../TaskDialog';
@@ -346,11 +346,11 @@ const StoryboardComponent: React.FC<StoryboardComponentProps> = ({ subStage, onU
         subStageId={subStage.id}
         onUploadComplete={handleAddFrame}
       />
-      <FileList 
+      {/* <FileList 
         teamId={projectId} 
         projectId={projectId} 
         subStageId={subStage.id}
-      />
+      /> */}
       {viewerFile && (
         <FileViewer
           isOpen={viewerOpen}

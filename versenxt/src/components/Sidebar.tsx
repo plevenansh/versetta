@@ -1,3 +1,108 @@
+// components/Sidebar.tsx
+// "use client"
+
+// import Link from 'next/link';
+// import { usePathname } from 'next/navigation';
+// import { Home, CircleCheckBig, ChartSpline, CalendarDays, Film, MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, Users } from 'lucide-react';
+// import { Button } from "./ui/button"; import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
+
+// interface MenuItem {
+//   href: string;
+//   icon: React.ElementType;
+//   label: string;
+// }
+
+// export default function AppSidebar() {
+//   const pathname = usePathname();
+//   const isActive = (path: string) => pathname === path;
+
+//   const mainMenuItems: MenuItem[] = [
+//     { href: '/dashboard', icon: Home, label: 'Home' },
+//     { href: '/projects', icon: Folder, label: 'Videos' },
+//     { href: '/tasks', icon: CircleCheckBig, label: 'Tasks' },
+//     { href: '/comments', icon: MessageSquare, label: 'Comments Analyser' },
+//     { href: '/storage', icon: Database, label: 'Storage'},
+//     { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
+//   ];
+
+//   const toolsMenuItems: MenuItem[] = [
+//     { href: '/chat', icon: MessageCircleMore, label: 'Chat' },
+//     { href: '/notes', icon: NotebookPen, label: 'Notes' },
+//     { href: '/thumbnail', icon: GalleryThumbnails, label: 'Thumbnail Lab'},
+//     { href: '/analyzer', icon: ChartSpline, label: 'Analytics' },
+//     { href: '/script', icon: NotepadTextDashed, label: 'Script' },
+//     { href: '/production', icon: Clapperboard, label: 'AI Production' },
+//     { href: '/platform', icon: Tv, label: 'Platforms' },
+//     { href: '/editing', icon: Film, label: 'Editing' },
+//   ];
+
+//   return (
+//     <Sidebar>
+//       <SidebarHeader className="border-b p-4">
+//         {/* Add your logo here if needed */}
+//       </SidebarHeader>
+      
+//       <SidebarContent>
+//         <SidebarGroup>
+//           <SidebarGroupLabel>Main</SidebarGroupLabel>
+//           <SidebarGroupContent>
+//             {mainMenuItems.map((item) => (
+//               <Button
+//                 key={item.href}
+//                 variant="ghost"
+//                 asChild
+//                 className={`w-full justify-start ${
+//                   isActive(item.href) ? 'bg-accent' : ''
+//                 }`}
+//               >
+//                 <Link href={item.href} className="flex items-center gap-3">
+//                   <item.icon className="h-5 w-5" />
+//                   <span>{item.label}</span>
+//                 </Link>
+//               </Button>
+//             ))}
+//           </SidebarGroupContent>
+//         </SidebarGroup>
+
+//         <SidebarGroup>
+//           <SidebarGroupLabel>Tools</SidebarGroupLabel>
+//           <SidebarGroupContent>
+//             {toolsMenuItems.map((item) => (
+//               <Button
+//                 key={item.href}
+//                 variant="ghost"
+//                 asChild
+//                 className={`w-full justify-start ${
+//                   isActive(item.href) ? 'bg-accent' : ''
+//                 }`}
+//               >
+//                 <Link href={item.href} className="flex items-center gap-3">
+//                   <item.icon className="h-5 w-5" />
+//                   <span>{item.label}</span>
+//                 </Link>
+//               </Button>
+//             ))}
+//           </SidebarGroupContent>
+//         </SidebarGroup>
+//       </SidebarContent>
+
+//       <SidebarFooter className="border-t p-4">
+//         <Button
+//           variant="ghost"
+//           asChild
+//           className="w-full justify-start"
+//         >
+//           <Link href="/teams" className="flex items-center gap-3">
+//             <Users className="h-5 w-5" />
+//             <span>Teams</span>
+//           </Link>
+//         </Button>
+//       </SidebarFooter>
+//     </Sidebar>
+//   );
+// }
+
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, SquareCheck,CircleCheckBig, Video,ChartSpline, Brush,PenTool,CalendarDays, Film,MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose, Lock } from 'lucide-react';
@@ -32,7 +137,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     { href: '/notes', icon: NotebookPen, label: 'Notes' , locked: true},
     { href: '/thumbnail', icon: GalleryThumbnails, label: 'Thumbnail Lab',locked: true},
     { href: '/analyzer', icon: ChartSpline, label: 'Analytics', locked: true },
-    { href: '/canvas', icon: Brush, label: 'Canvas', locked: true },
     { href: '/script', icon: NotepadTextDashed, label: 'Script', locked: true },
     { href: '/production', icon: Clapperboard, label: 'AI  Production', locked: true },
     { href: '/platform', icon: Tv, label: 'Platforms' , locked: true},

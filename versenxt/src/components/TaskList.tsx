@@ -11,6 +11,11 @@ import { Trash, FilePen, Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { CalendarIcon, UserIcon } from 'lucide-react';
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { format } from "date-fns";
+import { cn } from "../lib/utils";
+import { DatePicker } from "./DatePicker";
 
 interface Task {
   id: number;
@@ -297,12 +302,19 @@ return (
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              value={newTask.dueDate}
-              onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-              placeholder="Due Date"
-            />
+            <div className="space-y-2">
+  <label className="text-sm font-medium">Due Date</label>
+  <DatePicker
+    date={newTask.dueDate ? new Date(newTask.dueDate) : undefined}
+    onSelect={(date) => 
+      setNewTask({ 
+        ...newTask, 
+        dueDate: date ? date.toISOString().split('T')[0] : '' 
+      })
+    }
+    placeholder="Select due date"
+  />
+</div>
             <Select
               value={newTask.projectId?.toString() || ''}
               onValueChange={(value) => setNewTask({ ...newTask, projectId: Number(value), mainStageId: null, subStageId: null })}
@@ -482,12 +494,19 @@ return (
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  type="date"
-                  value={editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setEditingTask({ ...editingTask, dueDate: e.target.value })}
-                  placeholder="Due Date"
-                />
+                <div className="space-y-2">
+  <label className="text-sm font-medium">Due Date</label>
+  <DatePicker
+    date={editingTask.dueDate ? new Date(editingTask.dueDate) : undefined}
+    onSelect={(date) => 
+      setEditingTask({ 
+        ...editingTask, 
+        dueDate: date ? date.toISOString().split('T')[0] : null 
+      })
+    }
+    placeholder="Select due date"
+  />
+</div>
                 <Select
                   value={editingTask.projectId?.toString() || ''}
                   onValueChange={(value) => setEditingTask({ ...editingTask, projectId: Number(value), mainStageId: null, subStageId: null })}

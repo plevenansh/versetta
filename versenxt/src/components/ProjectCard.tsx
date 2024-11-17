@@ -1,14 +1,71 @@
-
 // components/ProjectCard.tsx
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+"use client"
+
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "./ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
+  Calendar,
+  Clock,
+  MoreVertical,
+  Users,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronRight,
+  Star,
+  Edit,
+  Trash2,
+} from 'lucide-react';
 import { trpc } from '../utils/trpc';
-import { Trash2, Edit2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { EditProjectModal } from './EditProjectModal';
 import Link from 'next/link';
+import { formatDistanceToNow, isAfter } from 'date-fns';
+import { EditProjectModal } from './EditProjectModal';
 import { slugify } from '../utils/slugify';
+
+interface MainStage {
+  id: number;
+  name: string;
+  starred: boolean;
+  subStages: SubStage[];
+}
+
+interface SubStage {
+  id: number;
+  name: string;
+  enabled: boolean;
+  starred: boolean;
+  content: any;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  assignee?: {
+    user: {
+      name: string;
+    }
+  };
+}
+
 interface Project {
   id: number;
   title: string;
@@ -37,53 +94,41 @@ interface Project {
   tasks: Task[];
 }
 
-interface MainStage {
-  id: number;
-  name: string;
-  starred: boolean;
-  subStages: SubStage[];
-}
-
-interface SubStage {
-  id: number;
-  name: string;
-  enabled: boolean;
-  starred: boolean;
-  content: any;
-}
-
-interface Task {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  assignee?: {
-    id: number;
-    user: {
-      id: number;
-      name: string;
-    }
-  };
-  creator: {
-    id: number;
-    user: {
-      id: number;
-      name: string;
-    }
-  };
-}
-
 interface ProjectCardProps {
   project: Project;
   refetchProjects: () => void;
 }
-export default function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+
+export function ProjectCard({ project, refetchProjects }: ProjectCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const deleteProjectMutation = trpc.projects.delete.useMutation();
   const toggleProjectCompletionMutation = trpc.projects.toggleProjectCompletion.useMutation();
-  const updateProjectMutation = trpc.projects.update.useMutation();
+  const { data: progress } = trpc.projects.getProjectProgress.useQuery(project.id);
+
+  // Calculate project status and timeline
+  const projectStatus = useMemo(() => {
+    if (project.completed) return 'completed';
+    if (!project.endDate) return 'ongoing';
+    return isAfter(new Date(), new Date(project.endDate)) ? 'overdue' : 'on-track';
+  }, [project.completed, project.endDate]);
+
+  const statusConfig = {
+    completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
+    'on-track': { color: 'bg-blue-100 text-blue-800', icon: Clock },
+    overdue: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
+    ongoing: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  };
+
+  // Calculate task statistics
+  const taskStats = useMemo(() => {
+    const total = project.tasks.length;
+    const completed = project.tasks.filter(t => t.status === 'COMPLETED').length;
+    const inProgress = project.tasks.filter(t => t.status === 'IN_PROGRESS').length;
+    const pending = project.tasks.filter(t => t.status === 'PENDING').length;
+
+    return { total, completed, inProgress, pending };
+  }, [project.tasks]);
 
   const handleDeleteProject = async () => {
     if (window.confirm('Are you sure you want to delete this project?')) {
@@ -92,114 +137,190 @@ export default function ProjectCard({ project, refetchProjects }: ProjectCardPro
         refetchProjects();
       } catch (error) {
         console.error('Error deleting project:', error);
-        alert('Failed to delete project. Please try again.');
       }
     }
   };
 
-  const handleToggleCompletion = async () => {
-    try {
-      await toggleProjectCompletionMutation.mutateAsync({
-        id: project.id,
-        completed: !project.completed
-      });
-      refetchProjects();
-    } catch (error) {
-      console.error('Error toggling project completion:', error);
-      alert('Failed to update project status. Please try again.');
-    }
-  };
-
-  const handleUpdateProject = async (updatedProject: Partial<Project>) => {
-    try {
-      await updateProjectMutation.mutateAsync({
-        id: project.id,
-        ...updatedProject,
-      });
-      refetchProjects();
-    } catch (error) {
-      console.error('Error updating project:', error);
-      alert('Failed to update project. Please try again.');
-    }
-  };
-
   return (
-    <Card className={`w-full ${project.completed ? 'bg-gray-100' : ''}`}>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl font-bold">{project.title}</CardTitle>
-            <CardDescription>{project.description}</CardDescription>
-          </div>
-          <Badge variant={project.completed ? "secondary" : "default"}>
-            {project.completed ? 'Completed' : 'In Progress'}
-          </Badge>
-        </div>
-        </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <p><strong>Created by:</strong> {project.creator.user.name}</p>
-          <p><strong>Team:</strong> {project.team.name}</p>
-          <p><strong>Duration:</strong> {project.duration}</p>
-          <p><strong>Start Date:</strong> {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}</p>
-          <p><strong>End Date:</strong> {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}</p>
-          {isExpanded && (
-            <div>
-              <strong>Main Stages:</strong>
-              <ul className="list-disc pl-5">
-                {project.mainStages.map((stage) => (
-                  <li key={stage.id}>
-                    {stage.name} {stage.starred && '⭐'}
-                    {stage.subStages.length > 0 && (
-                      <ul className="list-circle pl-5">
-                        {stage.subStages.map((subStage) => (
-                          <li key={subStage.id}>
-                            {subStage.name} {subStage.starred && '⭐'} {!subStage.enabled && '(Disabled)'}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-              </ul>
+    <TooltipProvider>
+      <Card className="group hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1.5">
+              <div className="flex items-center space-x-2">
+                <CardTitle className="text-xl">
+                  {project.title}
+                </CardTitle>
+                {project.mainStages.some(stage => stage.starred) && (
+                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                )}
+              </div>
+              <Badge
+                variant="secondary"
+                className={`${statusConfig[projectStatus].color} flex items-center space-x-1`}
+              >
+                {React.createElement(statusConfig[projectStatus].icon, { className: "h-3 w-3 mr-1" })}
+                <span className="capitalize">{projectStatus}</span>
+              </Badge>
             </div>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
-          {isExpanded ? 'Show Less' : 'Show More'}
-        </Button>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
-            <Edit2 className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          <Button variant="outline" onClick={handleToggleCompletion}>
-            <CheckCircle className="mr-2 h-4 w-4" />
-            {project.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
-          </Button>
-          <Button variant="destructive" onClick={handleDeleteProject}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
-          <Link href={`/videos/${project.id}/${slugify(project.title)}`}>
-              <Button variant="outline" className="justify-between">
-                Expand
-              </Button>
-            </Link>
-        </div>
-      </CardFooter>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {/* <Link href={`/videos/${project.id}/${slugify(project.title)}`}>
+                  <DropdownMenuItem>
+                    <ChevronRight className="h-4 w-4 mr-2" />
+                    View Details
+                  </DropdownMenuItem>
+                </Link> */}
+                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Project
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={handleDeleteProject}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
 
-      <EditProjectModal
-        project={project}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onUpdate={handleUpdateProject}
-      />
-    </Card>
+        <CardContent className="space-y-4">
+          {/* Project Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Overall Progress</span>
+              <span className="font-medium">{progress?.progress || 0}%</span>
+            </div>
+            <Progress value={progress?.progress || 0} className="h-2" />
+          </div>
+
+          {/* Project Info */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <div className="flex items-center text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Timeline</span>
+              </div>
+              <div className="font-medium">
+                {project.startDate ? (
+                  <>
+                    {new Date(project.startDate).toLocaleDateString()} 
+                    {project.endDate && ` - ${new Date(project.endDate).toLocaleDateString()}`}
+                  </>
+                ) : (
+                  'No dates set'
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center text-muted-foreground">
+                <Users className="h-4 w-4 mr-2" />
+                <span>Team</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback>
+                    {project.team.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm">{project.team.name}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Task Statistics */}
+          <div className="grid grid-cols-4 gap-2 pt-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-center p-2 rounded-lg bg-gray-50">
+                  <div className="font-medium">{taskStats.total}</div>
+                  <div className="text-xs text-muted-foreground">Total</div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Total Tasks</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-center p-2 rounded-lg bg-green-50">
+                  <div className="font-medium text-green-600">{taskStats.completed}</div>
+                  <div className="text-xs text-green-600">Done</div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Completed Tasks</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-center p-2 rounded-lg bg-blue-50">
+                  <div className="font-medium text-blue-600">{taskStats.inProgress}</div>
+                  <div className="text-xs text-blue-600">Active</div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>In Progress Tasks</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-center p-2 rounded-lg bg-yellow-50">
+                  <div className="font-medium text-yellow-600">{taskStats.pending}</div>
+                  <div className="text-xs text-yellow-600">Todo</div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Pending Tasks</TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Stages Preview */}
+          <div className="pt-2">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+              <span>Active Stages</span>
+              <span>{project.mainStages.length} stages</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {project.mainStages.map((stage) => (
+                <Badge
+                  key={stage.id}
+                  variant="outline"
+                  className={stage.starred ? 'border-yellow-200 bg-yellow-50' : ''}
+                >
+                  {stage.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+
+        <EditProjectModal
+          project={project}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={async () => {
+            try {
+              await toggleProjectCompletionMutation.mutateAsync({
+                id: project.id,
+                completed: !project.completed,
+              });
+              refetchProjects();
+            } catch (error) {
+              console.error('Error updating project:', error);
+            }
+          }}
+        />
+      </Card>
+    </TooltipProvider>
   );
 }
 
-
+export default ProjectCard;

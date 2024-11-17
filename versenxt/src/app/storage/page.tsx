@@ -333,3 +333,385 @@ export default function StoragePage() {
     </div>
   )
 }
+
+
+
+// 'use client'
+
+// import * as React from 'react'
+// import {
+//   Activity,
+//   Building2,
+//   ChevronDown,
+//   Code2,
+//   Cog,
+//   FileKey,
+//   FolderGit2,
+//   Globe,
+//   Home,
+//   KeyRound,
+//   LayoutDashboard,
+//   Link2,
+//   LogOut,
+//   PaintBucket,
+//   Settings,
+//   Shield,
+//   Users,
+//   Webhook,
+// } from 'lucide-react'
+// import Link from 'next/link'
+
+// import { Button } from '@/components/ui/button'
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from '@/components/ui/card'
+// import {
+//   Collapsible,
+//   CollapsibleContent,
+//   CollapsibleTrigger,
+// } from '@/components/ui/collapsible'
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu'
+// import { Progress } from '@/components/ui/progress'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select'
+// import {
+//   Sidebar,
+//   SidebarContent,
+//   SidebarFooter,
+//   SidebarGroup,
+//   SidebarGroupContent,
+//   SidebarGroupLabel,
+//   SidebarHeader,
+//   SidebarMenu,
+//   SidebarMenuButton,
+//   SidebarMenuItem,
+//   SidebarMenuSub,
+//   SidebarMenuSubItem,
+//   SidebarMenuSubButton,
+//   SidebarProvider,
+//   SidebarTrigger,
+// } from '@/components/ui/sidebar'
+
+// export default function Component() {
+//   const [environment, setEnvironment] = React.useState('production')
+
+//   return (
+//     <SidebarProvider>
+//       <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+//         <Sidebar className="hidden border-r lg:block">
+//           <SidebarHeader>
+//             <div className="flex items-center gap-2 px-4 py-2">
+//               <Shield className="h-6 w-6" />
+//               <h2 className="text-lg font-semibold">Versetta</h2>
+//             </div>
+//             <SidebarMenu>
+//               <SidebarMenuItem>
+//                 <Select
+//                   defaultValue={environment}
+//                   onValueChange={(value) => setEnvironment(value)}
+//                 >
+//                   <SelectTrigger className="w-full">
+//                     <Globe className="mr-2 h-4 w-4" />
+//                     <SelectValue placeholder="Select environment" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="production">Production</SelectItem>
+//                     <SelectItem value="staging">Staging</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </SidebarMenuItem>
+//             </SidebarMenu>
+//           </SidebarHeader>
+//           <SidebarContent>
+//             <SidebarGroup>
+//               <SidebarGroupLabel>Overview</SidebarGroupLabel>
+//               <SidebarGroupContent>
+//                 <SidebarMenu>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#home">
+//                         <Home className="h-4 w-4" />
+//                         <span>Home</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <DropdownMenu>
+//                       <DropdownMenuTrigger asChild>
+//                         <SidebarMenuButton>
+//                           <Building2 className="h-4 w-4" />
+//                           <span>Organizations</span>
+//                           <ChevronDown className="ml-auto h-4 w-4" />
+//                         </SidebarMenuButton>
+//                       </DropdownMenuTrigger>
+//                       <DropdownMenuContent>
+//                         <DropdownMenuItem>View Organizations</DropdownMenuItem>
+//                         <DropdownMenuItem>Create New Organization</DropdownMenuItem>
+//                       </DropdownMenuContent>
+//                     </DropdownMenu>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <DropdownMenu>
+//                       <DropdownMenuTrigger asChild>
+//                         <SidebarMenuButton>
+//                           <Users className="h-4 w-4" />
+//                           <span>Users</span>
+//                           <ChevronDown className="ml-auto h-4 w-4" />
+//                         </SidebarMenuButton>
+//                       </DropdownMenuTrigger>
+//                       <DropdownMenuContent>
+//                         <DropdownMenuItem>View Users</DropdownMenuItem>
+//                         <DropdownMenuItem>Create New User</DropdownMenuItem>
+//                       </DropdownMenuContent>
+//                     </DropdownMenu>
+//                   </SidebarMenuItem>
+//                 </SidebarMenu>
+//               </SidebarGroupContent>
+//             </SidebarGroup>
+//             <SidebarGroup>
+//               <SidebarGroupLabel>Configuration</SidebarGroupLabel>
+//               <SidebarGroupContent>
+//                 <SidebarMenu>
+//                   <Collapsible>
+//                     <CollapsibleTrigger asChild>
+//                       <SidebarMenuButton>
+//                         <KeyRound className="h-4 w-4" />
+//                         <span>Authentication</span>
+//                         <ChevronDown className="ml-auto h-4 w-4" />
+//                       </SidebarMenuButton>
+//                     </CollapsibleTrigger>
+//                     <CollapsibleContent>
+//                       <SidebarMenuSub>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Hosted UI</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Methods</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Others</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                       </SidebarMenuSub>
+//                     </CollapsibleContent>
+//                   </Collapsible>
+//                   <Collapsible>
+//                     <CollapsibleTrigger asChild>
+//                       <SidebarMenuButton>
+//                         <Shield className="h-4 w-4" />
+//                         <span>Roles</span>
+//                         <ChevronDown className="ml-auto h-4 w-4" />
+//                       </SidebarMenuButton>
+//                     </CollapsibleTrigger>
+//                     <CollapsibleContent>
+//                       <SidebarMenuSub>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Permissions</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Roles</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Admin Portal Roles</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                       </SidebarMenuSub>
+//                     </CollapsibleContent>
+//                   </Collapsible>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#directory-sync">
+//                         <FolderGit2 className="h-4 w-4" />
+//                         <span>Directory Sync</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#audit-logs">
+//                         <Activity className="h-4 w-4" />
+//                         <span>Audit Logs</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <Collapsible>
+//                     <CollapsibleTrigger asChild>
+//                       <SidebarMenuButton>
+//                         <Code2 className="h-4 w-4" />
+//                         <span>FGA</span>
+//                         <ChevronDown className="ml-auto h-4 w-4" />
+//                       </SidebarMenuButton>
+//                     </CollapsibleTrigger>
+//                     <CollapsibleContent>
+//                       <SidebarMenuSub>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Get Started</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Overview</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Schema</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Resources</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Check</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Query</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Events</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                       </SidebarMenuSub>
+//                     </CollapsibleContent>
+//                   </Collapsible>
+//                 </SidebarMenu>
+//               </SidebarGroupContent>
+//             </SidebarGroup>
+//             <SidebarGroup>
+//               <SidebarGroupLabel>Customization</SidebarGroupLabel>
+//               <SidebarGroupContent>
+//                 <SidebarMenu>
+//                   <Collapsible>
+//                     <CollapsibleTrigger asChild>
+//                       <SidebarMenuButton>
+//                         <PaintBucket className="h-4 w-4" />
+//                         <span>Branding</span>
+//                         <ChevronDown className="ml-auto h-4 w-4" />
+//                       </SidebarMenuButton>
+//                     </CollapsibleTrigger>
+//                     <CollapsibleContent>
+//                       <SidebarMenuSub>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>AuthKit</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Email</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                         <SidebarMenuSubItem>
+//                           <SidebarMenuSubButton>Admin Portal</SidebarMenuSubButton>
+//                         </SidebarMenuSubItem>
+//                       </SidebarMenuSub>
+//                     </CollapsibleContent>
+//                   </Collapsible>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#domains">
+//                         <Globe className="h-4 w-4" />
+//                         <span>Domains</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                 </SidebarMenu>
+//               </SidebarGroupContent>
+//             </SidebarGroup>
+//             <SidebarGroup>
+//               <SidebarGroupLabel>Developer</SidebarGroupLabel>
+//               <SidebarGroupContent>
+//                 <SidebarMenu>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#redirects">
+//                         <Link2 className="h-4 w-4" />
+//                         <span>Redirects</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#api-keys">
+//                         <FileKey className="h-4 w-4" />
+//                         <span>API Keys</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#webhooks">
+//                         <Webhook className="h-4 w-4" />
+//                         <span>Webhooks</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                   <SidebarMenuItem>
+//                     <SidebarMenuButton asChild>
+//                       <Link href="#events">
+//                         <Activity className="h-4 w-4" />
+//                         <span>Events</span>
+//                       </Link>
+//                     </SidebarMenuButton>
+//                   </SidebarMenuItem>
+//                 </SidebarMenu>
+//               </SidebarGroupContent>
+//             </SidebarGroup>
+//           </SidebarContent>
+//           <SidebarFooter>
+//             <SidebarMenu>
+//               <SidebarMenuItem>
+//                 <SidebarMenuButton asChild>
+//                   <Link href="#settings">
+//                     <Settings className="h-4 w-4" />
+//                     <span>Settings</span>
+//                   </Link>
+//                 </SidebarMenuButton>
+//               </SidebarMenuItem>
+//             </SidebarMenu>
+//           </SidebarFooter>
+//         </Sidebar>
+//         <div className="flex flex-col">
+//           <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
+//             <SidebarTrigger />
+//             <div className="flex-1">
+//               <h1 className="text-lg font-semibold">Dashboard</h1>
+//             </div>
+//             <DropdownMenu>
+//               <DropdownMenuTrigger asChild>
+//                 <Button
+//                   variant="ghost"
+//                   className="flex h-8 w-8 items-center justify-center rounded-full"
+//                 >
+//                   <img
+//                     src="/placeholder.svg"
+//                     width="32"
+//                     height="32"
+//                     className="rounded-full"
+//                     alt="Avatar"
+//                   />
+//                   <span className="sr-only">Toggle user menu</span>
+//                 </Button>
+//               </DropdownMenuTrigger>
+//               <DropdownMenuContent align="end">
+//                 <DropdownMenuItem>Settings</DropdownMenuItem>
+//                 <DropdownMenuItem>Support</DropdownMenuItem>
+//                 <DropdownMenuSeparator />
+//                 <DropdownMenuItem>
+//                   Logout
+//                   <LogOut className="ml-2 h-4 w-4" />
+//                 </DropdownMenuItem>
+//               </DropdownMenuContent>
+//             </DropdownMenu>
+//           </header>
+//           <main  className="flex-1 space-y-4 p-8 pt-6">
+//             {/* Main content goes here */}
+//           </main>
+//         </div>
+//       </div>
+//     </SidebarProvider>
+//   )
+// }

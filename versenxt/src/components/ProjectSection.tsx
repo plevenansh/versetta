@@ -12,6 +12,7 @@ import { Checkbox } from "./ui/checkbox";
 import ProjectCard from './ProjectCard';
 import { trpc } from '../utils/trpc';
 import { Plus,Trash2, Minus } from 'lucide-react';
+import { DatePicker } from "./DatePicker";
 
 interface Project {
   id: number;
@@ -417,14 +418,20 @@ export default function ProjectSection() {
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
               />
-              <Input
-                type="date"
-                placeholder="End Date"
-                value={newProject.endDate}
-                onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
-                onKeyDown={(e) => handleKeyDown(e, 2)}
-                ref={(el) => {inputRefs.current[2] = el}}
-              />
+             
+<div className="space-y-2">
+  <label className="text-sm font-medium">End Date</label>
+  <DatePicker
+    date={newProject.endDate ? new Date(newProject.endDate) : undefined}
+    onSelect={(date) => 
+      setNewProject({ 
+        ...newProject, 
+        endDate: date ? date.toISOString().split('T')[0] : '' 
+      })
+    }
+    placeholder="Select end date"
+  />
+</div>
               <Input
                 placeholder="Duration (e.g., 2 weeks, 1 month)"
                 value={newProject.duration}

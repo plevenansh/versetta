@@ -23,6 +23,34 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
+
     </div>
   )
 }
+// // components/layout.tsx
+// "use client"
+
+// import { ReactNode } from 'react'
+// import Appbar from './Appbar'
+// import Sidebar from './Sidebar'
+// import { SidebarProvider } from '@/components/ui/sidebar'
+
+// interface LayoutProps {
+//   children: ReactNode
+// }
+
+// export default function Layout({ children }: LayoutProps) {
+//   return (
+//     <SidebarProvider>
+//       <div className="flex h-screen">
+//         <Sidebar />
+//         <div className="flex flex-col flex-grow">
+//           <Appbar />
+//           <main className="flex-grow p-6 overflow-auto">
+//             {children}
+//           </main>
+//         </div>
+//       </div>
+//     </SidebarProvider>
+//   )
+// }

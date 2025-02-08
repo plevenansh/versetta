@@ -9,5 +9,6 @@ export default function Project() {
         <h1 className="text-2xl font-bold mb-4">Current Project</h1>
         <TaskList />
       </div>
+      
     );
   }

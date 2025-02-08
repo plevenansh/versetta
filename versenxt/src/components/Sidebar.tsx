@@ -1,108 +1,5 @@
 // components/Sidebar.tsx
-// "use client"
-
-// import Link from 'next/link';
-// import { usePathname } from 'next/navigation';
-// import { Home, CircleCheckBig, ChartSpline, CalendarDays, Film, MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, Users } from 'lucide-react';
-// import { Button } from "./ui/button"; import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
-
-// interface MenuItem {
-//   href: string;
-//   icon: React.ElementType;
-//   label: string;
-// }
-
-// export default function AppSidebar() {
-//   const pathname = usePathname();
-//   const isActive = (path: string) => pathname === path;
-
-//   const mainMenuItems: MenuItem[] = [
-//     { href: '/dashboard', icon: Home, label: 'Home' },
-//     { href: '/projects', icon: Folder, label: 'Videos' },
-//     { href: '/tasks', icon: CircleCheckBig, label: 'Tasks' },
-//     { href: '/comments', icon: MessageSquare, label: 'Comments Analyser' },
-//     { href: '/storage', icon: Database, label: 'Storage'},
-//     { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
-//   ];
-
-//   const toolsMenuItems: MenuItem[] = [
-//     { href: '/chat', icon: MessageCircleMore, label: 'Chat' },
-//     { href: '/notes', icon: NotebookPen, label: 'Notes' },
-//     { href: '/thumbnail', icon: GalleryThumbnails, label: 'Thumbnail Lab'},
-//     { href: '/analyzer', icon: ChartSpline, label: 'Analytics' },
-//     { href: '/script', icon: NotepadTextDashed, label: 'Script' },
-//     { href: '/production', icon: Clapperboard, label: 'AI Production' },
-//     { href: '/platform', icon: Tv, label: 'Platforms' },
-//     { href: '/editing', icon: Film, label: 'Editing' },
-//   ];
-
-//   return (
-//     <Sidebar>
-//       <SidebarHeader className="border-b p-4">
-//         {/* Add your logo here if needed */}
-//       </SidebarHeader>
-      
-//       <SidebarContent>
-//         <SidebarGroup>
-//           <SidebarGroupLabel>Main</SidebarGroupLabel>
-//           <SidebarGroupContent>
-//             {mainMenuItems.map((item) => (
-//               <Button
-//                 key={item.href}
-//                 variant="ghost"
-//                 asChild
-//                 className={`w-full justify-start ${
-//                   isActive(item.href) ? 'bg-accent' : ''
-//                 }`}
-//               >
-//                 <Link href={item.href} className="flex items-center gap-3">
-//                   <item.icon className="h-5 w-5" />
-//                   <span>{item.label}</span>
-//                 </Link>
-//               </Button>
-//             ))}
-//           </SidebarGroupContent>
-//         </SidebarGroup>
-
-//         <SidebarGroup>
-//           <SidebarGroupLabel>Tools</SidebarGroupLabel>
-//           <SidebarGroupContent>
-//             {toolsMenuItems.map((item) => (
-//               <Button
-//                 key={item.href}
-//                 variant="ghost"
-//                 asChild
-//                 className={`w-full justify-start ${
-//                   isActive(item.href) ? 'bg-accent' : ''
-//                 }`}
-//               >
-//                 <Link href={item.href} className="flex items-center gap-3">
-//                   <item.icon className="h-5 w-5" />
-//                   <span>{item.label}</span>
-//                 </Link>
-//               </Button>
-//             ))}
-//           </SidebarGroupContent>
-//         </SidebarGroup>
-//       </SidebarContent>
-
-//       <SidebarFooter className="border-t p-4">
-//         <Button
-//           variant="ghost"
-//           asChild
-//           className="w-full justify-start"
-//         >
-//           <Link href="/teams" className="flex items-center gap-3">
-//             <Users className="h-5 w-5" />
-//             <span>Teams</span>
-//           </Link>
-//         </Button>
-//       </SidebarFooter>
-//     </Sidebar>
-//   );
-// }
-
-
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, SquareCheck,CircleCheckBig, Video,ChartSpline, Brush,PenTool,CalendarDays, Film,MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose, Lock } from 'lucide-react';
@@ -215,3 +112,108 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     </div>
   );
 }
+
+
+// 'use client'
+
+// import * as React from 'react'
+// import Link from 'next/link'
+// import { usePathname } from 'next/navigation'
+// import Image from 'next/image'
+// import { Home, SquareCheck, CircleCheckBig, Video, BarChartIcon as ChartSpline, Brush, PenTool, CalendarDays, Film, MessageCircleMore, NotebookPen, Folder, Tv, GalleryThumbnails, Database, NotepadTextDashed, MessageSquare, Clapperboard, BarChart2, Users, PanelRightOpen, PanelRightClose } from 'lucide-react'
+
+// import { Button } from "@/components/ui/button"
+// import {
+//   Sidebar,
+//   SidebarContent,
+//   SidebarFooter,
+//   SidebarHeader,
+//   SidebarMenu,
+//   SidebarMenuButton,
+//   SidebarMenuItem,
+//   SidebarProvider,
+//   SidebarRail,
+//   SidebarTrigger,
+//   useSidebar,
+// } from "@/components/ui/sidebar"
+
+// const menuItems = [
+//   { href: '/dashboard', icon: Home, label: 'Home' },
+//   { href: '/projects', icon: Folder, label: 'Videos' },
+//   { href: '/tasks', icon: CircleCheckBig, label: 'Tasks' },
+//   { href: '/comments', icon: MessageSquare, label: 'Comments Analyser' },
+//   { href: '/storage', icon: Database, label: 'Storage'},
+//   { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
+//   { href: '/chat', icon: MessageCircleMore, label: 'Chat' },
+//   { href: '/notes', icon: NotebookPen, label: 'Notes' },
+//   { href: '/thumbnail', icon: GalleryThumbnails, label: 'Thumbnail Lab'},
+//   { href: '/analyzer', icon: ChartSpline, label: 'Analytics' },
+//   { href: '/script', icon: NotepadTextDashed, label: 'Script' },
+//   { href: '/production', icon: Clapperboard, label: 'AI  Production' },
+//   { href: '/platform', icon: Tv, label: 'Platforms' },
+//   { href: '/editing', icon: Film, label: 'Editing' },
+// ]
+
+// export default function AppSidebar() {
+//   const pathname = usePathname()
+//   const { state, toggleSidebar } = useSidebar()
+
+//   return (
+//     <Sidebar collapsible="icon">
+//       <SidebarHeader>
+//         <SidebarMenu>
+//           <SidebarMenuItem>
+//             <SidebarMenuButton size="lg" asChild>
+//               <Link href="/dashboard" className="flex items-center">
+//                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+//                   <Image
+//                     src="/ver.png"
+//                     alt="Versetta Logo"
+//                     width={24}
+//                     height={24}
+//                   />
+//                 </div>
+//                 <div className="ml-2 flex flex-col gap-0.5 leading-none">
+//                   <Image
+//                     src="/verlongb.png"
+//                     alt="Versetta Logo"
+//                     width={130}
+//                     height={24}
+//                     className="hidden sm:block"
+//                   />
+//                 </div>
+//               </Link>
+//             </SidebarMenuButton>
+//           </SidebarMenuItem>
+//         </SidebarMenu>
+//       </SidebarHeader>
+//       <SidebarContent>
+//         <SidebarMenu>
+//           {menuItems.map((item) => (
+//             <SidebarMenuItem key={item.href}>
+//               <SidebarMenuButton asChild isActive={pathname === item.href} className="text-lg">
+//                 <Link href={item.href} className="flex items-center">
+//                   <item.icon className="mr-3 h-7 w-7" />
+//                   <span>{item.label}</span>
+//                 </Link>
+//               </SidebarMenuButton>
+//             </SidebarMenuItem>
+//           ))}
+//         </SidebarMenu>
+//       </SidebarContent>
+//       <SidebarFooter>
+//         <SidebarMenu>
+//           <SidebarMenuItem>
+//             <SidebarMenuButton asChild isActive={pathname === '/teams'} className="text-lg">
+//               <Link href="/teams" className="flex items-center">
+//                 <Users className="mr-3 h-7 w-7" />
+//                 <span>Teams</span>
+//               </Link>
+//             </SidebarMenuButton>
+//           </SidebarMenuItem>
+//         </SidebarMenu>
+//       </SidebarFooter>
+//       <SidebarRail />
+//     </Sidebar>
+//   )
+// }

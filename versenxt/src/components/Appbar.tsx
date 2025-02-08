@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { useRouter } from 'next/navigation'
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 interface AppbarProps {
   collapsed: boolean;
@@ -150,6 +151,14 @@ export default function Appbar({ collapsed }: AppbarProps) {
     </Link>
   </div>
 )}
+
+
+
+     <SidebarTrigger />
+
+
+
+
       <p className="text-sm italic text-gray-600 mx-auto hidden md:block"></p>
       <div className="flex items-center space-x-3">
         <div className="relative hidden sm:block">

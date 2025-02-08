@@ -1,7 +1,7 @@
 // app/comments/page.tsx
 import React from 'react';
 import { getUser } from '@workos-inc/authkit-nextjs';
-import YouTubeCommentAnalyzer from '../../components/YoutubeAnalyzer';
+import YouTubeCommentAnalyzer from '@/components/YoutubeAnalyzer';
 
 async function getAuthenticatedUser() {
   try {

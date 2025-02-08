@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { trpc } from '../../utils/trpc'
-import { Button } from "../../components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
-import { Dialog, DialogTrigger } from "../../components/ui/dialog"
+import { trpc } from '@/utils/trpc'
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { PlusCircle } from 'lucide-react'
-import TeamCard from '../../components/TeamCard'
-import CreateTeamForm from '../../components/CreateTeamForm'
+import TeamCard from '@/components/TeamCard'
+import CreateTeamForm from '@/components/CreateTeamForm'
 import { useRouter } from 'next/navigation'
 
 

@@ -24,6 +24,6 @@
     },
     "maxNodeModuleJsDepth": 100,
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/create-team"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/app/create-team"],
   "exclude": ["node_modules"]
 }

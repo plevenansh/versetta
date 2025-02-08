@@ -1,6 +1,6 @@
 import React from 'react';
-import ProjectSection from '../../components/TaskList';
-import TaskList from '../../components/TaskList';
+import ProjectSection from '@/components/TaskList';
+import TaskList from '@/components/TaskList';
 
 
 export default function Project() {

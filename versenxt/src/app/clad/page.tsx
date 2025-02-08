@@ -2,11 +2,11 @@
 "use client"
 
 import React, { useState } from 'react';
-import { trpc } from '../../utils/trpc';
-import { Card } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { trpc } from '@/utils/trpc';
+import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GanttChart } from '@/components/Gantt/GanttChart';
-import { DateRangePicker } from '../../components/ui/date-range-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { addMonths, subMonths } from 'date-fns';
 
 export default function GanttPage() {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Appbar from './Appbar'
 import Sidebar from './Sidebar'
 import { ReactNode } from 'react'
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 interface LayoutProps {
   children: ReactNode
@@ -16,14 +17,17 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+     <SidebarProvider>
+      {/* <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} /> */}
+      <Sidebar />
       <div className="flex flex-col flex-grow">
         <Appbar collapsed={sidebarCollapsed} />
         <main className="flex-grow p-6 overflow-auto">
+        
           {children}
         </main>
       </div>
-
+</SidebarProvider>
     </div>
   )
 }

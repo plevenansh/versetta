@@ -3,6 +3,8 @@ import { appRouter } from '@/server/';
 import { createContext } from '@/server/context';
 import { NextRequest } from 'next/server';
 
+export const runtime = 'nodejs';
+
 const handler = (req: NextRequest) =>
   fetchRequestHandler({
     endpoint: '/api/trpc',

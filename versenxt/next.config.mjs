@@ -5,6 +5,11 @@ const nextConfig = {
     domains: ['workoscdn.com','versetta1.blob.core.windows.net'],
     //domains: ['versetta1.blob.core.windows.net'],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

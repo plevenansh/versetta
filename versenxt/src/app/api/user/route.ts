@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import { getUser } from '@workos-inc/authkit-nextjs';
 import prisma from '@/lib/prisma';
 
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     const workOsData = await getUser();

@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { trpc } from '../../../utils/trpc';
-import { FileUploader } from '../../FileUploader';
+import { trpc } from '@/utils/trpc';
+import { FileUploader } from '@/components/FileUploader';
 // import { FileList } from '../../components/FileList';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Team {
   id: number;
